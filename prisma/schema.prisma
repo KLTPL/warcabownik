@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum ScooterStatus {
+  AVAILABLE
+  IN_USE
+  MAINTENANCE
+  DECOMMISSIONED
+}
+
+model User {
+  id             String   @id @default(uuid())
+  firstName      String
+  lastName       String
+  phoneNumber    String   @unique
+  email          String   @unique
+  hashedPassword String
+  role           UserRole @default(USER)
+
+  rentals Rental[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ScooterModel {
+  id        String @id @default(uuid())
+  brand     String
+  modelName String
+  maxSpeed  Float
+  range     Float
+
+  scooters Scooter[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Scooter {
+  id           String        @id @default(uuid())
+  serialNumber String        @unique
+  status       ScooterStatus @default(AVAILABLE)
+
+  modelId String
+  model   ScooterModel @relation(fields: [modelId], references: [id])
+  rentals Rental[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Rental {
+  id        String    @id @default(uuid())
+  startTime DateTime  @default(now())
+  endTime   DateTime?
+  cost      Decimal?  @db.Decimal(10, 2)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  scooterId String
+  scooter   Scooter @relation(fields: [scooterId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
