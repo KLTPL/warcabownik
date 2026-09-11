@@ -48,7 +48,13 @@ Grupowy projekt Solvro Wakacyjne Wyzwanie 2026 ścieżki Backend
    pnpm install
    ```
 
-5. Run the dev command
+5. Generate prisma
+
+   ```
+   pnpm prisma generate
+   ```
+
+6. Run the dev command
 
    ```
    pnpm dev:start
