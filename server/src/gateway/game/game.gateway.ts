@@ -11,12 +11,6 @@ import { Server, Socket } from "socket.io";
 import { Logger } from "@nestjs/common";
 import { GameService } from "../../game/game.service";
 
-interface PlayerMovePayload {
-  gameId: string;
-  from: { y: number; x: number };
-  to: { y: number; x: number };
-}
-
 @WebSocketGateway({
   cors: {
     origin: "http://localhost:5173",
@@ -49,43 +43,37 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage("sendPlayerMove")
-  @SubscribeMessage("sendPlayerMove")
-async handlePlayerMove(
-  @MessageBody()
-  data: {
-    gameId: string;
-    move: { fromPosition: string; toPosition: string };
-  },
-  @ConnectedSocket() client: Socket,
-) {
-  this.logger.log(
-    `Received move from ${client.id} for game ${data.gameId}`,
-  );
+  async handlePlayerMove(
+    @MessageBody()
+    data: {
+      gameId: string;
+      move: { fromPosition: string; toPosition: string };
+    },
+    @ConnectedSocket() client: Socket,
+  ) {
+    this.logger.log(`Received move from ${client.id} for game ${data.gameId}`);
 
-  const userId = client["user"]?.sub;
+    const userId = client["user"]?.sub;
 
-  try {
-    const updatedGame = await this.gameService.playTurn(
-      data.gameId,
-      userId,
-      data.move,
-    );
+    try {
+      const updatedGame = await this.gameService.playTurn(
+        data.gameId,
+        userId,
+        data.move,
+      );
 
-    this.server.to(data.gameId).emit("gameStateUpdate", updatedGame);
+      this.server.to(data.gameId).emit("gameStateUpdate", updatedGame);
 
-    return { status: "success", game: updatedGame };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    this.logger.error(`Failed to process move: ${errorMessage}`);
-    client.emit("connect_error", { message: errorMessage });
-    return {
-      status: "error",
-      message: errorMessage,
-    };
-  }
-}
-
-  private toAlgebraic(pos: { x: number; y: number }): string {
-    return `${String.fromCharCode(97 + pos.x)}${pos.y + 1}`;
+      return { status: "success", game: updatedGame };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to process move: ${errorMessage}`);
+      client.emit("connect_error", { message: errorMessage });
+      return {
+        status: "error",
+        message: errorMessage,
+      };
+    }
   }
 }
