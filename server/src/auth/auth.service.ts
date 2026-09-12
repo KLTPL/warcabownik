@@ -16,11 +16,10 @@ export class AuthService {
 
   async register(registerDto: RegisterDto): Promise<UserEntity | undefined> {
     const { password, ...userData } = registerDto;
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 10);
     return this.userService.create({
       ...userData,
-      hashedPassword,
-      role: "USER",
+      passwordHash,
     });
   }
 
@@ -32,7 +31,7 @@ export class AuthService {
     }
     const isCorrect = await bcrypt.compare(
       loginDto.password,
-      user.hashedPassword,
+      user.passwordHash,
     );
     if (!isCorrect) {
       throw new UnauthorizedException(ERR_MESSAGE);
@@ -41,7 +40,6 @@ export class AuthService {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
-      role: user.role,
     };
     return this.jwtService.sign(payload, {
       expiresIn: parseInt(process.env.EXPIRY_TIME_MS as string) / 1000, // Takes in seconds
