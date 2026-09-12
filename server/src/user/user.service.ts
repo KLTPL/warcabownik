@@ -15,7 +15,7 @@ export class UserService {
     try {
       return await this.prisma.user.create({
         data,
-        omit: { hashedPassword: true },
+        omit: { passwordHash: true },
       });
     } catch (error) {
       if (
