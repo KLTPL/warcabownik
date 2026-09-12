@@ -3,7 +3,19 @@ import { useParams } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
 import { Card, CardContent } from "@/components/ui/card";
 
-const getInitialBoard = () => {
+interface BoardPosition {
+  x: number;
+  y: number;
+}
+
+interface GameStateUpdate {
+  boardStateJson: string;
+}
+
+type BoardCell = 0 | 1 | 2;
+type Board = BoardCell[][];
+
+const getInitialBoard = (): Board => {
   return Array(8)
     .fill(null)
     .map((_, y) =>
@@ -24,11 +36,8 @@ export function Game() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [status, setStatus] = useState("Connecting to server...");
 
-  const [board, setBoard] = useState(getInitialBoard());
-  const [selectedPiece, setSelectedPiece] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
+  const [board, setBoard] = useState<Board>(getInitialBoard());
+  const [selectedPiece, setSelectedPiece] = useState<BoardPosition | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -41,21 +50,12 @@ export function Game() {
       newSocket.emit("joinGame", { gameId: id });
     });
 
-    newSocket.on("gameStateUpdate", (data) => {
-      console.log("Received new game state:", data);
-
-      setBoard((prevBoard) => {
-        const newBoard = prevBoard.map((row) => [...row]);
-
-        if (data.botMove) {
-          const { from, to } = data.botMove;
-
-          newBoard[from.y][from.x] = 0;
-          newBoard[to.y][to.x] = 2;
-        }
-
-        return newBoard;
-      });
+    newSocket.on("gameStateUpdate", (updatedGame: GameStateUpdate) => {
+      const rawBoard: string[][] = JSON.parse(updatedGame.boardStateJson);
+      const numericBoard: Board = rawBoard.map((row: string[]) => 
+        row.map((cell: string): BoardCell => cell.toLowerCase() === 'w' ? 1 : cell.toLowerCase() === 'b' ? 2 : 0)
+      );
+      setBoard(numericBoard);
     });
 
     newSocket.on("connect_error", (err) => {
@@ -68,7 +68,7 @@ export function Game() {
     };
   }, [id]);
 
-  const handleSquareClick = (x: number, y: number) => {
+  const handleSquareClick = (x: number, y: number): void => {
     if ((x + y) % 2 === 0) return;
 
     const piece = board[y][x];
@@ -83,11 +83,11 @@ export function Game() {
     if (piece === 0 && selectedPiece && socket) {
       // Poprawna konwersja (a=97 w ASCII, rzędy odwrócone 8-y)
       const fromCol = String.fromCharCode(97 + selectedPiece.x);
-      const fromRow = 8 - selectedPiece.y;
+      const fromRow = selectedPiece.y + 1; // y=0 staje się rzędem 1
       const fromPosition = `${fromCol}${fromRow}`; // np. "e3"
 
       const toCol = String.fromCharCode(97 + x);
-      const toRow = 8 - y;
+      const toRow = y + 1;
       const toPosition = `${toCol}${toRow}`; // np. "d4"
 
       socket.emit("sendPlayerMove", {

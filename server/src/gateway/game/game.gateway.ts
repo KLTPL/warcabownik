@@ -49,43 +49,41 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage("sendPlayerMove")
-  async handlePlayerMove(
-    @MessageBody()
-    data: {
-      gameId: string;
-      move: { fromPosition: string; toPosition: string };
-    },
-    @ConnectedSocket() client: Socket,
-  ) {
-    this.logger.log(
-      `Received move from ${client.id} for game ${payload.gameId}`,
+  @SubscribeMessage("sendPlayerMove")
+async handlePlayerMove(
+  @MessageBody()
+  data: {
+    gameId: string;
+    move: { fromPosition: string; toPosition: string };
+  },
+  @ConnectedSocket() client: Socket,
+) {
+  this.logger.log(
+    `Received move from ${client.id} for game ${data.gameId}`,
+  );
+
+  const userId = client["user"]?.sub;
+
+  try {
+    const updatedGame = await this.gameService.playTurn(
+      data.gameId,
+      userId,
+      data.move,
     );
 
-    const userId = client["user"]?.sub;
-    const fromPosition = this.toAlgebraic(payload.from);
-    const toPosition = this.toAlgebraic(payload.to);
+    this.server.to(data.gameId).emit("gameStateUpdate", updatedGame);
 
-    try {
-      const updatedGame = await this.gameService.playTurn(
-        data.gameId,
-        userId,
-        data.move,
-      );
-
-      this.server.to(data.gameId).emit("gameStateUpdate", updatedGame);
-
-      return { status: "success", game: updatedGame };
-    } catch (error) {
-      this.logger.error(
-        `Failed to process move: ${error instanceof Error ? error.message : String(error)}`,
-      );
-      client.emit("connect_error", { message: error.message });
-      return {
-        status: "error",
-        message: error instanceof Error ? error.message : String(error),
-      };
-    }
+    return { status: "success", game: updatedGame };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    this.logger.error(`Failed to process move: ${errorMessage}`);
+    client.emit("connect_error", { message: errorMessage });
+    return {
+      status: "error",
+      message: errorMessage,
+    };
   }
+}
 
   private toAlgebraic(pos: { x: number; y: number }): string {
     return `${String.fromCharCode(97 + pos.x)}${pos.y + 1}`;
