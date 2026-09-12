@@ -93,7 +93,7 @@ class CheckersTrainer:
         for episode in range(self.episodes):
             history, winner = self.play_self_play_episode()
             avg_loss = self.train_on_episode(history, winner)
-            
+            print(episode)
             if (episode + 1) % 50 == 0:
                 winner_str = "White (1)" if winner == 1 else "Black (-1)"
                 print(f"Episode {episode + 1}/{self.episodes} | Winner: {winner_str} | Loss: {avg_loss:.4f}")
