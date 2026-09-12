@@ -19,7 +19,7 @@ interface PlayerMovePayload {
 
 @WebSocketGateway({
   cors: {
-    origin: "*",
+    origin: "http://localhost:5173",
   },
   namespace: "/game",
 })
