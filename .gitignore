@@ -1,7 +1,9 @@
 # compiled output
-/dist
-/node_modules
-/build
+dist/
+node_modules/
+build/
+.nyc_output/
+coverage/
 
 # Logs
 logs
@@ -55,4 +57,39 @@ pids
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
-/generated/prisma
+/server/generated/prisma
+
+# =========================
+# PYTHON & MACHINE LEARNING
+# =========================
+
+# Virtual enviroments
+venv/
+.env/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# AI models
+*.pth
+*.pt
+*.h5
+*.hdf5
+*.onnx
+*.pkl
+*.csv
+/ai/models/
+/ai/data/
