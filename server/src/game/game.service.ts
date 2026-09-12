@@ -1,11 +1,41 @@
-import { Injectable, BadRequestException } from "@nestjs/common";
+import { Injectable, BadRequestException, Logger } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { AiService } from "../ai/ai.service";
 import { GameValidatorService } from "./game-validator.service";
 import { GameStatus } from "../../generated/prisma/enums";
+import { parsePosition } from "./board.utils";
+import {
+  BOARD_SIZE,
+  BOARD_MIN,
+  BOARD_MAX,
+  INITIAL_WHITE_ROWS,
+  INITIAL_BLACK_ROW_START,
+  WHITE_PIECE,
+  BLACK_PIECE,
+  EMPTY_SQUARE,
+  CAPTURE_STEP,
+  MovePayload,
+  DEFAULT_WHITE_ID,
+  DEFAULT_BLACK_ID,
+} from "./game.constants";
+
+export interface GameState {
+  id: string;
+  whitePlayerId: string | null;
+  blackPlayerId: string | null;
+  boardStateJson: string;
+  status: GameStatus;
+  winnerId: string | null;
+}
+
+export interface GameWithMoves extends GameState {
+  moves: unknown[];
+}
 
 @Injectable()
 export class GameService {
+  private readonly logger = new Logger(GameService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly aiService: AiService,
@@ -13,26 +43,21 @@ export class GameService {
   ) {}
 
   getInitialBoard(): string[][] {
-    const board: string[][] = Array(8)
-      .fill(null)
-      .map(() => Array(8).fill(""));
+    const board: string[][] = Array.from({ length: BOARD_SIZE }, () =>
+      Array<string>(BOARD_SIZE).fill(EMPTY_SQUARE),
+    );
 
-    for (let y = 0; y < 3; y++) {
-      for (let x = 0; x < 8; x++) {
-        if ((x + y) % 2 === 1) {
-          board[y][x] = "w";
-        }
+    for (let y = BOARD_MIN; y < INITIAL_WHITE_ROWS; y++) {
+      for (let x = BOARD_MIN; x <= BOARD_MAX; x++) {
+        if ((x + y) % 2 === 1) board[y][x] = WHITE_PIECE;
       }
     }
 
-    for (let y = 5; y < 8; y++) {
-      for (let x = 0; x < 8; x++) {
-        if ((x + y) % 2 === 1) {
-          board[y][x] = "b";
-        }
+    for (let y = INITIAL_BLACK_ROW_START; y <= BOARD_MAX; y++) {
+      for (let x = BOARD_MIN; x <= BOARD_MAX; x++) {
+        if ((x + y) % 2 === 1) board[y][x] = BLACK_PIECE;
       }
     }
-
     return board;
   }
 
@@ -48,11 +73,76 @@ export class GameService {
     });
   }
 
-  async applyMove(
-    gameId: string,
-    playerId: string | null,
-    move: { fromPosition: string; toPosition: string },
-  ) {
+  async playTurn(gameId: string, userId: string, move: MovePayload) {
+    this.logger.log(`Processing player turn for game: ${gameId}`);
+
+    const playerResult = await this.applyMove(gameId, userId, move);
+
+    if (
+      playerResult.canContinueCapture ||
+      playerResult.game.status === GameStatus.FINISHED
+    ) {
+      return playerResult.game;
+    }
+
+    return await this.processAiTurns(gameId, playerResult.game);
+  }
+
+  async applyMove(gameId: string, playerId: string | null, move: MovePayload) {
+    const game = await this.getValidGame(gameId);
+
+    const currentTurnNumber = game.moves.length + 1;
+    const isWhiteTurn = currentTurnNumber % 2 !== 0;
+
+    this.verifyPlayerTurn(game, playerId, isWhiteTurn);
+
+    const parsedJson: unknown = JSON.parse(game.boardStateJson);
+    const boardState = parsedJson as string[][];
+
+    if (!this.gameValidator.validateMove(boardState, move, isWhiteTurn)) {
+      throw new BadRequestException("InvalidMove");
+    }
+
+    const { newBoard, captured, promoted, toX, toY } = this.updateBoardState(
+      boardState,
+      move,
+    );
+
+    const canContinueCapture =
+      captured &&
+      !promoted &&
+      this.gameValidator.hasAdditionalCaptures(newBoard, toX, toY);
+
+    const nextTurnIsWhite = canContinueCapture ? isWhiteTurn : !isWhiteTurn;
+
+    const { status, winnerId } = this.determineGameStatus(
+      newBoard,
+      nextTurnIsWhite,
+      isWhiteTurn,
+      game,
+    );
+
+    const updatedGame = await this.prisma.game.update({
+      where: { id: gameId },
+      data: {
+        boardStateJson: JSON.stringify(newBoard),
+        status,
+        winnerId,
+        moves: {
+          create: {
+            turnNumber: currentTurnNumber,
+            fromPosition: move.fromPosition,
+            toPosition: move.toPosition,
+            playerId: playerId ?? undefined,
+          },
+        },
+      },
+    });
+
+    return { game: updatedGame as GameState, canContinueCapture };
+  }
+
+  private async getValidGame(gameId: string): Promise<GameWithMoves> {
     const game = await this.prisma.game.findUnique({
       where: { id: gameId },
       include: { moves: true },
@@ -66,41 +156,33 @@ export class GameService {
       throw new BadRequestException("GameAlreadyFinished");
     }
 
-    const currentTurnNumber = game.moves.length + 1;
-    const isWhiteTurn = currentTurnNumber % 2 !== 0;
+    return game;
+  }
 
-    if (playerId !== null) {
-      const expectedPlayerId = isWhiteTurn
-        ? game.whitePlayerId
-        : game.blackPlayerId;
-      if (expectedPlayerId && playerId !== expectedPlayerId) {
-        throw new BadRequestException("NotYourTurn");
-      }
+  private verifyPlayerTurn(
+    game: GameState,
+    playerId: string | null,
+    isWhiteTurn: boolean,
+  ): void {
+    if (playerId === null) return;
+
+    const expectedPlayerId = isWhiteTurn
+      ? game.whitePlayerId
+      : game.blackPlayerId;
+    if (expectedPlayerId && playerId !== expectedPlayerId) {
+      throw new BadRequestException("NotYourTurn");
     }
+  }
 
-    const boardState: string[][] = JSON.parse(game.boardStateJson);
-
-    const isValid = this.gameValidator.validateMove(
-      boardState,
-      move,
-      isWhiteTurn,
-    );
-    if (!isValid) {
-      throw new BadRequestException("InvalidMove");
-    }
-
-    const { newBoard, captured, promoted, toX, toY } =
-      this.gameValidator.updateBoardState(boardState, move);
-
-    const canContinueCapture =
-      captured &&
-      !promoted &&
-      this.gameValidator.hasAdditionalCaptures(newBoard, toX, toY);
-
+  private determineGameStatus(
+    newBoard: string[][],
+    nextTurnIsWhite: boolean,
+    isWhiteTurn: boolean,
+    game: GameState,
+  ): { status: GameStatus; winnerId: string | null } {
     let status: GameStatus = game.status;
     let winnerId: string | null = game.winnerId;
 
-    const nextTurnIsWhite = canContinueCapture ? isWhiteTurn : !isWhiteTurn;
     const opponentHasMoves = this.gameValidator.hasAnyLegalMoves(
       newBoard,
       nextTurnIsWhite,
@@ -109,54 +191,29 @@ export class GameService {
     if (!opponentHasMoves) {
       status = GameStatus.FINISHED;
       winnerId = isWhiteTurn
-        ? game.whitePlayerId || "WHITE"
-        : game.blackPlayerId || "BLACK";
+        ? game.whitePlayerId || DEFAULT_WHITE_ID
+        : game.blackPlayerId || DEFAULT_BLACK_ID;
     }
 
-    const updatedGame = await this.prisma.game.update({
-      where: { id: gameId },
-      data: {
-        boardStateJson: JSON.stringify(newBoard),
-        status,
-        winnerId,
-        moves: {
-          create: {
-            turnNumber: currentTurnNumber,
-            fromPosition: move.fromPosition,
-            toPosition: move.toPosition,
-            playerId: playerId,
-          },
-        },
-      },
-    });
-
-    return { game: updatedGame, canContinueCapture };
+    return { status, winnerId };
   }
 
-  async playTurn(
+  private async processAiTurns(
     gameId: string,
-    userId: string,
-    move: { fromPosition: string; toPosition: string },
-  ) {
-    const playerResult = await this.applyMove(gameId, userId, move);
-
-    if (
-      playerResult.canContinueCapture ||
-      playerResult.game.status === GameStatus.FINISHED
-    ) {
-      return playerResult.game;
-    }
-
-    let currentBoardJson = playerResult.game.boardStateJson;
-    let finalGame = playerResult.game;
+    initialGame: GameState,
+  ): Promise<GameState> {
+    let currentBoardJson = initialGame.boardStateJson;
+    let finalGame = initialGame;
     let aiCanContinue = true;
 
     while (aiCanContinue && finalGame.status === GameStatus.IN_PROGRESS) {
       const aiMoveData = await this.aiService.getAiMove(currentBoardJson);
-      const aiMove = {
+      const aiMove: MovePayload = {
         fromPosition: aiMoveData.fromPosition,
         toPosition: aiMoveData.toPosition,
       };
+
+      this.logger.log(`Processing AI move for game: ${gameId}`);
 
       const aiResult = await this.applyMove(gameId, null, aiMove);
       finalGame = aiResult.game;
@@ -165,5 +222,48 @@ export class GameService {
     }
 
     return finalGame;
+  }
+
+  private updateBoardState(board: string[][], move: MovePayload) {
+    const newBoard = board.map((row) => [...row]);
+    const from = parsePosition(move.fromPosition);
+    const to = parsePosition(move.toPosition);
+
+    let piece = newBoard[from.y][from.x];
+    newBoard[from.y][from.x] = EMPTY_SQUARE;
+
+    const promoted = this.checkPromotion(piece, to.y);
+    if (promoted) {
+      piece = piece.toUpperCase();
+    }
+
+    newBoard[to.y][to.x] = piece;
+    const captured = this.processPotentialCapture(newBoard, from, to);
+
+    return { newBoard, captured, promoted, toX: to.x, toY: to.y };
+  }
+
+  private checkPromotion(piece: string, toY: number): boolean {
+    const isWhite = piece.toLowerCase() === WHITE_PIECE;
+    const isPawn = piece === WHITE_PIECE || piece === BLACK_PIECE;
+
+    if (!isPawn) return false;
+    return (isWhite && toY === BOARD_MAX) || (!isWhite && toY === BOARD_MIN);
+  }
+
+  private processPotentialCapture(
+    board: string[][],
+    from: { x: number; y: number },
+    to: { x: number; y: number },
+  ): boolean {
+    if (Math.abs(to.x - from.x) !== CAPTURE_STEP) {
+      return false;
+    }
+
+    const midX = from.x + (to.x - from.x) / 2;
+    const midY = from.y + (to.y - from.y) / 2;
+    board[midY][midX] = EMPTY_SQUARE;
+
+    return true;
   }
 }

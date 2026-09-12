@@ -3,7 +3,19 @@ import { useParams } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
 import { Card, CardContent } from "@/components/ui/card";
 
-const getInitialBoard = () => {
+interface BoardPosition {
+  x: number;
+  y: number;
+}
+
+interface GameStateUpdate {
+  boardStateJson: string;
+}
+
+type BoardCell = 0 | 1 | 2;
+type Board = BoardCell[][];
+
+const getInitialBoard = (): Board => {
   return Array(8)
     .fill(null)
     .map((_, y) =>
@@ -11,8 +23,8 @@ const getInitialBoard = () => {
         .fill(0)
         .map((_, x) => {
           if ((x + y) % 2 === 1) {
-            if (y < 3) return 2;
-            if (y > 4) return 1;
+            if (y < 3) return 1;
+            if (y > 4) return 2;
           }
           return 0;
         })
@@ -24,11 +36,10 @@ export function Game() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [status, setStatus] = useState("Connecting to server...");
 
-  const [board, setBoard] = useState(getInitialBoard());
-  const [selectedPiece, setSelectedPiece] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
+  const [board, setBoard] = useState<Board>(getInitialBoard());
+  const [selectedPiece, setSelectedPiece] = useState<BoardPosition | null>(
+    null
+  );
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -41,21 +52,14 @@ export function Game() {
       newSocket.emit("joinGame", { gameId: id });
     });
 
-    newSocket.on("gameStateUpdate", (data) => {
-      console.log("Received new game state:", data);
-
-      setBoard((prevBoard) => {
-        const newBoard = prevBoard.map((row) => [...row]);
-
-        if (data.botMove) {
-          const { from, to } = data.botMove;
-
-          newBoard[from.y][from.x] = 0;
-          newBoard[to.y][to.x] = 2;
-        }
-
-        return newBoard;
-      });
+    newSocket.on("gameStateUpdate", (updatedGame: GameStateUpdate) => {
+      const rawBoard: string[][] = JSON.parse(updatedGame.boardStateJson);
+      const numericBoard: Board = rawBoard.map((row: string[]) =>
+        row.map((cell: string): BoardCell =>
+          cell.toLowerCase() === "w" ? 1 : cell.toLowerCase() === "b" ? 2 : 0
+        )
+      );
+      setBoard(numericBoard);
     });
 
     newSocket.on("connect_error", (err) => {
@@ -68,35 +72,35 @@ export function Game() {
     };
   }, [id]);
 
-  const handleSquareClick = (x: number, y: number) => {
+  const handleSquareClick = (x: number, y: number): void => {
     if ((x + y) % 2 === 0) return;
 
     const piece = board[y][x];
 
     if (piece === 1) {
-      if (selectedPiece?.x === x && selectedPiece?.y === y) {
-        setSelectedPiece(null);
-      } else {
-        setSelectedPiece({ x, y });
-      }
+      setSelectedPiece(
+        selectedPiece?.x === x && selectedPiece?.y === y ? null : { x, y }
+      );
       return;
     }
 
     if (piece === 0 && selectedPiece && socket) {
+      const fromCol = String.fromCharCode(97 + selectedPiece.x);
+      const fromRow = selectedPiece.y + 1;
+      const fromPosition = `${fromCol}${fromRow}`;
+
+      const toCol = String.fromCharCode(97 + x);
+      const toRow = y + 1;
+      const toPosition = `${toCol}${toRow}`;
+
       socket.emit("sendPlayerMove", {
         gameId: id,
-        from: { x: selectedPiece.x, y: selectedPiece.y },
-        to: { x, y },
+        move: { fromPosition, toPosition },
       });
 
-      const newBoard = [...board.map((row) => [...row])];
-      newBoard[y][x] = 1;
-      newBoard[selectedPiece.y][selectedPiece.x] = 0;
-      setBoard(newBoard);
       setSelectedPiece(null);
     }
   };
-
   return (
     <div className="flex flex-col items-center mt-8 space-y-6">
       <div className="text-center">
@@ -110,8 +114,9 @@ export function Game() {
 
       <Card className="p-2 bg-neutral-300">
         <CardContent className="p-0 grid grid-cols-8 border-4 border-neutral-800">
-          {board.map((row, y) =>
-            row.map((piece, x) => {
+          {[7, 6, 5, 4, 3, 2, 1, 0].map((y) =>
+            [0, 1, 2, 3, 4, 5, 6, 7].map((x) => {
+              const piece = board[y][x];
               const isDark = (x + y) % 2 === 1;
               const isSelected =
                 selectedPiece?.x === x && selectedPiece?.y === y;
@@ -121,8 +126,7 @@ export function Game() {
                   key={`${x}-${y}`}
                   onClick={() => handleSquareClick(x, y)}
                   className={`w-10 h-10 sm:w-16 sm:h-16 flex items-center justify-center 
-                    ${isDark ? "bg-amber-900 cursor-pointer hover:brightness-110" : "bg-amber-100"}
-                  `}
+                  ${isDark ? "bg-amber-900 cursor-pointer hover:brightness-110" : "bg-amber-100"}`}
                 >
                   {piece === 1 && (
                     <div
