@@ -4,6 +4,9 @@ import torch.optim as optim
 import random
 import numpy as np
 
+import os
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+
 from CheckersEnv import CheckersEnv
 from Model import CheckersValueNet, prepare_state_for_network
 
@@ -106,8 +109,7 @@ class CheckersTrainer:
             if (episode + 1) % 500 == 0:  
                 winner_str = "White (1)" if winner == 1 else "Black (-1)"
                 print(f"Ep {episode + 1}/{self.episodes} | Epsilon: {self.epsilon:.3f} | Winner: {winner_str} | Loss: {avg_loss:.4f}")
-            if (episode + 1) % 50 == 0:
-                torch.cuda.empty_cache()
+            torch.cuda.empty_cache()
 
         torch.save(self.model.state_dict(), self.model_path)
         print(f"\nTraining complete! Model saved as '{self.model_path}'.")
