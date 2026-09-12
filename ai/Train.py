@@ -102,11 +102,13 @@ class CheckersTrainer:
             if (episode + 1) % 10000 == 0:
                 checkpoint_path = f"checkers_model_{episode + 1}ep.pth"
                 torch.save(self.model.state_dict(), checkpoint_path)
-                print(f"--> Zapisano checkpoint: {checkpoint_path}")
+                print(f"--> saved checkpoint: {checkpoint_path}")
             if (episode + 1) % 500 == 0:  
                 winner_str = "White (1)" if winner == 1 else "Black (-1)"
                 print(f"Ep {episode + 1}/{self.episodes} | Epsilon: {self.epsilon:.3f} | Winner: {winner_str} | Loss: {avg_loss:.4f}")
-                
+            if (episode + 1) % 50 == 0:
+                torch.cuda.empty_cache()
+
         torch.save(self.model.state_dict(), self.model_path)
         print(f"\nTraining complete! Model saved as '{self.model_path}'.")
 
