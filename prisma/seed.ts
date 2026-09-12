@@ -1,10 +1,6 @@
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
-import {
-  PrismaClient,
-  ScooterStatus,
-  UserRole,
-} from "../generated/prisma/client";
+import { PrismaClient } from "../generated/prisma/client";
 import * as bcrypt from "bcrypt";
 
 const connectionString = process.env.DATABASE_URL;
@@ -14,85 +10,72 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  await prisma.rental.deleteMany();
-  await prisma.scooter.deleteMany();
-  await prisma.scooterModel.deleteMany();
+  console.log("Rozpoczynam seedowanie bazy danych...");
+
+  await prisma.move.deleteMany();
+  await prisma.game.deleteMany();
   await prisma.user.deleteMany();
 
-  const defaultPassword = await bcrypt.hash("i-DO-pieca67!", 10);
+  console.log("Wyczyszczono stare dane.");
 
-  await prisma.user.create({
+  const salt = await bcrypt.genSalt(10);
+  const defaultPasswordHash = await bcrypt.hash("test1234", salt);
+
+  const user1 = await prisma.user.create({
     data: {
-      firstName: "Admin",
-      lastName: "User",
-      email: "admin@example.com",
-      phoneNumber: "+48111222333",
-      hashedPassword: defaultPassword,
-      role: UserRole.ADMIN,
+      email: "gracz@example.com",
+      username: "WarcabowyMistrz",
+      passwordHash: defaultPasswordHash,
     },
   });
 
-  const customer = await prisma.user.create({
+  const aiBot = await prisma.user.create({
     data: {
-      firstName: "John",
-      lastName: "Doe",
-      email: "customer@example.com",
-      phoneNumber: "+48999888777",
-      hashedPassword: defaultPassword,
-      role: UserRole.USER,
+      email: "ai@warcaby-system.local",
+      username: "AI_BOT_V1",
+      passwordHash: defaultPasswordHash,
     },
   });
 
-  const modelA = await prisma.scooterModel.create({
+  console.log(`Utworzono użytkowników: ${user1.username}, ${aiBot.username}`);
+
+  const initialBoard = [
+    [0, 2, 0, 2, 0, 2, 0, 2],
+    [2, 0, 2, 0, 2, 0, 2, 0],
+    [0, 2, 0, 2, 0, 2, 0, 2],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 1, 0, 1, 0, 1, 0],
+    [0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 1, 0],
+  ];
+
+  const testGame = await prisma.game.create({
     data: {
-      brand: "Ninebot",
-      modelName: "Max G30",
-      maxSpeed: 25.0,
-      range: 65.0,
+      whitePlayerId: user1.id,
+      blackPlayerId: aiBot.id,
+      status: "IN_PROGRESS",
+      boardStateJson: JSON.stringify(initialBoard),
     },
   });
 
-  const modelB = await prisma.scooterModel.create({
-    data: {
-      brand: "Xiaomi",
-      modelName: "Mi Pro 2",
-      maxSpeed: 25.0,
-      range: 45.0,
-    },
-  });
-
-  const scooter1 = await prisma.scooter.create({
-    data: {
-      serialNumber: "NB-MAX-001",
-      status: ScooterStatus.AVAILABLE,
-      modelId: modelA.id,
-    },
-  });
-
-  const scooter2 = await prisma.scooter.create({
-    data: {
-      serialNumber: "XI-PRO-001",
-      status: ScooterStatus.IN_USE,
-      modelId: modelB.id,
-    },
-  });
-
-  await prisma.rental.create({
-    data: {
-      startTime: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-      endTime: new Date(Date.now() - 1000 * 60 * 60 * 1), // 1 hour ago
-      cost: 15.5,
-      userId: customer.id,
-      scooterId: scooter1.id,
-    },
-  });
-
-  await prisma.rental.create({
-    data: {
-      startTime: new Date(),
-      userId: customer.id,
-      scooterId: scooter2.id,
-    },
+  await prisma.move.createMany({
+    data: [
+      {
+        gameId: testGame.id,
+        turnNumber: 1,
+        playerId: user1.id,
+        fromPosition: JSON.stringify({ y: 5, x: 0 }),
+        toPosition: JSON.stringify({ y: 4, x: 1 }),
+      },
+      {
+        gameId: testGame.id,
+        turnNumber: 2,
+        playerId: aiBot.id,
+        fromPosition: JSON.stringify({ y: 2, x: 1 }),
+        toPosition: JSON.stringify({ y: 3, x: 0 }),
+      },
+    ],
   });
   console.log("Seed completed");
 }
