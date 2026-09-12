@@ -9,6 +9,7 @@ import {
 } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
 import { Logger } from "@nestjs/common";
+import { GameService } from "../../game/game.service";
 
 interface PlayerMovePayload {
   gameId: string;
@@ -24,9 +25,11 @@ interface PlayerMovePayload {
 })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   private logger: Logger = new Logger(GameGateway.name);
+
+  constructor(private readonly gameService: GameService) {}
 
   handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
@@ -53,27 +56,33 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.logger.log(
       `Received move from ${client.id} for game ${payload.gameId}`,
     );
-    this.logger.log(
-      `Move details: from ${JSON.stringify(payload.from)} to ${JSON.stringify(payload.to)}`,
-    );
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const userId = (client.data?.userId as string) || client.id;
+    const fromPosition = this.toAlgebraic(payload.from);
+    const toPosition = this.toAlgebraic(payload.to);
 
-    const mockedBotMove = {
-      from: { y: 2, x: 1 },
-      to: { y: 3, x: 2 },
-    };
+    try {
+      const updatedGame = await this.gameService.playTurn(
+        payload.gameId,
+        userId,
+        { fromPosition, toPosition },
+      );
 
-    const mockGameState = {
-      gameId: payload.gameId,
-      status: "IN_PROGRESS",
-      lastMoveByPlayer: payload,
-      botMove: mockedBotMove,
-      message: "Turn processed. Bot has responded.",
-    };
+      this.server.to(payload.gameId).emit("gameStateUpdate", updatedGame);
 
-    this.server.to(payload.gameId).emit("gameStateUpdate", mockGameState);
+      return { status: "success", game: updatedGame };
+    } catch (error) {
+      this.logger.error(
+        `Failed to process move: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return {
+        status: "error",
+        message: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
 
-    return { status: "success" };
+  private toAlgebraic(pos: { x: number; y: number }): string {
+    return `${String.fromCharCode(97 + pos.x)}${pos.y + 1}`;
   }
 }
