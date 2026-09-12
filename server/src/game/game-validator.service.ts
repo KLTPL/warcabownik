@@ -30,7 +30,7 @@ export class GameValidatorService {
 
     const piece = this.getPiece(board, from.x, from.y);
     const target = this.getPiece(board, to.x, to.y);
-
+    console.log(JSON.stringify(piece), JSON.stringify(target));
     if (!piece || piece === "" || target !== "") {
       return false;
     }

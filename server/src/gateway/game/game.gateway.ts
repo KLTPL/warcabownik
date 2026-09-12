@@ -50,31 +50,36 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage("sendPlayerMove")
   async handlePlayerMove(
+    @MessageBody()
+    data: {
+      gameId: string;
+      move: { fromPosition: string; toPosition: string };
+    },
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: PlayerMovePayload,
   ) {
     this.logger.log(
       `Received move from ${client.id} for game ${payload.gameId}`,
     );
 
-    const userId = (client.data?.userId as string) || client.id;
+    const userId = client["user"]?.sub;
     const fromPosition = this.toAlgebraic(payload.from);
     const toPosition = this.toAlgebraic(payload.to);
 
     try {
       const updatedGame = await this.gameService.playTurn(
-        payload.gameId,
+        data.gameId,
         userId,
-        { fromPosition, toPosition },
+        data.move,
       );
 
-      this.server.to(payload.gameId).emit("gameStateUpdate", updatedGame);
+      this.server.to(data.gameId).emit("gameStateUpdate", updatedGame);
 
       return { status: "success", game: updatedGame };
     } catch (error) {
       this.logger.error(
         `Failed to process move: ${error instanceof Error ? error.message : String(error)}`,
       );
+      client.emit("connect_error", { message: error.message });
       return {
         status: "error",
         message: error instanceof Error ? error.message : String(error),

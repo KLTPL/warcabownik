@@ -138,6 +138,9 @@ export class GameService {
     userId: string,
     move: { fromPosition: string; toPosition: string },
   ) {
+    console.log("user move");
+
+    console.log(JSON.stringify(move));
     const playerResult = await this.applyMove(gameId, userId, move);
 
     if (
@@ -158,6 +161,7 @@ export class GameService {
         toPosition: aiMoveData.toPosition,
       };
 
+      console.log("bot move");
       const aiResult = await this.applyMove(gameId, null, aiMove);
       finalGame = aiResult.game;
       currentBoardJson = finalGame.boardStateJson;

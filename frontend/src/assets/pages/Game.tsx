@@ -74,29 +74,30 @@ export function Game() {
     const piece = board[y][x];
 
     if (piece === 1) {
-      if (selectedPiece?.x === x && selectedPiece?.y === y) {
-        setSelectedPiece(null);
-      } else {
-        setSelectedPiece({ x, y });
-      }
+      setSelectedPiece(
+        selectedPiece?.x === x && selectedPiece?.y === y ? null : { x, y }
+      );
       return;
     }
 
     if (piece === 0 && selectedPiece && socket) {
+      // Poprawna konwersja (a=97 w ASCII, rzędy odwrócone 8-y)
+      const fromCol = String.fromCharCode(97 + selectedPiece.x);
+      const fromRow = 8 - selectedPiece.y;
+      const fromPosition = `${fromCol}${fromRow}`; // np. "e3"
+
+      const toCol = String.fromCharCode(97 + x);
+      const toRow = 8 - y;
+      const toPosition = `${toCol}${toRow}`; // np. "d4"
+
       socket.emit("sendPlayerMove", {
         gameId: id,
-        from: { x: selectedPiece.x, y: selectedPiece.y },
-        to: { x, y },
+        move: { fromPosition, toPosition },
       });
 
-      const newBoard = [...board.map((row) => [...row])];
-      newBoard[y][x] = 1;
-      newBoard[selectedPiece.y][selectedPiece.x] = 0;
-      setBoard(newBoard);
       setSelectedPiece(null);
     }
   };
-
   return (
     <div className="flex flex-col items-center mt-8 space-y-6">
       <div className="text-center">
