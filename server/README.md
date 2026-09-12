@@ -8,7 +8,7 @@
 
    ```
     git clone https://github.com/KLTPL/final-project-solvro-backend-wakacyjne-wyzwanie-2026
-    cd final-project-solvro-backend-wakacyjne-wyzwanie-2026
+    cd warcabownik/server
    ```
 
 2. Create .env

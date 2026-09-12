@@ -1,6 +1,6 @@
 # Warcabownik
 
-Grupowy projekt Solvro Wakacyjne Wyzwanie 2026 ścieżki Backend
+Grupowy projekt Solvro Wakacyjne Wyzwanie 2026 ścieżki Backend i AI/ML
 
 ## 👤 Authors
 
