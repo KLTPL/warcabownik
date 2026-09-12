@@ -10,10 +10,22 @@ import {
 import { Server, Socket } from "socket.io";
 import { Logger } from "@nestjs/common";
 import { GameService } from "../../game/game.service";
+import {
+  MovePayload,
+  SocketEvents,
+  SocketStatus,
+  CORS_ORIGIN,
+} from "../../game/game.constants";
+
+interface AuthenticatedSocket extends Socket {
+  user?: {
+    sub: string;
+  };
+}
 
 @WebSocketGateway({
   cors: {
-    origin: "http://localhost:5173",
+    origin: CORS_ORIGIN,
   },
   namespace: "/game",
 })
@@ -21,7 +33,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;
 
-  private logger: Logger = new Logger(GameGateway.name);
+  private readonly logger = new Logger(GameGateway.name);
 
   constructor(private readonly gameService: GameService) {}
 
@@ -33,7 +45,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.logger.log(`Client disconnected: ${client.id}`);
   }
 
-  @SubscribeMessage("joinGame")
+  @SubscribeMessage(SocketEvents.JOIN_GAME)
   async handleJoinGame(
     @ConnectedSocket() client: Socket,
     @MessageBody() payload: { gameId: string },
@@ -42,18 +54,15 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.logger.log(`Client ${client.id} joined room: ${payload.gameId}`);
   }
 
-  @SubscribeMessage("sendPlayerMove")
+  @SubscribeMessage(SocketEvents.SEND_PLAYER_MOVE)
   async handlePlayerMove(
-    @MessageBody()
-    data: {
-      gameId: string;
-      move: { fromPosition: string; toPosition: string };
-    },
+    @MessageBody() data: { gameId: string; move: MovePayload },
     @ConnectedSocket() client: Socket,
   ) {
     this.logger.log(`Received move from ${client.id} for game ${data.gameId}`);
 
-    const userId = client["user"]?.sub;
+    const authClient = client as AuthenticatedSocket;
+    const userId = authClient.user?.sub ?? "";
 
     try {
       const updatedGame = await this.gameService.playTurn(
@@ -62,16 +71,20 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         data.move,
       );
 
-      this.server.to(data.gameId).emit("gameStateUpdate", updatedGame);
+      this.server
+        .to(data.gameId)
+        .emit(SocketEvents.GAME_STATE_UPDATE, updatedGame);
 
-      return { status: "success", game: updatedGame };
+      return { status: SocketStatus.SUCCESS, game: updatedGame };
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(`Failed to process move: ${errorMessage}`);
-      client.emit("moveError", { message: errorMessage });
+
+      client.emit(SocketEvents.MOVE_ERROR, { message: errorMessage });
+
       return {
-        status: "error",
+        status: SocketStatus.ERROR,
         message: errorMessage,
       };
     }
