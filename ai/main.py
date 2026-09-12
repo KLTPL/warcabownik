@@ -19,18 +19,19 @@ class MoveResponse(BaseModel):
 
 def find_possible_moves(board: List[List[int]], player_id: int) -> List[dict]:
     moves = []
+    captures = []
 
-    # direction: 2 (black) moves down (+1), 1 (white) moves up (-1)
-    direction = 1 if player_id == 2 else -1
+    direction = -1 if player_id == 2 else 1
+    opponent_id = 1 if player_id == 2 else 2
 
     for y in range(8):
         for x in range(8):
             if board[y][x] == player_id:
                 new_y = y + direction
 
-                # Check diagonal moves (left and right)
-                for new_x in [x - 1, x + 1]:
-                    # Ensure move is within board limits and target is empty
+                for dx in [-1, 1]:
+                    new_x = x + dx
+
                     if 0 <= new_x < 8 and 0 <= new_y < 8:
                         if board[new_y][new_x] == 0:
                             moves.append(
@@ -39,7 +40,20 @@ def find_possible_moves(board: List[List[int]], player_id: int) -> List[dict]:
                                     "toPosition": {"y": new_y, "x": new_x},
                                 }
                             )
-    return moves
+                        elif board[new_y][new_x] == opponent_id:
+                            jump_y = new_y + direction
+                            jump_x = new_x + dx
+
+                            if 0 <= jump_x < 8 and 0 <= jump_y < 8:
+                                if board[jump_y][jump_x] == 0:
+                                    captures.append(
+                                        {
+                                            "fromPosition": {"y": y, "x": x},
+                                            "toPosition": {"y": jump_y, "x": jump_x},
+                                        }
+                                    )
+
+    return captures if len(captures) > 0 else moves
 
 
 @app.post("/predict-move", response_model=MoveResponse)

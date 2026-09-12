@@ -69,7 +69,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(`Failed to process move: ${errorMessage}`);
-      client.emit("connect_error", { message: errorMessage });
+      client.emit("moveError", { message: errorMessage });
       return {
         status: "error",
         message: errorMessage,

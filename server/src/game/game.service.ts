@@ -19,20 +19,15 @@ export class GameService {
 
     for (let y = 0; y < 3; y++) {
       for (let x = 0; x < 8; x++) {
-        if ((x + y) % 2 === 1) {
-          board[y][x] = "w";
-        }
+        if ((x + y) % 2 === 1) board[y][x] = "w";
       }
     }
 
     for (let y = 5; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
-        if ((x + y) % 2 === 1) {
-          board[y][x] = "b";
-        }
+        if ((x + y) % 2 === 1) board[y][x] = "b";
       }
     }
-
     return board;
   }
 
@@ -162,6 +157,7 @@ export class GameService {
       };
 
       console.log("bot move");
+      console.log(JSON.stringify(aiMove));
       const aiResult = await this.applyMove(gameId, null, aiMove);
       finalGame = aiResult.game;
       currentBoardJson = finalGame.boardStateJson;
