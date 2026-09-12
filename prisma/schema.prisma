@@ -13,71 +13,58 @@ datasource db {
   provider = "postgresql"
 }
 
-enum UserRole {
-  USER
-  ADMIN
-}
-
-enum ScooterStatus {
-  AVAILABLE
-  IN_USE
-  MAINTENANCE
-  DECOMMISSIONED
-}
-
 model User {
-  id             String   @id @default(uuid())
-  firstName      String
-  lastName       String
-  phoneNumber    String   @unique
-  email          String   @unique
-  hashedPassword String
-  role           UserRole @default(USER)
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  username     String   @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  rentals Rental[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  gamesAsWhite Game[] @relation("WhitePlayer")
+  gamesAsBlack Game[] @relation("BlackPlayer")
 }
 
-model ScooterModel {
-  id        String @id @default(uuid())
-  brand     String
-  modelName String
-  maxSpeed  Float
-  range     Float
-
-  scooters Scooter[]
-
+model Game {
+  id        String   @id @default(uuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  whitePlayerId String?
+  whitePlayer   User?   @relation("WhitePlayer", fields: [whitePlayerId], references: [id])
+
+  blackPlayerId String?
+  blackPlayer   User?   @relation("BlackPlayer", fields: [blackPlayerId], references: [id])
+
+  status GameStatus @default(IN_PROGRESS)
+
+  winnerId String?
+
+  boardStateJson String @default("[]")
+
+  moves Move[]
 }
 
-model Scooter {
-  id           String        @id @default(uuid())
-  serialNumber String        @unique
-  status       ScooterStatus @default(AVAILABLE)
+model Move {
+  id     String @id @default(uuid())
+  gameId String
+  game   Game   @relation(fields: [gameId], references: [id])
 
-  modelId String
-  model   ScooterModel @relation(fields: [modelId], references: [id])
-  rentals Rental[]
+  turnNumber Int
+
+  fromPosition String
+  toPosition   String
+
+  playerId String?
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  @@unique([gameId, turnNumber])
 }
 
-model Rental {
-  id        String    @id @default(uuid())
-  startTime DateTime  @default(now())
-  endTime   DateTime?
-  cost      Decimal?  @db.Decimal(10, 2)
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
-
-  scooterId String
-  scooter   Scooter @relation(fields: [scooterId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum GameStatus {
+  IN_PROGRESS
+  FINISHED
+  DRAW
+  ABANDONED
 }
