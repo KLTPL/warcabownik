@@ -1,10 +1,10 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/context/AuthContext";
 
 export function Home() {
-  const [isLoggedIn] = useState(false);
+  const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
   if (!isLoggedIn) {
