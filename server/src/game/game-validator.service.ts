@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from "@nestjs/common";
 
 @Injectable()
 export class GameValidatorService {
@@ -31,11 +31,11 @@ export class GameValidatorService {
     const piece = this.getPiece(board, from.x, from.y);
     const target = this.getPiece(board, to.x, to.y);
 
-    if (!piece || piece === '' || target !== '') {
+    if (!piece || piece === "" || target !== "") {
       return false;
     }
 
-    const isPieceWhite = piece.toLowerCase() === 'w';
+    const isPieceWhite = piece.toLowerCase() === "w";
     if (isWhiteTurn !== isPieceWhite) {
       return false;
     }
@@ -49,7 +49,7 @@ export class GameValidatorService {
       return false;
     }
 
-    const isKing = piece === 'W' || piece === 'B';
+    const isKing = piece === "W" || piece === "B";
 
     if (!isKing) {
       if (isPieceWhite && dy <= 0) return false;
@@ -69,11 +69,11 @@ export class GameValidatorService {
       const midY = from.y + dy / 2;
       const midPiece = this.getPiece(board, midX, midY);
 
-      if (!midPiece || midPiece === '') {
+      if (!midPiece || midPiece === "") {
         return false;
       }
 
-      const isMidWhite = midPiece.toLowerCase() === 'w';
+      const isMidWhite = midPiece.toLowerCase() === "w";
       if (isPieceWhite === isMidWhite) {
         return false;
       }
@@ -87,18 +87,24 @@ export class GameValidatorService {
   updateBoardState(
     board: string[][],
     move: { fromPosition: string; toPosition: string },
-  ): { newBoard: string[][]; captured: boolean; promoted: boolean; toX: number; toY: number } {
-    const newBoard = board.map(row => [...row]);
+  ): {
+    newBoard: string[][];
+    captured: boolean;
+    promoted: boolean;
+    toX: number;
+    toY: number;
+  } {
+    const newBoard = board.map((row) => [...row]);
 
     const from = this.parsePosition(move.fromPosition);
     const to = this.parsePosition(move.toPosition);
 
     let piece = newBoard[from.y][from.x];
-    newBoard[from.y][from.x] = '';
+    newBoard[from.y][from.x] = "";
 
     let promoted = false;
-    const isWhite = piece.toLowerCase() === 'w';
-    if (piece === 'w' || piece === 'b') {
+    const isWhite = piece.toLowerCase() === "w";
+    if (piece === "w" || piece === "b") {
       if ((isWhite && to.y === 7) || (!isWhite && to.y === 0)) {
         piece = piece.toUpperCase();
         promoted = true;
@@ -111,7 +117,7 @@ export class GameValidatorService {
     if (Math.abs(to.x - from.x) === 2) {
       const midX = from.x + (to.x - from.x) / 2;
       const midY = from.y + (to.y - from.y) / 2;
-      newBoard[midY][midX] = '';
+      newBoard[midY][midX] = "";
       captured = true;
     }
 
@@ -120,10 +126,10 @@ export class GameValidatorService {
 
   hasAdditionalCaptures(board: string[][], x: number, y: number): boolean {
     const piece = this.getPiece(board, x, y);
-    if (!piece || piece === '') return false;
+    if (!piece || piece === "") return false;
 
-    const isWhite = piece.toLowerCase() === 'w';
-    const isKing = piece === 'W' || piece === 'B';
+    const isWhite = piece.toLowerCase() === "w";
+    const isKing = piece === "W" || piece === "B";
     const directions = [
       { dx: -2, dy: -2 },
       { dx: 2, dy: -2 },
@@ -141,12 +147,12 @@ export class GameValidatorService {
       const toY = y + dir.dy;
       const target = this.getPiece(board, toX, toY);
 
-      if (target === '') {
+      if (target === "") {
         const midX = x + dir.dx / 2;
         const midY = y + dir.dy / 2;
         const midPiece = this.getPiece(board, midX, midY);
-        if (midPiece && midPiece !== '') {
-          const isMidWhite = midPiece.toLowerCase() === 'w';
+        if (midPiece && midPiece !== "") {
+          const isMidWhite = midPiece.toLowerCase() === "w";
           if (isWhite !== isMidWhite) {
             return true;
           }
@@ -161,7 +167,7 @@ export class GameValidatorService {
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         const piece = board[y][x];
-        if (piece && (piece.toLowerCase() === 'w') === isWhiteTurn) {
+        if (piece && (piece.toLowerCase() === "w") === isWhiteTurn) {
           if (this.hasAdditionalCaptures(board, x, y)) {
             return true;
           }
@@ -175,10 +181,10 @@ export class GameValidatorService {
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         const piece = board[y][x];
-        if (piece && (piece.toLowerCase() === 'w') === isWhiteTurn) {
+        if (piece && (piece.toLowerCase() === "w") === isWhiteTurn) {
           if (this.hasAdditionalCaptures(board, x, y)) return true;
 
-          const isKing = piece === 'W' || piece === 'B';
+          const isKing = piece === "W" || piece === "B";
           const directions = [
             { dx: -1, dy: -1 },
             { dx: 1, dy: -1 },
@@ -193,7 +199,7 @@ export class GameValidatorService {
             }
             const toX = x + dir.dx;
             const toY = y + dir.dy;
-            if (this.getPiece(board, toX, toY) === '') {
+            if (this.getPiece(board, toX, toY) === "") {
               return true;
             }
           }

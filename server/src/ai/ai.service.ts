@@ -1,23 +1,25 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import axios from 'axios';
+import { Injectable, InternalServerErrorException } from "@nestjs/common";
+import axios from "axios";
 
 @Injectable()
 export class AiService {
-  async getAiMove(boardStateJson: string): Promise<{ fromPosition: string; toPosition: string }> {
+  async getAiMove(
+    boardStateJson: string,
+  ): Promise<{ fromPosition: string; toPosition: string }> {
     const rawBoard: string[][] = JSON.parse(boardStateJson);
 
     const numericBoard: number[][] = rawBoard.map((row) =>
       row.map((cell) => {
         if (!cell) return 0;
         const lower = cell.toLowerCase();
-        if (lower === 'w') return 1;
-        if (lower === 'b') return 2;
+        if (lower === "w") return 1;
+        if (lower === "b") return 2;
         return 0;
       }),
     );
 
     try {
-      const response = await axios.post('http://localhost:8000/predict-move', {
+      const response = await axios.post("http://localhost:8000/predict-move", {
         board: numericBoard,
         player_id: 2,
       });
@@ -29,7 +31,7 @@ export class AiService {
         toPosition: this.toAlgebraic(toPosition.x, toPosition.y),
       };
     } catch (error) {
-      throw new InternalServerErrorException('FailedToFetchAiMove');
+      throw new InternalServerErrorException("FailedToFetchAiMove");
     }
   }
 

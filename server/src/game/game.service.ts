@@ -1,8 +1,8 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { AiService } from '../ai/ai.service';
-import { GameValidatorService } from './game-validator.service';
-import { GameStatus } from '../../generated/prisma/enums';
+import { Injectable, BadRequestException } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { AiService } from "../ai/ai.service";
+import { GameValidatorService } from "./game-validator.service";
+import { GameStatus } from "../../generated/prisma/enums";
 
 @Injectable()
 export class GameService {
@@ -15,12 +15,12 @@ export class GameService {
   getInitialBoard(): string[][] {
     const board: string[][] = Array(8)
       .fill(null)
-      .map(() => Array(8).fill(''));
+      .map(() => Array(8).fill(""));
 
     for (let y = 0; y < 3; y++) {
       for (let x = 0; x < 8; x++) {
         if ((x + y) % 2 === 1) {
-          board[y][x] = 'w';
+          board[y][x] = "w";
         }
       }
     }
@@ -28,7 +28,7 @@ export class GameService {
     for (let y = 5; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         if ((x + y) % 2 === 1) {
-          board[y][x] = 'b';
+          board[y][x] = "b";
         }
       }
     }
@@ -48,50 +48,69 @@ export class GameService {
     });
   }
 
-  async applyMove(gameId: string, playerId: string | null, move: { fromPosition: string; toPosition: string }) {
+  async applyMove(
+    gameId: string,
+    playerId: string | null,
+    move: { fromPosition: string; toPosition: string },
+  ) {
     const game = await this.prisma.game.findUnique({
       where: { id: gameId },
       include: { moves: true },
     });
 
     if (!game) {
-      throw new BadRequestException('GameNotFound');
+      throw new BadRequestException("GameNotFound");
     }
 
     if (game.status !== GameStatus.IN_PROGRESS) {
-      throw new BadRequestException('GameAlreadyFinished');
+      throw new BadRequestException("GameAlreadyFinished");
     }
 
     const currentTurnNumber = game.moves.length + 1;
     const isWhiteTurn = currentTurnNumber % 2 !== 0;
 
     if (playerId !== null) {
-      const expectedPlayerId = isWhiteTurn ? game.whitePlayerId : game.blackPlayerId;
+      const expectedPlayerId = isWhiteTurn
+        ? game.whitePlayerId
+        : game.blackPlayerId;
       if (expectedPlayerId && playerId !== expectedPlayerId) {
-        throw new BadRequestException('NotYourTurn');
+        throw new BadRequestException("NotYourTurn");
       }
     }
 
     const boardState: string[][] = JSON.parse(game.boardStateJson);
 
-    const isValid = this.gameValidator.validateMove(boardState, move, isWhiteTurn);
+    const isValid = this.gameValidator.validateMove(
+      boardState,
+      move,
+      isWhiteTurn,
+    );
     if (!isValid) {
-      throw new BadRequestException('InvalidMove');
+      throw new BadRequestException("InvalidMove");
     }
 
-    const { newBoard, captured, promoted, toX, toY } = this.gameValidator.updateBoardState(boardState, move);
+    const { newBoard, captured, promoted, toX, toY } =
+      this.gameValidator.updateBoardState(boardState, move);
 
-    const canContinueCapture = captured && !promoted && this.gameValidator.hasAdditionalCaptures(newBoard, toX, toY);
+    const canContinueCapture =
+      captured &&
+      !promoted &&
+      this.gameValidator.hasAdditionalCaptures(newBoard, toX, toY);
 
     let status: GameStatus = game.status;
     let winnerId: string | null = game.winnerId;
 
     const nextTurnIsWhite = canContinueCapture ? isWhiteTurn : !isWhiteTurn;
-    const opponentHasMoves = this.gameValidator.hasAnyLegalMoves(newBoard, nextTurnIsWhite);
+    const opponentHasMoves = this.gameValidator.hasAnyLegalMoves(
+      newBoard,
+      nextTurnIsWhite,
+    );
 
     if (!opponentHasMoves) {
       status = GameStatus.FINISHED;
-      winnerId = isWhiteTurn ? (game.whitePlayerId || 'WHITE') : (game.blackPlayerId || 'BLACK');
+      winnerId = isWhiteTurn
+        ? game.whitePlayerId || "WHITE"
+        : game.blackPlayerId || "BLACK";
     }
 
     const updatedGame = await this.prisma.game.update({
@@ -114,10 +133,17 @@ export class GameService {
     return { game: updatedGame, canContinueCapture };
   }
 
-  async playTurn(gameId: string, userId: string, move: { fromPosition: string; toPosition: string }) {
+  async playTurn(
+    gameId: string,
+    userId: string,
+    move: { fromPosition: string; toPosition: string },
+  ) {
     const playerResult = await this.applyMove(gameId, userId, move);
 
-    if (playerResult.canContinueCapture || playerResult.game.status === GameStatus.FINISHED) {
+    if (
+      playerResult.canContinueCapture ||
+      playerResult.game.status === GameStatus.FINISHED
+    ) {
       return playerResult.game;
     }
 
