@@ -14,8 +14,8 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
-    .setTitle("Wakacyjne wyzwanie API")
-    .setDescription("Documentation for expense, trip and participant:")
+    .setTitle("Warcabownik")
+    .setDescription("Checkers model with database and API for managing games")
     .setVersion("1.0")
     .addTag("API")
     .addBearerAuth()
