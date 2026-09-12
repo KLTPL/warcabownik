@@ -41,9 +41,11 @@ export class AuthService {
       sub: user.id,
       email: user.email,
     };
-    return this.jwtService.sign(payload, {
-      expiresIn: parseInt(process.env.EXPIRY_TIME_MS as string) / 1000, // Takes in seconds
-      secret: process.env.JWT_SECRET as string,
-    });
+    return {
+      access_token: this.jwtService.sign(payload, {
+        expiresIn: parseInt(process.env.EXPIRY_TIME_MS as string) / 1000,
+        secret: process.env.JWT_SECRET as string,
+      }),
+    };
   }
 }
