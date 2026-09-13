@@ -8,28 +8,46 @@ Grupowy projekt Solvro Wakacyjne Wyzwanie 2026 ścieżki Backend i AI/ML
 - [Dawid Wartalski](https://github.com/dwartalski)
 - [Szymon Banasiak](https://github.com/FaziSPB)
 
-## Project structure
+## 🛠️ Tech Stack
 
-```
+- **Frontend:** React, TypeScript, Vite, Tailwind CSS, Socket.io-client.
+- **Backend:** NestJS, TypeScript, Socket.io, Prisma (PostgreSQL).
+- **AI Engine:** Python, FastAPI, PyTorch (Machine Learning model for bot logic).
+
+## 🗂️ Project Structure
+
+For more detailed information head on to other README.md files in the three main directories.
+
+```text
 warcabownik/
-├── frontend/
+├── frontend/                 # React (Vite) client
 │   ├── src/
-│   ├── README.md
-│   └── ...
+│   │   ├── assets/pages/     # Auth.tsx, Game.tsx, Home.tsx
+│   │   ├── components/       # UI components (Shadcn)
+│   │   ├── context/          # React Context (Auth)
+│   │   └── lib/
+│   ├── package.json
+│   └── vite.config.ts
 │
-├── server/
+├── server/                   # NestJS backend
+│   ├── prisma/               # Database schema
 │   ├── src/
-│   ├── README.md
-│   └── nest-cli.json
+│   │   ├── ai/               # AI microservice integration
+│   │   ├── auth/             # JWT Authentication
+│   │   ├── game/             # Game logic & validation (GameValidatorService)
+│   │   └── gateway/          # WebSocket endpoints (GameGateway)
+│   ├── docker-compose.yaml   # Local DB/Infrastructure setup
+│   └── package.json
 │
-├── ai/
-│   ├── model.pth
-│   ├── main.py
-│   ├── README.md
-│   ├── train.ipynb
+├── ai/                       # Python AI Microservice
+│   ├── CheckersEnv.py        # RL Environment (Model branch)
+│   ├── Model.py              # Neural Network architecture (Model branch)
+│   ├── Train.py              # Training script (Model branch)
+│   ├── checkers_model.pth    # Trained PyTorch weights (Model branch)
+│   ├── main.py               # FastAPI communication endpoint
 │   └── requirements.txt
 │
-├── .gitignore
+├── pnpm-workspace.yaml       # Monorepo configuration
 └── README.md
 ```
 
