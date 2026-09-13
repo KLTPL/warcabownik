@@ -1,0 +1,54 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    container_name: checkers_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  ai:
+    build: ./ai
+    container_name: checkers_ai
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./ai:/app
+
+  server:
+    build: ./server
+    container_name: checkers_server
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      - JWT_SECRET=${JWT_SECRET}
+      - EXPIRY_TIME_MS=${EXPIRY_TIME_MS}
+      - AI_URL=http://ai:5000
+    depends_on:
+      - postgres
+      - ai
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+
+  frontend:
+    build: ./frontend
+    container_name: checkers_frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - server
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
