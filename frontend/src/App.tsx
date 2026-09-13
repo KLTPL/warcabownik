@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { Layout } from "./components/Layout";
-import { Home } from "./assets/pages/Home";
-import { Auth } from "./assets/pages/Auth";
-import { Game } from "./assets/pages/Game";
-import { GameHistory } from "./assets/pages/GameHistory";
+import { Home } from "./pages/Home";
+import { Auth } from "./pages/Auth";
+import { Game } from "./pages/Game";
+import { GameHistory } from "./pages/GameHistory";
 
 export default function App() {
   return (
