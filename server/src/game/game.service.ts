@@ -306,4 +306,22 @@ export class GameService {
 
     return true;
   }
+
+  async getUserHistory(userId: string, page: number = 1, limit: number = 5) {
+    const skip = (page - 1) * limit;
+
+    const [games, total] = await Promise.all([
+      this.prisma.game.findMany({
+        where: { OR: [{ whitePlayerId: userId }, { blackPlayerId: userId }] },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      this.prisma.game.count({
+        where: { OR: [{ whitePlayerId: userId }, { blackPlayerId: userId }] },
+      }),
+    ]);
+
+    return { games, total, page, totalPages: Math.ceil(total / limit) };
+  }
 }

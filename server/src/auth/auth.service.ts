@@ -5,7 +5,7 @@ import { UserService } from "src/user/user.service";
 import { UserEntity } from "src/user/entities/user.entity";
 import { LoginDto } from "./dto/login.dto";
 import { JwtService } from "@nestjs/jwt";
-import { JwtPayload } from "./strategies/jwt.strategy";
+import { JwtPayload } from "./auth.types";
 
 @Injectable()
 export class AuthService {
@@ -37,7 +37,7 @@ export class AuthService {
       throw new UnauthorizedException(ERR_MESSAGE);
     }
 
-    const payload: JwtPayload = {
+    const payload: Omit<JwtPayload, "exp" | "iat"> = {
       sub: user.id,
       email: user.email,
     };

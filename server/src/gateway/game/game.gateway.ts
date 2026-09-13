@@ -8,7 +8,7 @@ import {
   ConnectedSocket,
 } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
-import { Logger } from "@nestjs/common";
+import { Logger, UseGuards } from "@nestjs/common";
 import { GameService } from "../../game/game.service";
 import {
   MovePayload,
@@ -16,6 +16,7 @@ import {
   SocketStatus,
   CORS_ORIGIN,
 } from "../../game/game.constants";
+import { WsJwtGuard } from "src/auth/guards/ws-jwt-auth.guard";
 
 interface AuthenticatedSocket extends Socket {
   user?: {
@@ -54,6 +55,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.logger.log(`Client ${client.id} joined room: ${payload.gameId}`);
   }
 
+  @UseGuards(WsJwtGuard)
   @SubscribeMessage(SocketEvents.SEND_PLAYER_MOVE)
   async handlePlayerMove(
     @MessageBody() data: { gameId: string; move: MovePayload },
