@@ -55,6 +55,8 @@ warcabownik/
 
 This project uses Docker Compose to run the entire stack (React, NestJS, Python AI, and PostgreSQL) locally with hot-reloading enabled.
 
+> **Note:** You can run the project without using docker. Follow the instructions in `/server/README.md`, `/frontend/README.md` and `/ai/README.md`
+
 ### 1. Initial Setup
 
 Create a global `.env` file in the root directory based on your configuration. Minimal example:
