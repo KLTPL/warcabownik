@@ -19,13 +19,11 @@ export class AiService {
     );
 
     try {
-      const response = await axios.post("http://localhost:8000/predict-move", {
+      const response = await axios.post(`${process.env.AI_URL}/predict-move`, {
         board: numericBoard,
         player_id: 2,
       });
-
       const { fromPosition, toPosition } = response.data;
-
       return {
         fromPosition: this.toAlgebraic(fromPosition.x, fromPosition.y),
         toPosition: this.toAlgebraic(toPosition.x, toPosition.y),
