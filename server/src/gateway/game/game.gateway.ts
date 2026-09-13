@@ -53,6 +53,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     await client.join(payload.gameId);
     this.logger.log(`Client ${client.id} joined room: ${payload.gameId}`);
+    try {
+      const game = await this.gameService.getGameById(payload.gameId);
+      client.emit(SocketEvents.GAME_STATE_UPDATE, game);
+    } catch (error) {
+      this.logger.error(
+        `Failed to fetch game state for room: ${payload.gameId}`,
+      );
+    }
   }
 
   @UseGuards(WsJwtGuard)

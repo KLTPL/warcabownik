@@ -324,4 +324,16 @@ export class GameService {
 
     return { games, total, page, totalPages: Math.ceil(total / limit) };
   }
+
+  public async getGameById(gameId: string) {
+    const game = await this.prisma.game.findUnique({
+      where: { id: gameId },
+    });
+
+    if (!game) {
+      throw new BadRequestException("GameNotFound");
+    }
+
+    return game;
+  }
 }
