@@ -85,7 +85,12 @@ export class GameService {
       return playerResult.game;
     }
 
+    try {
     return await this.processAiTurns(gameId, playerResult.game);
+  } catch (error) {
+    this.logger.error(`AI failed to respond. Keeping board state after player move.`);
+    return playerResult.game; 
+  }
   }
 
   async applyMove(gameId: string, playerId: string | null, move: MovePayload) {
@@ -99,6 +104,7 @@ export class GameService {
     const parsedJson: unknown = JSON.parse(game.boardStateJson);
     const boardState = parsedJson as string[][];
 
+    this.logger.debug(`Validating move: ${move.fromPosition} -> ${move.toPosition} | isWhiteTurn: ${isWhiteTurn}`);
     if (!this.gameValidator.validateMove(boardState, move, isWhiteTurn)) {
       throw new BadRequestException("InvalidMove");
     }
