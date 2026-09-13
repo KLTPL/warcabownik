@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { GameHistoryList } from "@/components/GameHistoryList";
 
 export function GameHistory() {
   const [games, setGames] = useState([]);
@@ -28,13 +29,7 @@ export function GameHistory() {
   return (
     <div className="max-w-2xl mx-auto mt-10 space-y-4">
       <h2 className="text-2xl font-bold">Match History</h2>
-      <div className="space-y-2">
-        {games.map((game) => (
-          <div key={game.id} className="p-4 border rounded-md">
-            Game ID: {game.id} - Status: {game.status}
-          </div>
-        ))}
-      </div>
+      <div className="space-y-2">{<GameHistoryList games={games} />}</div>
       {hasMore && (
         <Button onClick={() => setPage((p) => p + 1)} className="w-full">
           Load More

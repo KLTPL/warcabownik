@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
+import { GameHistoryList } from "@/components/GameHistoryList";
 
 export function Home() {
   const { isLoggedIn } = useAuth();
@@ -78,11 +79,7 @@ export function Home() {
           <CardTitle>Recent Games</CardTitle>
         </CardHeader>
         <CardContent>
-          {recentGames.map((game) => (
-            <div key={game.id} className="py-2 border-b last:border-0">
-              Game: {game.id.slice(0, 8)}...
-            </div>
-          ))}
+          <GameHistoryList games={recentGames} />
           <Button
             variant="outline"
             className="w-full mt-4"
