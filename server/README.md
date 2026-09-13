@@ -4,14 +4,7 @@
 
 ### Running localy
 
-1. Clone the repository
-
-   ```
-    git clone https://github.com/KLTPL/final-project-solvro-backend-wakacyjne-wyzwanie-2026
-    cd warcabownik/server
-   ```
-
-2. Create .env
+1. Create .env
 
    ```
    # For prisma
@@ -28,25 +21,25 @@
    EXPIRY_TIME_MS=
    ```
 
-3. Turn on docker database
+2. Turn on docker database
 
    ```
    sudo docker-compose up -d
    ```
 
-4. Download packages
+3. Download packages
 
    ```
    pnpm install
    ```
 
-5. Generate prisma
+4. Generate prisma
 
    ```
    pnpm prisma generate
    ```
 
-6. Run the dev command
+5. Run the dev command
 
    ```
    pnpm dev:start
