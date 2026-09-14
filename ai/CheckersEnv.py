@@ -30,11 +30,26 @@ class CheckersEnv:
 
     def get_player(self):
         return self.player
+    def set_player(self, new_player):
+        if new_player in (-1, 1):
+            self.player = new_player
+        else:
+            raise ValueError("Player value should be 1 or -1")
+        
+    def rotate_board(self):
+        self.board = self.board[::-1, ::-1].copy() * -1
+
+    def get_board(self):
+        return self.board
     
     def next_move(self, new_board):
         self.board = new_board
-        self.board = self.board[::-1, ::-1].copy() * -1
+        self.rotate_board
         self.player *= -1
+
+    def load_board(self, new_board):
+        self.board = new_board
+
 
     def get_next_states(self):
         possible_board_layouts = self._get_capture_states()

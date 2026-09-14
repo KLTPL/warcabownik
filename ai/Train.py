@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import random
 import numpy as np
-
+import torch
 
 MAX_GAME_LEN = 150
 TIE =0.0

@@ -1,56 +1,136 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
-import torch
+import random
 import numpy as np
+import torch
+
+API_EMPTY = 0
+API_WHITE_MAN = 1
+API_BLACK_MAN = 2
+API_WHITE_KING = 3
+API_BLACK_KING = 4
+
+ENV_EMPTY = 0
+ENV_WHITE_MAN = 1
+ENV_BLACK_MAN = -1
+ENV_WHITE_KING = 2
+ENV_BLACK_KING = -2
+
+BOARD_SIZE = 8
+
+WHITE_PLAYER = 1
+BLACK_PLAYER = -1
+
+CHECKERS_MODEL_WEIGHTS_PATH = "checkers_model.pth"
+
 from CheckersEnv import CheckersEnv
 from Model import CheckersValueNet, prepare_layout_for_network
 
-app = FastAPI()
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_aviable() else "cpu")
 model = CheckersValueNet().to(device)
-model.load_state_dict(torch.load("checkers_model.pth", map_location=device))
-model.eval()
 
-env = CheckersEnv()
+try:
+    model.load_state_dict(torch.load(CHECKERS_MODEL_WEIGHTS_PATH, map_location=device, weights_only=True))
+    print(f"Succesfully loaded model into :{device}")
+except FileNotFoundError:
+    print(f"WARNING: file {CHECKERS_MODEL_WEIGHTS_PATH} not found")
+
+app = FastAPI(title="Checkers AI Mock")
+
 
 class BoardRequest(BaseModel):
-    board: list
-    player: int
+    board: list[list[int]]
+    player_id: int 
 
-def diff_boards(current, next_state):
-    """Derives fromPosition and toPosition by comparing board matrices."""
-    from_pos, to_pos = None, None
-    for r in range(8):
-        for c in range(8):
-            if current[r][c] != 0 and next_state[r][c] == 0:
-                from_pos = f"{r},{c}"
-            elif current[r][c] == 0 and next_state[r][c] != 0:
-                to_pos = f"{r},{c}"
-    return from_pos, to_pos
 
-@app.post("/get-best-move")
-def get_best_move(data: BoardRequest):
-    board = np.array(data.board, dtype=np.int8)
-    player = data.player
-    
-    possible_futures = env.get_next_states(board, player)
-    if not possible_futures:
-        return {"error": "No legal moves available"}
-        
-    canonical_states = [
-        f if player == 1 else f[::-1, ::-1] * -1 
-        for f in possible_futures
-    ]
-    tensor_list = [prepare_layout_for_network(c) for c in canonical_states]
-    batch_tensor = torch.stack(tensor_list).to(device)
-    
+class MoveResponse(BaseModel):
+    fromPosition: dict[str, int]
+    toPosition: dict[str, int]
+
+
+
+def translate_board_to_env(board_request, player):
+    translate_dict={
+        API_EMPTY: ENV_EMPTY, 
+        API_WHITE_MAN: ENV_WHITE_MAN,
+        API_BLACK_MAN: ENV_BLACK_MAN,
+        API_WHITE_KING: ENV_WHITE_KING,
+        API_BLACK_KING: ENV_BLACK_KING
+    }
+
+    env_board = np.full((BOARD_SIZE,BOARD_SIZE),0)
+    for row in range(BOARD_SIZE):
+        for col in range(BOARD_SIZE):
+            env_board[row,col] = translate_dict[board_request[row][col]]
+
+    env = CheckersEnv()
+    env.load_board(env_board)
+    env.set_player(1)
+
+    if player == BLACK_PLAYER:
+        env.rotate_board()
+    return env
+
+def select_move(env: CheckersEnv):
+    possible_layouts = env.get_next_states()
+
+    if not possible_layouts:
+        return None
+
+    if len(possible_layouts)==1:
+        return possible_layouts[1]
+
+    tensor_layout_list=[prepare_layout_for_network(layout) for layout in possible_layouts]
+    batch_tensor = torch.stack(tensor_layout_list).to(device)
+
     with torch.no_grad():
-        values = model(batch_tensor)
-        best_idx = torch.argmax(values).item()
-        
-    best_state = possible_futures[best_idx]
-    from_pos, to_pos = diff_boards(board, best_state)
+        predictions = model(batch_tensor)
+        best_idx = torch.argmax(predictions).item()
+
+    return possible_layouts[best_idx]
     
+def translate_layout_to_response(old_layout, next_layout, player):
+
+    if player == BLACK_PLAYER:
+        next_layout = next_layout[::-1, ::-1].copy() * -1 #rotating board back to input state 
+        old_layout = old_layout[::-1, ::-1].copy() * -1
+
+    first_cord = None
+    second_cord = None
+    for row in range(BOARD_SIZE):
+        for col in range(BOARD_SIZE):
+            if old_layout[row,col]*player > ENV_EMPTY and next_layout[row,col]==ENV_EMPTY:
+                first_cord = row, col
+            if next_layout[row,col]*player > ENV_EMPTY and old_layout[row,col]==ENV_EMPTY:
+                second_cord = row, col
+    return first_cord, second_cord
+
+
+@app.post("/predict-move", response_model=MoveResponse)
+async def predict_move(request: BoardRequest):
+    if len(request.board) != BOARD_SIZE or any(
+        len(row) != BOARD_SIZE for row in request.board
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Board must be {BOARD_SIZE}x{BOARD_SIZE}",
+        )
+    env = translate_board_to_env(request.board, request.player_id)
+    old_board = env.get_board()
+    player = env.get_player()
+
+    best_next_layout = select_move(env)
+
+    if best_next_layout is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No valid moves available"
+        )
+
+    from_pos, to_pos = translate_layout_to_response(best_next_layout, player)
+
+    if from_pos is None or to_pos is None:
+         raise HTTPException(status_code=500, detail="Error calculating move coordinates")
+
     return {
         "fromPosition": from_pos,
         "toPosition": to_pos
