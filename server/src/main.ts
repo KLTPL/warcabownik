@@ -14,8 +14,8 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
-    .setTitle("Wakacyjne wyzwanie API")
-    .setDescription("Documentation for expense, trip and participant:")
+    .setTitle("Warcabownik")
+    .setDescription("Checkers model with database and API for managing games")
     .setVersion("1.0")
     .addTag("API")
     .addBearerAuth()
@@ -23,6 +23,12 @@ async function bootstrap() {
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("api", app, documentFactory);
+
+  app.enableCors({
+    origin: "http://localhost:5173",
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+    credentials: true,
+  });
 
   await app.listen(process.env.PORT ?? 3000);
 }

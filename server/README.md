@@ -4,14 +4,7 @@
 
 ### Running localy
 
-1. Clone the repository
-
-   ```
-    git clone https://github.com/KLTPL/final-project-solvro-backend-wakacyjne-wyzwanie-2026
-    cd final-project-solvro-backend-wakacyjne-wyzwanie-2026
-   ```
-
-2. Create .env
+1. Create .env
 
    ```
    # For prisma
@@ -21,6 +14,7 @@
    POSTGRES_USER="myuser"
    POSTGRES_PASSWORD="mypassword"
    POSTGRES_DB="nestjs_db"
+   AI_URL=http://localhost:8000
 
 
    # JWT
@@ -28,25 +22,25 @@
    EXPIRY_TIME_MS=
    ```
 
-3. Turn on docker database
+2. Turn on docker database
 
    ```
    sudo docker-compose up -d
    ```
 
-4. Download packages
+3. Download packages
 
    ```
    pnpm install
    ```
 
-5. Generate prisma
+4. Generate prisma
 
    ```
    pnpm prisma generate
    ```
 
-6. Run the dev command
+5. Run the dev command
 
    ```
    pnpm dev:start
@@ -57,3 +51,51 @@
 ```
 pnpm prisma db seed
 ```
+
+## 🔌 WebSocket API
+
+**Namespace:** `/game`
+
+### Events Sent by Client (Frontend -> Backend)
+
+#### `joinGame`
+
+Subscribes the player's socket to a specific game room to receive updates for that match.
+
+- **Payload:**
+
+  ```json
+  { "gameId": "string" }
+  ```
+
+#### `sendPlayerMove`
+
+Submits a move made by the player.
+
+- **Payload:**
+
+  ```json
+  {
+    "gameId": "string",
+    "from": { "y": "number", "x": "number" },
+    "to": { "y": "number", "x": "number" }
+  }
+  ```
+
+### Events Received by Client (Backend -> Frontend)
+
+#### `gameStateUpdate`
+
+Broadcasted by the server to all clients in the game room after a turn is processed (including the AI bot's response).
+
+- **Payload:**
+
+  ```json
+  {
+    "gameId": "string",
+    "status": "IN_PROGRESS | FINISHED",
+    "lastMoveByPlayer": { ... },
+    "botMove": { ... },
+    "message": "string"
+  }
+  ```

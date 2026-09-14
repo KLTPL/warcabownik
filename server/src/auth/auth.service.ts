@@ -5,7 +5,7 @@ import { UserService } from "src/user/user.service";
 import { UserEntity } from "src/user/entities/user.entity";
 import { LoginDto } from "./dto/login.dto";
 import { JwtService } from "@nestjs/jwt";
-import { JwtPayload } from "./strategies/jwt.strategy";
+import { JwtPayload } from "./auth.types";
 
 @Injectable()
 export class AuthService {
@@ -16,11 +16,10 @@ export class AuthService {
 
   async register(registerDto: RegisterDto): Promise<UserEntity | undefined> {
     const { password, ...userData } = registerDto;
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 10);
     return this.userService.create({
       ...userData,
-      hashedPassword,
-      role: "USER",
+      passwordHash,
     });
   }
 
@@ -32,20 +31,21 @@ export class AuthService {
     }
     const isCorrect = await bcrypt.compare(
       loginDto.password,
-      user.hashedPassword,
+      user.passwordHash,
     );
     if (!isCorrect) {
       throw new UnauthorizedException(ERR_MESSAGE);
     }
 
-    const payload: JwtPayload = {
+    const payload: Omit<JwtPayload, "exp" | "iat"> = {
       sub: user.id,
       email: user.email,
-      role: user.role,
     };
-    return this.jwtService.sign(payload, {
-      expiresIn: parseInt(process.env.EXPIRY_TIME_MS as string) / 1000, // Takes in seconds
-      secret: process.env.JWT_SECRET as string,
-    });
+    return {
+      access_token: this.jwtService.sign(payload, {
+        expiresIn: parseInt(process.env.EXPIRY_TIME_MS as string) / 1000,
+        secret: process.env.JWT_SECRET as string,
+      }),
+    };
   }
 }

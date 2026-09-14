@@ -26,12 +26,12 @@ CHECKERS_MODEL_WEIGHTS_PATH = "checkers_model.pth"
 from CheckersEnv import CheckersEnv
 from Model import CheckersValueNet, prepare_layout_for_network
 
-device = torch.device("cuda" if torch.cuda.is_aviable() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = CheckersValueNet().to(device)
 
 try:
     model.load_state_dict(torch.load(CHECKERS_MODEL_WEIGHTS_PATH, map_location=device, weights_only=True))
-    print(f"Succesfully loaded model into :{device}")
+    print(f"Successfully loaded model into :{device}")
 except FileNotFoundError:
     print(f"WARNING: file {CHECKERS_MODEL_WEIGHTS_PATH} not found")
 
@@ -78,7 +78,7 @@ def select_move(env: CheckersEnv):
         return None
 
     if len(possible_layouts)==1:
-        return possible_layouts[1]
+        return possible_layouts[0]
 
     tensor_layout_list=[prepare_layout_for_network(layout) for layout in possible_layouts]
     batch_tensor = torch.stack(tensor_layout_list).to(device)
@@ -100,9 +100,9 @@ def translate_layout_to_response(old_layout, next_layout, player):
     for row in range(BOARD_SIZE):
         for col in range(BOARD_SIZE):
             if old_layout[row,col]*player > ENV_EMPTY and next_layout[row,col]==ENV_EMPTY:
-                first_cord = row, col
+                first_cord = {"y": row, "x":col}
             if next_layout[row,col]*player > ENV_EMPTY and old_layout[row,col]==ENV_EMPTY:
-                second_cord = row, col
+                second_cord = {"y": row, "x":col}
     return first_cord, second_cord
 
 
@@ -126,7 +126,7 @@ async def predict_move(request: BoardRequest):
             status_code=status.HTTP_404_NOT_FOUND, detail="No valid moves available"
         )
 
-    from_pos, to_pos = translate_layout_to_response(best_next_layout, player)
+    from_pos, to_pos = translate_layout_to_response(old_board, best_next_layout, player)
 
     if from_pos is None or to_pos is None:
          raise HTTPException(status_code=500, detail="Error calculating move coordinates")
