@@ -21,7 +21,7 @@ uvicorn main:app --reload --port 5000
 
 ```
 curl -X 'POST' \
-  'https://localhost:5000/predict-move' \
+  'http://localhost:5000/predict-move' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
