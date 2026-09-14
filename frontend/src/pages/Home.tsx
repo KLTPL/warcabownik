@@ -10,12 +10,11 @@ export function Home() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [recentGames, setRecentGames] = useState([]);
+  const { fetchWithAuth } = useAuth();
 
   useEffect(() => {
     if (!isLoggedIn) return;
-    fetch("http://localhost:3000/game/history?page=1&limit=3", {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-    })
+    fetchWithAuth("http://localhost:3000/game/history?page=1&limit=3")
       .then((res) => res.json())
       .then((data) => setRecentGames(data.games || []));
   }, [isLoggedIn]);
@@ -24,7 +23,7 @@ export function Home() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:3000/game/create-ai", {
+      const response = await fetchWithAuth("http://localhost:3000/game/create-ai", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
