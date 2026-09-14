@@ -28,6 +28,7 @@ services:
   server:
     build: ./server
     container_name: checkers_server
+    user: "${UID:-1000}:${GID:-1000}"
     ports:
       - "3000:3000"
     environment:
