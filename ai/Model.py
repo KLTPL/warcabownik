@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
-def prepare_state_for_network(board):
+def prepare_layout_for_network(board):
     """
     Splits the 8x8 matrix into 4 separate binary channels:
     Channel 0: Our men (1)
@@ -36,7 +36,6 @@ class CheckersValueNet(nn.Module):
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
         
-        # POPRAWKA: Dynamiczne spłaszczenie uwzględniające rozmiar paczki (batch size)
         x = x.view(x.size(0), -1)
         
         x = F.relu(self.fc1(x))

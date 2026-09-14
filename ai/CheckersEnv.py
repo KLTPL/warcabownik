@@ -9,11 +9,14 @@ BOARD_SIZE = 8
 
 class CheckersEnv:
     def __init__(self):
-        self.board = self.create_starting_board()
+        self.player = None
+        self.board = None
+        self.create_starting_state()
         
 
-    def create_starting_board(self):
-        return np.array([
+    def create_starting_state(self):
+        self.player = 1
+        self.board = np.array([
             [EMPTY, -MAN,EMPTY, -MAN,EMPTY, -MAN,EMPTY, -MAN],
             [ -MAN,EMPTY, -MAN,EMPTY, -MAN,EMPTY, -MAN,EMPTY],
             [EMPTY, -MAN,EMPTY, -MAN,EMPTY, -MAN,EMPTY, -MAN],
@@ -23,9 +26,15 @@ class CheckersEnv:
             [EMPTY,  MAN,EMPTY,  MAN,EMPTY,  MAN,EMPTY,  MAN],
             [  MAN,EMPTY,  MAN,EMPTY,  MAN,EMPTY,  MAN,EMPTY]
         ])
+
+
+    def get_player(self):
+        return self.player
     
-    def swap_player(self):
+    def next_move(self, new_board):
+        self.board = new_board
         self.board = self.board[::-1, ::-1].copy() * -1
+        self.player *= -1
 
     def get_next_states(self):
         possible_board_layouts = self._get_capture_states()

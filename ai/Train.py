@@ -8,14 +8,14 @@ import os
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
 from CheckersEnv import CheckersEnv
-from Model import CheckersValueNet, prepare_state_for_network
+from Model import CheckersValueNet, prepare_layout_for_network
 
 class CheckersTrainer:
     def __init__(self, episodes=50000, lr=0.001, model_path="checkers_model.pth"):
         self.episodes = episodes
         self.lr = lr
         
-        # Hiperparametry Epsilon Decay
+        
         self.epsilon = 1.0           
         self.min_epsilon = 0.05     
         self.epsilon_decay = 0.9992 
@@ -30,41 +30,35 @@ class CheckersTrainer:
         self.criterion = nn.MSELoss()
 
     def play_self_play_episode(self):
-        state = self.env.create_starting_board()
-        current_player = 1
-        game_history = []
         
+        self.env.create_starting_state()
+        game_history = []
+
         while True:
-            possible_futures = self.env.get_next_states(state, current_player)
-            
-            if len(possible_futures) == 0:
-                winner = -current_player
+            possible_board_layouts = self.env.get_next_states()
+
+            if len(possible_board_layouts)==0: # that means there are no aviable moves to do so current player loses
+                winner = -self.env.get_player()
                 return game_history, winner
-                
-            if random.random() < self.epsilon or len(possible_futures) == 1:
-                next_state = random.choice(possible_futures)
+
+            if random.random() < self.epsilon or len(possible_board_layouts) == 1: # decides if next move is genereted random with propability of self.epsilon
+                board_choice = random.choice(possible_board_layouts)
             else:
                 self.model.eval()
-                
-                
-                canonical_states = [
-                    f if current_player == 1 else f[::-1, ::-1] * -1 
-                    for f in possible_futures
-                ]
-                tensor_list = [prepare_state_for_network(c) for c in canonical_states]
-                batch_tensor = torch.stack(tensor_list).to(self.device)
-                
+                tensor_layout_list = [prepare_layout_for_network(layout) for layout in possible_board_layouts]
+                batch_tensor = torch.stack(tensor_layout_list).to(self.device)
+
                 with torch.no_grad():
-                    values = self.model(batch_tensor)
-                    best_idx = torch.argmax(values).item()
-                    
-                next_state = possible_futures[best_idx]
-                
-            game_history.append((next_state, current_player))
-            state = next_state
-            current_player *= -1
+                    values_prediction = self.model(batch_tensor)
+                    best_idx = torch.argmax(values_prediction).item()
+
+                board_choice = possible_board_layouts[best_idx]
+
+            game_history.append((board_choice, self.env.get_player()))
+            self.env.next_move(board_choice)
 
     def train_on_episode(self, game_history, winner):
+        
         if not game_history:
             return 0.0
             
@@ -75,12 +69,10 @@ class CheckersTrainer:
         
         for board, player in game_history:
             target_value = 1.0 if player == winner else -1.0
-            canonical = board if player == 1 else board[::-1, ::-1] * -1
             
-            states_list.append(prepare_state_for_network(canonical))
+            states_list.append(prepare_layout_for_network(board))
             targets_list.append([target_value])
             
-        
         batch_states = torch.stack(states_list).to(self.device)
         batch_targets = torch.tensor(targets_list, dtype=torch.float32, device=self.device)
         
@@ -117,3 +109,6 @@ class CheckersTrainer:
 if __name__ == "__main__":
     trainer = CheckersTrainer()
     trainer.start_training()
+
+
+

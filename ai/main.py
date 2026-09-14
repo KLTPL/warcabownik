@@ -3,7 +3,7 @@ from pydantic import BaseModel
 import torch
 import numpy as np
 from CheckersEnv import CheckersEnv
-from Model import CheckersValueNet, prepare_state_for_network
+from Model import CheckersValueNet, prepare_layout_for_network
 
 app = FastAPI()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -41,7 +41,7 @@ def get_best_move(data: BoardRequest):
         f if player == 1 else f[::-1, ::-1] * -1 
         for f in possible_futures
     ]
-    tensor_list = [prepare_state_for_network(c) for c in canonical_states]
+    tensor_list = [prepare_layout_for_network(c) for c in canonical_states]
     batch_tensor = torch.stack(tensor_list).to(device)
     
     with torch.no_grad():
