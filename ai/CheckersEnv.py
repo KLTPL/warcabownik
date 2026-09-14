@@ -4,145 +4,170 @@ import numpy as np
 EMPTY = 0
 MAN = 1
 KING = 2
+BOARD_SIZE = 8
+#the opponent checks are represented as negative Ones
 
 class CheckersEnv:
     def __init__(self):
         self.board = self.create_starting_board()
-        self.current_player = 1  # 1 (White/Bottom), -1 (Black/Top)
+        
 
     def create_starting_board(self):
-        """Creates a standard 8x8 checkers board."""
-        board = np.zeros((8, 8), dtype=np.int8)
+        return np.array([
+            [EMPTY, -MAN,EMPTY, -MAN,EMPTY, -MAN,EMPTY, -MAN],
+            [ -MAN,EMPTY, -MAN,EMPTY, -MAN,EMPTY, -MAN,EMPTY],
+            [EMPTY, -MAN,EMPTY, -MAN,EMPTY, -MAN,EMPTY, -MAN],
+            [EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY],
+            [EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY],
+            [  MAN,EMPTY,  MAN,EMPTY,  MAN,EMPTY,  MAN,EMPTY],
+            [EMPTY,  MAN,EMPTY,  MAN,EMPTY,  MAN,EMPTY,  MAN],
+            [  MAN,EMPTY,  MAN,EMPTY,  MAN,EMPTY,  MAN,EMPTY]
+        ])
+    
+    def swap_player(self):
+        self.board = self.board[::-1, ::-1].copy() * -1
+
+    def get_next_states(self):
+        possible_board_layouts = self._get_capture_states()
         
-        # Black pieces at the top (-1)
-        for r in range(3):
-            for c in range(8):
-                if (r + c) % 2 != 0:
-                    board[r, c] = -MAN
-                    
-        # White pieces at the bottom (1)
-        for r in range(5, 8):
-            for c in range(8):
-                if (r + c) % 2 != 0:
-                    board[r, c] = MAN
-                    
+        if len(possible_board_layouts) == 0:
+            possible_board_layouts = self._get_normal_states() # the non capturing moves has lower priority in English/American checks 
+
+        return possible_board_layouts
+
+    def add_moves(self, cord, move):
+        return cord[0]+move[0], cord[1]+move[1]
+    
+    def _is_cord_on_board(self, cord):
+        x, y = cord
+        return x<BOARD_SIZE and x>=0 and y<BOARD_SIZE and y>=0
+    
+    def _is_field_empty(self, cord):
+        try:
+            return self.board[cord]==EMPTY
+        except IndexError:
+            return False
+
+    def _is_cord_last_field(self, cord):
+        row, col = cord 
+        return row == 0
+
+    def _is_piece_opponent(self, cord):
+        try:
+            return self.board[cord]<0
+        except IndexError:
+            return False
+        
+    def _apply_captured_mask(self, captured_mask):
+        board = self.board.copy()
+        for row in range(BOARD_SIZE):
+            for col in range(BOARD_SIZE):
+                cord = row,col
+                if not captured_mask[cord]:
+                    board[cord]=EMPTY
         return board
-
-    def get_next_states(self, state, player):
-        """
-        MAIN FUNCTION FOR THE ML MODEL (After-States).
-        Returns a list of board states (NumPy arrays) after executing all legal moves.
-        """
-        # 1. Conversion to Canonical State (We always play with 'positive' pieces from bottom to top)
-        canonical_state = state.copy() if player == 1 else state[::-1, ::-1] * -1
-
-        # 2. Find moves (forced captures first, then normal moves)
-        next_canonical_states = self._get_capture_states(canonical_state)
         
-        if len(next_canonical_states) == 0:
-            next_canonical_states = self._get_normal_states(canonical_state)
+    def _king_capture_moves_recursive(self, cord, board_layouts=None, captured_mask=None ):
+        able_to_move=False
+        first_move = False
 
-        # 3. Revert the generated boards back to the true game perspective
-        final_states = []
-        for canonical_next in next_canonical_states:
-            absolute_state = canonical_next if player == 1 else canonical_next[::-1, ::-1] * -1
-            final_states.append(absolute_state)
+        if captured_mask is None:
+            captured_mask = np.full((BOARD_SIZE,BOARD_SIZE),True)
+            first_move = True
+        if board_layouts is None:
+            board_layouts=[]
+            
+        for move in ((-1,-1),(-1, 1),(1,-1),(1, 1)):
+            jump = (move[0]*2,move[1]*2)
+            mid_cord=self.add_moves(cord, move)
+            jump_cord = self.add_moves(cord, jump)
+            if self._is_piece_opponent(mid_cord) and self._is_field_empty(jump_cord) and self._is_cord_on_board(jump_cord) and captured_mask[mid_cord]: # checks if its possible to beat opponent check
+                captured_mask[mid_cord] = False
+                able_to_move=True
+                self._king_capture_moves_recursive(jump_cord, board_layouts, captured_mask.copy())
+                captured_mask[mid_cord] = True
 
-        return final_states
+        if not able_to_move and not first_move:
+            final_board = self._apply_captured_mask(captured_mask) # important is that when recursive function is called then the field on standing pawn is changed to empty
+            final_board[cord] = KING
+            board_layouts.append(final_board)
+        return board_layouts
+    
+    def _king_classic_moves(self,cord):
+        board_layouts = []
+        for move in ((-1,-1),(-1, 1),(1,-1),(1, 1)):
+            new_cord=self.add_moves(cord, move)
+            if self._is_field_empty(new_cord) and self._is_cord_on_board(new_cord):
+                current_board = self.board.copy()
+                current_board[cord] = EMPTY
+                current_board[new_cord] = KING
+                board_layouts.append(current_board)
+        return board_layouts
 
-    # ==========================================
-    # INTERNAL LOGIC (For positive pieces only)
-    # ==========================================
+    def _man_classic_moves(self, cord):
+        board_layouts = []
+        for move in ((-1,-1),(-1, 1)):
+            new_cord=self.add_moves(cord, move)
+            if self._is_field_empty(new_cord) and self._is_cord_on_board(new_cord):
+                current_board = self.board.copy()
+                current_board[cord] = EMPTY
+                current_board[new_cord] = KING if self._is_cord_last_field(new_cord) else MAN
+                board_layouts.append(current_board)
+        return board_layouts
 
-    def _get_normal_states(self, state):
-        """Generates board states after normal, non-capturing moves."""
-        next_states = []
-        for r in range(8):
-            for c in range(8):
-                piece = state[r, c]
-                if piece <= 0:
-                    continue  # Ignore empty squares and enemy pieces
+    def _man_capture_move_recursive(self, cord, board_layouts=None, captured_mask=None ):
+        able_to_move=False
+        first_move = False
+        if captured_mask is None:
+            captured_mask = np.full((BOARD_SIZE,BOARD_SIZE),True)
+            first_move = True
+        if board_layouts is None:
+            board_layouts = []
 
-                # Directions: Man (2 diagonals up), King (all 4 diagonals)
-                dirs = [(-1, -1), (-1, 1)] if piece == MAN else [(-1, -1), (-1, 1), (1, -1), (1, 1)]
-                
-                for dr, dc in dirs:
-                    nr, nc = r + dr, c + dc
-                    if 0 <= nr < 8 and 0 <= nc < 8 and state[nr, nc] == EMPTY:
-                        # Create a new future state
-                        new_state = state.copy()
-                        new_state[r, c] = EMPTY
-                        
-                        # Pawn promotion to King
-                        if piece == MAN and nr == 0:
-                            new_state[nr, nc] = KING
-                        else:
-                            new_state[nr, nc] = piece
-                            
-                        next_states.append(new_state)
-        return next_states
+        for move in ((-1,-1),(-1, 1)):
+            jump = (move[0]*2,move[1]*2)
+            mid_cord = self.add_moves(cord, move)
+            jump_cord = self.add_moves(cord, jump)
+            if self._is_piece_opponent(mid_cord) and self._is_field_empty(jump_cord) and self._is_cord_on_board(jump_cord) and captured_mask[mid_cord]: # checks if its possible to beat opponent check
+                captured_mask[mid_cord] = False
+                able_to_move=True
+                self._man_capture_move_recursive(jump_cord, board_layouts, captured_mask.copy())
+                captured_mask[mid_cord] = True
 
-    def _get_capture_states(self, state):
-        """Triggers recursive search for multi-jumps (captures) for each of our pieces."""
-        capture_states = []
-        for r in range(8):
-            for c in range(8):
-                piece = state[r, c]
-                if piece > 0:
-                    # Function returns ready boards with completed jump sequences
-                    states = self._find_captures_recursive(state, r, c, piece, captured=set())
-                    capture_states.extend(states)
-        return capture_states
-
-    def _find_captures_recursive(self, state, r, c, piece, captured):
-        """The magic of multi-jumps: recursively builds states after a series of jumps."""
-        found_jump = False
-        final_states = []
+        if not able_to_move and not first_move:
+            final_board = self._apply_captured_mask(captured_mask) # important is that when recursive function is called then the field on standing pawn is changed to empty
+            final_board[cord] = KING if self._is_cord_last_field(cord) else MAN
+            board_layouts.append(final_board)
+        return board_layouts
         
-        dirs = [(-1, -1), (-1, 1)] if piece == MAN else [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+    
+    def _get_normal_states(self):
+        possible_board_layouts=[]
+        for row in range(BOARD_SIZE):
+            for col in range(BOARD_SIZE):
+                cord = row,col
+                if self.board[cord] == MAN:
+                    possible_board_layouts.extend(self._man_classic_moves(cord))
+                elif self.board[cord] == KING:
+                    possible_board_layouts.extend(self._king_classic_moves(cord))
+        return possible_board_layouts
 
-        for dr, dc in dirs:
-            enemy_r, enemy_c = r + dr, c + dc
-            land_r, land_c = r + 2*dr, c + 2*dc
+    def _get_capture_states(self):
+        possible_board_layouts=[]
+        for row in range(BOARD_SIZE):
+            for col in range(BOARD_SIZE):
+                cord = row,col
+                if self.board[cord] == MAN:
+                    self.board[cord] = EMPTY 
+                    possible_board_layouts.extend(self._man_capture_move_recursive(cord))
+                    self.board[cord] = MAN
+                elif self.board[cord] == KING:
+                    self.board[cord] = EMPTY
+                    possible_board_layouts.extend(self._king_capture_moves_recursive(cord))
+                    self.board[cord] = KING
+        return possible_board_layouts
 
-            if 0 <= land_r < 8 and 0 <= land_c < 8:
-                # 1. Is there an enemy? 2. Have we not captured it yet in this sequence?
-                if state[enemy_r, enemy_c] < 0 and (enemy_r, enemy_c) not in captured:
-                    # Are we landing on an empty square (or the starting square from before the jump)?
-                    if state[land_r, land_c] == EMPTY or (land_r, land_c) == (r, c):
-                        found_jump = True
-                        
-                        # Copy the state for this jump branch
-                        new_state = state.copy()
-                        new_state[r, c] = EMPTY
-                        
-                        new_captured = captured.copy()
-                        new_captured.add((enemy_r, enemy_c))
-                        
-                        # Pawn promotion stops the jump sequence immediately
-                        is_promoted = (piece == MAN and land_r == 0)
-                        
-                        if is_promoted:
-                            new_state[land_r, land_c] = KING
-                            # Remove all captured enemies and finish
-                            for cr, cc in new_captured:
-                                new_state[cr, cc] = EMPTY
-                            final_states.append(new_state)
-                        else:
-                            # Move the piece and search further recursively
-                            new_state[land_r, land_c] = piece
-                            deeper_states = self._find_captures_recursive(new_state, land_r, land_c, piece, new_captured)
-                            final_states.extend(deeper_states)
-
-        # If there are no more jumps from here and we collected something -> Save the result
-        if not found_jump and len(captured) > 0:
-            clean_state = state.copy()
-            # Only at the end of the turn (Turkish rule) do we remove all captured pieces
-            for cr, cc in captured:
-                clean_state[cr, cc] = EMPTY
-            final_states.append(clean_state)
-
-        return final_states
+    
 
     def print_board(self, state=None):
         """Prints the board in a readable format."""
@@ -152,9 +177,10 @@ class CheckersEnv:
         symbols = {EMPTY: '.', MAN: 'w', KING: 'W', -MAN: 'b', -KING: 'B'}
         print("  0 1 2 3 4 5 6 7")
         print(" -----------------")
-        for r in range(8):
+        for r in range(BOARD_SIZE):
             row_str = f"{r}|"
-            for c in range(8):
+            for c in range(BOARD_SIZE):
                 row_str += symbols[state[r, c]] + " "
             print(row_str)
         print()
+
