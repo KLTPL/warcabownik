@@ -14,7 +14,7 @@ export function Home() {
 
   useEffect(() => {
     if (!isLoggedIn) return;
-    fetchWithAuth("http://localhost:3000/game/history?page=1&limit=3")
+    fetchWithAuth(`${import.meta.env.VITE_API_URL}/game/history?page=1&limit=3`)
       .then((res) => res.json())
       .then((data) => setRecentGames(data.games || []));
   }, [isLoggedIn]);
@@ -23,13 +23,16 @@ export function Home() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetchWithAuth("http://localhost:3000/game/create-ai", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetchWithAuth(
+        `${import.meta.env.VITE_API_URL}/game/create-ai`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const game = await response.json();
       if (response.ok && game.id) {

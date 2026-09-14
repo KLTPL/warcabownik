@@ -11,7 +11,7 @@ export function GameHistory() {
 
   const fetchGames = async (pageNumber: number) => {
     const res = await fetchWithAuth(
-      `http://localhost:3000/game/history?page=${pageNumber}&limit=10`
+      `${import.meta.env.VITE_API_URL}/game/history?page=${pageNumber}&limit=10`
     );
     const data = await res.json();
 
