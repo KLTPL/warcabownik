@@ -5,4 +5,5 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install
 COPY . .
 RUN pnpm prisma generate
-CMD ["pnpm", "run", "start:dev"]
+RUN pnpm run build
+CMD ["pnpm", "run", "start:prod"]

@@ -29,6 +29,7 @@ services:
     build: ./server
     container_name: checkers_server
     user: "${UID:-1000}:${GID:-1000}"
+    command: pnpm run start:dev
     ports:
       - "3000:3000"
     environment:
