@@ -44,7 +44,7 @@ class CheckersTrainer:
                 winner = -self.env.get_player()
                 return game_history, winner
             
-            if len(possible_board_layouts)>150:
+            if len(game_history)>150:
                 return game_history, TIE
             
             if random.random() < self.epsilon or len(possible_board_layouts) == 1: # decides if next move is genereted random with propability of self.epsilon
@@ -105,7 +105,12 @@ class CheckersTrainer:
                 torch.save(self.model.state_dict(), checkpoint_path)
                 print(f"--> saved checkpoint: {checkpoint_path}")
             if (episode + 1) % 500 == 0:  
-                winner_str = "White (1)" if winner == 1 else "Black (-1)"
+                if winner == 1:
+                    winner_str = "white (1)"
+                elif winner ==0:
+                    winner_str = "Tie (0)"
+                else:
+                    winner_str = "Black (-1)"
                 print(f"Ep {episode + 1}/{self.episodes} | Epsilon: {self.epsilon:.3f} | Winner: {winner_str} | Loss: {avg_loss:.4f}")
             torch.cuda.empty_cache()
 
