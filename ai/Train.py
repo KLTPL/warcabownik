@@ -4,6 +4,9 @@ import torch.optim as optim
 import random
 import numpy as np
 
+
+MAX_GAME_LEN = 150
+TIE =0.0
 import os
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
@@ -40,7 +43,10 @@ class CheckersTrainer:
             if len(possible_board_layouts)==0: # that means there are no aviable moves to do so current player loses
                 winner = -self.env.get_player()
                 return game_history, winner
-
+            
+            if len(possible_board_layouts)>150:
+                return game_history, TIE
+            
             if random.random() < self.epsilon or len(possible_board_layouts) == 1: # decides if next move is genereted random with propability of self.epsilon
                 board_choice = random.choice(possible_board_layouts)
             else:
@@ -68,7 +74,7 @@ class CheckersTrainer:
         targets_list = []
         
         for board, player in game_history:
-            target_value = 1.0 if player == winner else -1.0
+            target_value = player * winner 
             
             states_list.append(prepare_layout_for_network(board))
             targets_list.append([target_value])
@@ -109,6 +115,3 @@ class CheckersTrainer:
 if __name__ == "__main__":
     trainer = CheckersTrainer()
     trainer.start_training()
-
-
-
