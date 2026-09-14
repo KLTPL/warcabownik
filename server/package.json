@@ -41,7 +41,8 @@
     "pg": "^8.23.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "socket.io": "^4.8.3"
+    "socket.io": "^4.8.3",
+    "@warcabownik/shared": "workspace:*"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

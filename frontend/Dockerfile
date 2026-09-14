@@ -1,7 +1,19 @@
 FROM node:20-alpine
-WORKDIR /app
+
+WORKDIR /workspace
+
 RUN npm install -g pnpm@8
-COPY package.json pnpm-lock.yaml ./
+
+COPY pnpm-workspace.yaml ./
+
+COPY packages/shared/package.json ./packages/shared/
+COPY frontend/package.json ./frontend/
+
 RUN pnpm install
-COPY . .
+
+COPY packages/shared ./packages/shared
+COPY frontend ./frontend
+
+WORKDIR /workspace/frontend
+
 CMD ["pnpm", "run", "dev", "--host"]
