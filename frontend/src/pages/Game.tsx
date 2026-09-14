@@ -64,7 +64,7 @@ export function Game() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const newSocket = io("http://localhost:3000/game", {
+    const newSocket = io(`${import.meta.env.VITE_API_URL}/game`, {
       auth: { token },
     });
 

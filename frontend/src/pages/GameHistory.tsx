@@ -1,18 +1,17 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { GameHistoryList } from "@/components/GameHistoryList";
+import { useAuth } from "@/context/AuthContext";
 
 export function GameHistory() {
   const [games, setGames] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const { fetchWithAuth } = useAuth();
 
   const fetchGames = async (pageNumber: number) => {
-    const res = await fetch(
-      `http://localhost:3000/game/history?page=${pageNumber}&limit=10`,
-      {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      }
+    const res = await fetchWithAuth(
+      `${import.meta.env.VITE_API_URL}/game/history?page=${pageNumber}&limit=10`
     );
     const data = await res.json();
 

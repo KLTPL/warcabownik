@@ -28,6 +28,8 @@ services:
   server:
     build: ./server
     container_name: checkers_server
+    user: "${UID:-1000}:${GID:-1000}"
+    command: pnpm run start:dev
     ports:
       - "3000:3000"
     environment:
@@ -47,6 +49,8 @@ services:
     container_name: checkers_frontend
     ports:
       - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3000
     depends_on:
       - server
     volumes:
