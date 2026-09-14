@@ -6,6 +6,8 @@ BOARD_SIZE = 8
 EMPTY_CELL = 0
 WHITE_PLAYER = 1
 BLACK_PLAYER = 2
+WHITE_KING = 3
+BLACK_KING = 4
 
 app = FastAPI(title="Checkers AI Mock")
 
@@ -21,14 +23,12 @@ class MoveResponse(BaseModel):
 
 
 def _is_within_bounds(y: int, x: int) -> bool:
-    """Check if the given coordinates are inside the board limits."""
     return 0 <= y < BOARD_SIZE and 0 <= x < BOARD_SIZE
 
 
 def _create_move(
     from_y: int, from_x: int, to_y: int, to_x: int
 ) -> dict[str, dict[str, int]]:
-    """Helper to format the move payload consistently."""
     return {
         "fromPosition": {"y": from_y, "x": from_x},
         "toPosition": {"y": to_y, "x": to_x},
@@ -40,39 +40,44 @@ def _get_piece_moves(
     y: int,
     x: int,
     player_id: int,
-    opponent_id: int,
-    direction: int,
 ) -> tuple[list[dict], list[dict]]:
-    """Evaluate regular and capture moves for a single piece to reduce loop nesting."""
     moves = []
     captures = []
 
-    # early return if the piece doesn't belong to the current player
-    if board[y][x] != player_id:
+    piece = board[y][x]
+    
+    is_black_turn = player_id in (BLACK_PLAYER, BLACK_KING)
+    player_pieces = {BLACK_PLAYER, BLACK_KING} if is_black_turn else {WHITE_PLAYER, WHITE_KING}
+    opponent_pieces = {WHITE_PLAYER, WHITE_KING} if is_black_turn else {BLACK_PLAYER, BLACK_KING}
+
+    if piece not in player_pieces:
         return moves, captures
+    is_king = (
+        piece in (WHITE_KING, BLACK_KING)
+        or (is_black_turn and y == 0)
+        or (not is_black_turn and y == BOARD_SIZE - 1)
+    )
+    directions = [-1, 1] if is_king else ([-1] if is_black_turn else [1])
 
-    new_y = y + direction
+    for dy in directions:
+        new_y = y + dy
+        for dx in [-1, 1]:
+            new_x = x + dx
 
-    for dx in [-1, 1]:
-        new_x = x + dx
+            if not _is_within_bounds(new_y, new_x):
+                continue
 
-        if not _is_within_bounds(new_y, new_x):
-            continue
+            if board[new_y][new_x] == EMPTY_CELL:
+                moves.append(_create_move(y, x, new_y, new_x))
+            elif board[new_y][new_x] in opponent_pieces:
+                jump_y = new_y + dy
+                jump_x = new_x + dx
 
-        # regular move logic
-        if board[new_y][new_x] == EMPTY_CELL:
-            moves.append(_create_move(y, x, new_y, new_x))
-
-        # capture move logic
-        elif board[new_y][new_x] == opponent_id:
-            jump_y = new_y + direction
-            jump_x = new_x + dx
-
-            if (
-                _is_within_bounds(jump_y, jump_x)
-                and board[jump_y][jump_x] == EMPTY_CELL
-            ):
-                captures.append(_create_move(y, x, jump_y, jump_x))
+                if (
+                    _is_within_bounds(jump_y, jump_x)
+                    and board[jump_y][jump_x] == EMPTY_CELL
+                ):
+                    captures.append(_create_move(y, x, jump_y, jump_x))
 
     return moves, captures
 
@@ -81,24 +86,17 @@ def find_possible_moves(board: list[list[int]], player_id: int) -> list[dict]:
     moves = []
     captures = []
 
-    direction = -1 if player_id == BLACK_PLAYER else 1
-    opponent_id = WHITE_PLAYER if player_id == BLACK_PLAYER else BLACK_PLAYER
-
     for y in range(BOARD_SIZE):
         for x in range(BOARD_SIZE):
-            piece_moves, piece_captures = _get_piece_moves(
-                board, y, x, player_id, opponent_id, direction
-            )
+            piece_moves, piece_captures = _get_piece_moves(board, y, x, player_id)
             moves.extend(piece_moves)
             captures.extend(piece_captures)
 
-    # force captures if any exist, otherwise return regular moves
     return captures if captures else moves
 
 
 @app.post("/predict-move", response_model=MoveResponse)
 async def predict_move(request: BoardRequest):
-    # board validation using constants instead of magic numbers
     if len(request.board) != BOARD_SIZE or any(
         len(row) != BOARD_SIZE for row in request.board
     ):

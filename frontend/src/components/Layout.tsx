@@ -15,7 +15,7 @@ export function Layout() {
     <div className="min-h-screen bg-neutral-50">
       <header className="border-b bg-white p-4 flex justify-between items-center shadow-sm">
         <Link to="/" className="text-xl font-bold text-neutral-900">
-          Checkers AI
+          Warcabownik
         </Link>
         {isLoggedIn ? (
           <Button variant="outline" onClick={handleLogout}>

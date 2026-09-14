@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface BoardPosition {
   x: number;
@@ -10,6 +11,8 @@ interface BoardPosition {
 
 interface GameStateUpdate {
   boardStateJson: string;
+  status: string;
+  winnerId: string | null;
 }
 
 type BoardCell = 0 | 1 | 2;
@@ -31,15 +34,33 @@ const getInitialBoard = (): Board => {
     );
 };
 
+const getMyUserId = (): string | null => {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+  try {
+    // get the middle part of JWT (payload)
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.sub;
+  } catch (error) {
+    return null;
+  }
+};
 export function Game() {
   const { id } = useParams();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [status, setStatus] = useState("Connecting to server...");
+  const [gameStatus, setGameStatus] = useState<string>("IN_PROGRESS");
+  const [winner, setWinner] = useState<string | null>(null);
 
   const [board, setBoard] = useState<Board>(getInitialBoard());
   const [selectedPiece, setSelectedPiece] = useState<BoardPosition | null>(
     null
   );
+  const navigate = useNavigate();
+
+  const myId = getMyUserId();
+  const isWinner = winner === myId;
+  const isLoser = winner !== null && winner !== myId;
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -60,6 +81,8 @@ export function Game() {
         )
       );
       setBoard(numericBoard);
+      if (updatedGame.status) setGameStatus(updatedGame.status);
+      if (updatedGame.winnerId !== undefined) setWinner(updatedGame.winnerId);
     });
 
     newSocket.on("connect_error", (err) => {
@@ -112,7 +135,8 @@ export function Game() {
         </p>
       </div>
 
-      <Card className="p-2 bg-neutral-300">
+      {/* Dodano relative, aby zamknąć nakładkę w obrębie planszy */}
+      <Card className="p-2 bg-neutral-300 relative">
         <CardContent className="p-0 grid grid-cols-8 border-4 border-neutral-800">
           {[7, 6, 5, 4, 3, 2, 1, 0].map((y) =>
             [0, 1, 2, 3, 4, 5, 6, 7].map((x) => {
@@ -141,6 +165,42 @@ export function Game() {
             })
           )}
         </CardContent>
+
+        {gameStatus === "FINISHED" && (
+          <div className="absolute inset-0 bg-neutral-900/40 backdrop-blur-[2px] flex items-center justify-center z-10 rounded-lg">
+            <Card className="w-[80%] max-w-sm p-6 text-center shadow-lg bg-background border-2 flex flex-col items-center space-y-4">
+              <h2
+                className={`text-3xl font-black tracking-tight ${
+                  isWinner
+                    ? "text-green-600"
+                    : isLoser
+                      ? "text-red-600"
+                      : "text-neutral-600"
+                }`}
+              >
+                {isWinner ? "Game won!" : isLoser ? "Game lost!" : "Draw!"}
+              </h2>
+
+              <div className="text-lg font-medium">
+                {winner ? (
+                  <p>
+                    Winner:
+                    <br />
+                    <span className="text-muted-foreground font-semibold">
+                      {isWinner ? "You" : "Enemy (AI)"}
+                    </span>
+                  </p>
+                ) : (
+                  <p>Game ended without a winner</p>
+                )}
+              </div>
+
+              <Button onClick={() => navigate("/")} className="w-full mt-4">
+                Back to home page
+              </Button>
+            </Card>
+          </div>
+        )}
       </Card>
     </div>
   );

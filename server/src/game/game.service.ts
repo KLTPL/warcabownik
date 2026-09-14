@@ -85,20 +85,60 @@ export class GameService {
       return playerResult.game;
     }
 
-    return await this.processAiTurns(gameId, playerResult.game);
+    try {
+      return await this.processAiTurns(gameId, playerResult.game);
+    } catch (error) {
+      this.logger.error(
+        `AI failed to respond. Keeping board state after player move.`,
+      );
+      return playerResult.game;
+    }
+  }
+
+  private determineIsWhiteTurn(
+    game: GameWithMoves,
+    boardState: string[][],
+  ): boolean {
+    if (game.moves.length === 0) {
+      return true;
+    }
+    const lastMove = game.moves[game.moves.length - 1] as {
+      fromPosition: string;
+      toPosition: string;
+    };
+    const lastFrom = parsePosition(lastMove.fromPosition);
+    const lastTo = parsePosition(lastMove.toPosition);
+
+    const piece = boardState[lastTo.y][lastTo.x];
+    if (!piece) {
+      return (game.moves.length + 1) % 2 !== 0;
+    }
+    const isLastPieceWhite = piece.toLowerCase() === WHITE_PIECE;
+    const wasCapture = Math.abs(lastTo.x - lastFrom.x) === CAPTURE_STEP;
+    const canContinue =
+      wasCapture &&
+      this.gameValidator.hasAdditionalCaptures(boardState, lastTo.x, lastTo.y);
+
+    if (canContinue) {
+      return isLastPieceWhite;
+    }
+    return !isLastPieceWhite;
   }
 
   async applyMove(gameId: string, playerId: string | null, move: MovePayload) {
     const game = await this.getValidGame(gameId);
 
-    const currentTurnNumber = game.moves.length + 1;
-    const isWhiteTurn = currentTurnNumber % 2 !== 0;
-
-    this.verifyPlayerTurn(game, playerId, isWhiteTurn);
-
     const parsedJson: unknown = JSON.parse(game.boardStateJson);
     const boardState = parsedJson as string[][];
 
+    const currentTurnNumber = game.moves.length + 1;
+    const isWhiteTurn = this.determineIsWhiteTurn(game, boardState);
+
+    this.verifyPlayerTurn(game, playerId, isWhiteTurn);
+
+    this.logger.debug(
+      `Validating move: ${move.fromPosition} -> ${move.toPosition} | isWhiteTurn: ${isWhiteTurn}`,
+    );
     if (!this.gameValidator.validateMove(boardState, move, isWhiteTurn)) {
       throw new BadRequestException("InvalidMove");
     }
@@ -265,5 +305,35 @@ export class GameService {
     board[midY][midX] = EMPTY_SQUARE;
 
     return true;
+  }
+
+  async getUserHistory(userId: string, page: number = 1, limit: number = 5) {
+    const skip = (page - 1) * limit;
+
+    const [games, total] = await Promise.all([
+      this.prisma.game.findMany({
+        where: { OR: [{ whitePlayerId: userId }, { blackPlayerId: userId }] },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      this.prisma.game.count({
+        where: { OR: [{ whitePlayerId: userId }, { blackPlayerId: userId }] },
+      }),
+    ]);
+
+    return { games, total, page, totalPages: Math.ceil(total / limit) };
+  }
+
+  public async getGameById(gameId: string) {
+    const game = await this.prisma.game.findUnique({
+      where: { id: gameId },
+    });
+
+    if (!game) {
+      throw new BadRequestException("GameNotFound");
+    }
+
+    return game;
   }
 }

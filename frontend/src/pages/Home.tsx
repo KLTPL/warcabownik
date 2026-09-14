@@ -2,12 +2,23 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { GameHistoryList } from "@/components/GameHistoryList";
 
 export function Home() {
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [recentGames, setRecentGames] = useState([]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    fetch("http://localhost:3000/game/history?page=1&limit=3", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setRecentGames(data.games || []));
+  }, [isLoggedIn]);
 
   const handlePlayAI = async () => {
     setLoading(true);
@@ -60,6 +71,21 @@ export function Home() {
           </Button>
           <Button className="w-full" variant="secondary">
             Multiplayer Matchmaking
+          </Button>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Games</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <GameHistoryList games={recentGames} />
+          <Button
+            variant="outline"
+            className="w-full mt-4"
+            onClick={() => navigate("/history")}
+          >
+            View Full History
           </Button>
         </CardContent>
       </Card>
