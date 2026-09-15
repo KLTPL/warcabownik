@@ -298,7 +298,11 @@ export class GameService {
     return true;
   }
 
-  async getUserHistory(userId: string, page: number = 1, limit: number = 5) {
+  async getUserGameHistory(
+    userId: string,
+    page: number = 1,
+    limit: number = 5,
+  ) {
     const skip = (page - 1) * limit;
 
     const [games, total] = await Promise.all([
