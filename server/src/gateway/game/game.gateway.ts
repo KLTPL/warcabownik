@@ -10,13 +10,9 @@ import {
 import { Server, Socket } from "socket.io";
 import { Logger, UseGuards } from "@nestjs/common";
 import { GameService } from "../../game/game.service";
-import {
-  MovePayload,
-  SocketEvents,
-  SocketStatus,
-  CORS_ORIGIN,
-} from "../../game/game.constants";
+import { CORS_ORIGIN } from "../../game/game.constants";
 import { WsJwtGuard } from "src/auth/guards/ws-jwt-auth.guard";
+import { MovePayload, SocketEvents, SocketStatus } from "@warcabownik/shared";
 
 interface AuthenticatedSocket extends Socket {
   user?: {

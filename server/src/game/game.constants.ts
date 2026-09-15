@@ -14,11 +14,6 @@ export interface Position {
   y: number;
 }
 
-export interface MovePayload {
-  fromPosition: string;
-  toPosition: string;
-}
-
 export interface Direction {
   dx: number;
   dy: number;
@@ -44,15 +39,3 @@ export const INITIAL_BLACK_ROW_START = 5;
 export const DEFAULT_WHITE_ID = "WHITE";
 export const DEFAULT_BLACK_ID = "BLACK";
 export const CORS_ORIGIN = "http://localhost:5173";
-
-export const SocketEvents = {
-  JOIN_GAME: "joinGame",
-  SEND_PLAYER_MOVE: "sendPlayerMove",
-  GAME_STATE_UPDATE: "gameStateUpdate",
-  MOVE_ERROR: "moveError",
-} as const;
-
-export const SocketStatus = {
-  SUCCESS: "success",
-  ERROR: "error",
-} as const;

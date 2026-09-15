@@ -14,19 +14,10 @@ import {
   BLACK_PIECE,
   EMPTY_SQUARE,
   CAPTURE_STEP,
-  MovePayload,
   DEFAULT_WHITE_ID,
   DEFAULT_BLACK_ID,
 } from "./game.constants";
-
-export interface GameState {
-  id: string;
-  whitePlayerId: string | null;
-  blackPlayerId: string | null;
-  boardStateJson: string;
-  status: GameStatus;
-  winnerId: string | null;
-}
+import { GameState, MovePayload } from "@warcabownik/shared";
 
 export interface GameWithMoves extends GameState {
   moves: unknown[];
@@ -80,7 +71,7 @@ export class GameService {
 
     if (
       playerResult.canContinueCapture ||
-      playerResult.game.status === GameStatus.FINISHED
+      playerResult.game.status === "FINISHED"
     ) {
       return playerResult.game;
     }
