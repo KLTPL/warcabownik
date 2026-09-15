@@ -1,6 +1,8 @@
-# Warcabownik
+# Warcabownik (Checkers)
 
 Grupowy projekt Solvro Wakacyjne Wyzwanie 2026 ścieżki Backend i AI/ML
+
+**Warcabownik** is a modern, real-time multiplayer Checkers application featuring a dedicated AI opponent trained via Reinforcement Learning. Containerized with Docker, providing instant hot-reloading and painless local development.
 
 ## 👤 Authors
 
@@ -13,6 +15,14 @@ Grupowy projekt Solvro Wakacyjne Wyzwanie 2026 ścieżki Backend i AI/ML
 - **Frontend:** React, TypeScript, Vite, Tailwind CSS, Socket.io-client.
 - **Backend:** NestJS, TypeScript, Socket.io, Prisma (PostgreSQL).
 - **AI Engine:** Python, FastAPI, PyTorch (Machine Learning model for bot logic).
+
+## Table of Contents
+
+- [Project Structure](#🗂️-project-structure)
+- [Local Development with Docker](#🐳-local-development-with-docker)
+  - [Initial Setup](#1-initial-setup)
+  - [Prisma Studio](#8-prisma-studio-database-gui)
+- [Conventional commits](#📝-conventional-commits)
 
 ## 🗂️ Project Structure
 
