@@ -3,16 +3,16 @@ import { useNavigate, useParams } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  type ServerToClientEvents,
+  type ClientToServerEvents,
+  SocketEvents,
+  type GameState,
+} from "@warcabownik/shared";
 
 interface BoardPosition {
   x: number;
   y: number;
-}
-
-interface GameStateUpdate {
-  boardStateJson: string;
-  status: string;
-  winnerId: string | null;
 }
 
 type BoardCell = 0 | 1 | 2;
@@ -45,9 +45,11 @@ const getMyUserId = (): string | null => {
     return null;
   }
 };
+
+type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 export function Game() {
   const { id } = useParams();
-  const [socket, setSocket] = useState<Socket | null>(null);
+  const [socket, setSocket] = useState<TypedSocket | null>(null);
   const [status, setStatus] = useState("Connecting to server...");
   const [gameStatus, setGameStatus] = useState<string>("IN_PROGRESS");
   const [winner, setWinner] = useState<string | null>(null);
@@ -63,17 +65,19 @@ export function Game() {
   const isLoser = winner !== null && winner !== myId;
 
   useEffect(() => {
+    if (!id) return;
+
     const token = localStorage.getItem("token");
-    const newSocket = io(`${import.meta.env.VITE_API_URL}/game`, {
+    const newSocket: TypedSocket = io(`${import.meta.env.VITE_API_URL}/game`, {
       auth: { token },
     });
 
     newSocket.on("connect", () => {
       setStatus("Connected. Your turn!");
-      newSocket.emit("joinGame", { gameId: id });
+      newSocket.emit(SocketEvents.JOIN_GAME, { gameId: id });
     });
 
-    newSocket.on("gameStateUpdate", (updatedGame: GameStateUpdate) => {
+    newSocket.on(SocketEvents.GAME_STATE_UPDATE, (updatedGame: GameState) => {
       const rawBoard: string[][] = JSON.parse(updatedGame.boardStateJson);
       const numericBoard: Board = rawBoard.map((row: string[]) =>
         row.map((cell: string): BoardCell =>
@@ -91,6 +95,7 @@ export function Game() {
 
     setSocket(newSocket);
     return () => {
+      newSocket.off(SocketEvents.GAME_STATE_UPDATE);
       newSocket.disconnect();
     };
   }, [id]);
@@ -116,10 +121,18 @@ export function Game() {
       const toRow = y + 1;
       const toPosition = `${toCol}${toRow}`;
 
-      socket.emit("sendPlayerMove", {
-        gameId: id,
-        move: { fromPosition, toPosition },
-      });
+      socket.emit(
+        SocketEvents.SEND_PLAYER_MOVE,
+        {
+          gameId: id!,
+          move: { fromPosition, toPosition },
+        },
+        (response) => {
+          if (response.status === "ERROR") {
+            console.error("Invalid move:", response.message);
+          }
+        }
+      );
 
       setSelectedPiece(null);
     }
@@ -135,7 +148,6 @@ export function Game() {
         </p>
       </div>
 
-      {/* Dodano relative, aby zamknąć nakładkę w obrębie planszy */}
       <Card className="p-2 bg-neutral-300 relative">
         <CardContent className="p-0 grid grid-cols-8 border-4 border-neutral-800">
           {[7, 6, 5, 4, 3, 2, 1, 0].map((y) =>
