@@ -29,6 +29,6 @@ export class GameController {
     @Query("page", ParseIntPipe) page: number,
     @Query("limit", ParseIntPipe) limit: number,
   ) {
-    return this.gameService.getUserHistory(user.id, page || 1, limit || 5);
+    return this.gameService.getUserGameHistory(user.id, page || 1, limit || 5);
   }
 }
