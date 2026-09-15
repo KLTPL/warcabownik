@@ -94,8 +94,11 @@ POSTGRES_USER=myuser
 POSTGRES_PASSWORD=mypassword
 POSTGRES_DB=nestjs_db
 DATABASE_URL="postgresql://myuser:mypassword@postgres:5432/nestjs_db?schema=public"
+
 JWT_SECRET=secret
 EXPIRY_TIME_MS=3600000
+
+VITE_API_URL=http://localhost:3000
 ```
 
 ### 2. Start the Environment
