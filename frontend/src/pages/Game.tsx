@@ -58,6 +58,9 @@ export function Game() {
   const [selectedPiece, setSelectedPiece] = useState<BoardPosition | null>(
     null
   );
+  const [errorPosition, setErrorPosition] = useState<BoardPosition | null>(
+    null
+  );
   const navigate = useNavigate();
 
   const myId = getMyUserId();
@@ -121,6 +124,8 @@ export function Game() {
       const toRow = y + 1;
       const toPosition = `${toCol}${toRow}`;
 
+      const attemptedPiece = { ...selectedPiece };
+
       socket.emit(
         SocketEvents.SEND_PLAYER_MOVE,
         {
@@ -129,7 +134,11 @@ export function Game() {
         },
         (response) => {
           if (response.status === "ERROR") {
-            console.error("Invalid move:", response.message);
+            setErrorPosition(attemptedPiece);
+
+            setTimeout(() => {
+              setErrorPosition(null);
+            }, 500);
           }
         }
       );
@@ -156,6 +165,7 @@ export function Game() {
               const isDark = (x + y) % 2 === 1;
               const isSelected =
                 selectedPiece?.x === x && selectedPiece?.y === y;
+              const isError = errorPosition?.x === x && errorPosition?.y === y; // Check for error
 
               return (
                 <div
@@ -166,7 +176,15 @@ export function Game() {
                 >
                   {piece === 1 && (
                     <div
-                      className={`w-4/5 h-4/5 rounded-full bg-slate-100 shadow-md border-4 border-slate-300 ${isSelected ? "ring-4 ring-yellow-400" : ""}`}
+                      className={`w-4/5 h-4/5 rounded-full bg-slate-100 shadow-md border-4 border-slate-300 transition-all duration-200 
+                        ${
+                          isError
+                            ? "ring-4 ring-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)]"
+                            : isSelected
+                              ? "ring-4 ring-yellow-400"
+                              : ""
+                        }
+                      `}
                     />
                   )}
                   {piece === 2 && (
