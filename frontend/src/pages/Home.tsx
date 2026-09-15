@@ -2,48 +2,36 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
-import { useEffect, useState } from "react";
 import { GameHistoryList } from "@/components/GameHistoryList";
+
+import {
+  useGameControllerGetHistory,
+  useGameControllerCreateAiGame,
+} from "../api/endpoints/game/game";
 
 export function Home() {
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [recentGames, setRecentGames] = useState([]);
-  const { fetchWithAuth } = useAuth();
 
-  useEffect(() => {
-    if (!isLoggedIn) return;
-    fetchWithAuth(`${import.meta.env.VITE_API_URL}/game/history?page=1&limit=3`)
-      .then((res) => res.json())
-      .then((data) => setRecentGames(data.games || []));
-  }, [isLoggedIn]);
+  const { data: historyData } = useGameControllerGetHistory(
+    { page: 1, limit: 3 },
+    { query: { enabled: isLoggedIn } }
+  );
+
+  const createAiGameMutation = useGameControllerCreateAiGame();
 
   const handlePlayAI = async () => {
-    setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetchWithAuth(
-        `${import.meta.env.VITE_API_URL}/game/create-ai`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await createAiGameMutation.mutateAsync();
 
-      const game = await response.json();
-      if (response.ok && game.id) {
-        navigate(`/game/${game.id}`);
+      if (response.data?.id) {
+        navigate(`/game/${response.data.id}`);
       }
     } catch (error) {
       console.error("Błąd tworzenia gry", error);
-    } finally {
-      setLoading(false);
     }
   };
+
   if (!isLoggedIn) {
     return (
       <div className="flex flex-col items-center mt-20 space-y-6 text-center">
@@ -61,6 +49,8 @@ export function Home() {
     );
   }
 
+  const recentGames = historyData?.data?.games || [];
+
   return (
     <div className="max-w-md mx-auto mt-10">
       <Card>
@@ -68,8 +58,14 @@ export function Home() {
           <CardTitle>Dashboard</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button className="w-full" onClick={handlePlayAI} disabled={loading}>
-            {loading ? "Creating Match..." : "Play vs AI"}
+          <Button
+            className="w-full"
+            onClick={handlePlayAI}
+            disabled={createAiGameMutation.isPending}
+          >
+            {createAiGameMutation.isPending
+              ? "Creating Match..."
+              : "Play vs AI"}
           </Button>
           <Button className="w-full" variant="secondary">
             Multiplayer Matchmaking

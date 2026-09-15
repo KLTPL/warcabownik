@@ -1,22 +1,32 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { isAxiosError } from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
 
+import {
+  useAuthControllerLogin,
+  useAuthControllerRegister,
+} from "../api/endpoints/auth/auth";
+
 export function Auth() {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { login } = useAuth();
 
+  const [isLogin, setIsLogin] = useState(true);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     username: "",
   });
-  const { login } = useAuth();
+
+  const loginMutation = useAuthControllerLogin();
+  const registerMutation = useAuthControllerRegister();
+
+  const isLoading = loginMutation.isPending || registerMutation.isPending;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -46,45 +56,41 @@ export function Auth() {
       return;
     }
 
-    setLoading(true);
-
-    const endpoint = isLogin ? "/auth/login" : "/auth/register";
-    const payload = isLogin
-      ? { email: formData.email, password: formData.password }
-      : {
-          email: formData.email,
-          password: formData.password,
-          username: formData.username,
-        };
-
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}${endpoint}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+      if (isLogin) {
+        const response = await loginMutation.mutateAsync({
+          data: { email: formData.email, password: formData.password },
+        });
+
+        login((response as any).access_token);
+        navigate("/");
+      } else {
+        await registerMutation.mutateAsync({
+          data: {
+            email: formData.email,
+            password: formData.password,
+            username: formData.username,
           },
-          body: JSON.stringify(payload),
-        }
-      );
+        });
 
-      const data = await response.json();
+        const loginResponse = await loginMutation.mutateAsync({
+          data: { email: formData.email, password: formData.password },
+        });
 
-      if (!response.ok) {
-        throw new Error(
-          Array.isArray(data.message)
-            ? data.message[0]
-            : data.message || "Authentication failed"
-        );
+        login((loginResponse as any).access_token);
+        navigate("/");
       }
-
-      login(data.access_token || data.token);
-      navigate("/");
     } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      if (isAxiosError(err)) {
+        const message = err.response?.data?.message;
+        setError(
+          Array.isArray(message)
+            ? message[0]
+            : message || "Authentication failed"
+        );
+      } else {
+        setError(err.message || "An unexpected error occurred");
+      }
     }
   };
 
@@ -130,8 +136,8 @@ export function Auth() {
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Processing..." : isLogin ? "Sign In" : "Sign Up"}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Processing..." : isLogin ? "Sign In" : "Sign Up"}
             </Button>
           </form>
 

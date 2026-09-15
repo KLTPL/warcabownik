@@ -1,17 +1,17 @@
 import {
   createContext,
-  useContext,
   useState,
   useEffect,
   type ReactNode,
+  useContext,
 } from "react";
+import axios from "axios";
 
 interface AuthContextType {
   isLoggedIn: boolean;
   token: string | null;
   login: (token: string) => void;
   logout: () => void;
-  fetchWithAuth: (url: string, options?: RequestInit) => Promise<Response>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,7 +24,7 @@ const isTokenExpired = (token: string): boolean => {
     if (!decoded.exp) return false;
     return decoded.exp * 1000 < Date.now();
   } catch {
-    return true; 
+    return true;
   }
 };
 
@@ -54,30 +54,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoggedIn(true);
       }
     }
+
+    const reqInterceptor = axios.interceptors.request.use((config) => {
+      const currentToken = localStorage.getItem("token");
+      if (currentToken) {
+        config.headers.Authorization = `Bearer ${currentToken}`;
+      }
+      return config;
+    });
+
+    const resInterceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          logout();
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.request.eject(reqInterceptor);
+      axios.interceptors.response.eject(resInterceptor);
+    };
   }, []);
 
-  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-    const currentToken = token || localStorage.getItem("token");
-
-    const headers = {
-      ...options.headers,
-      "Content-Type": "application/json",
-      ...(currentToken ? { Authorization: `Bearer ${currentToken}` } : {}),
-    };
-
-    const response = await fetch(url, { ...options, headers });
-
-    if (response.status === 401) {
-      logout();
-    }
-
-    return response;
-  };
-
   return (
-    <AuthContext.Provider
-      value={{ isLoggedIn, token, login, logout, fetchWithAuth }}
-    >
+    <AuthContext.Provider value={{ isLoggedIn, token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -22,6 +22,7 @@ import type {
   UserEntity
 } from '../../models';
 
+import { customInstance } from '../../custom-instance';
 
 
 
@@ -73,21 +74,14 @@ export const authControllerRegister = async (registerDto: RegisterDto, options?:
     }
     return headers;
   };
-const res = await fetch(getAuthControllerRegisterUrl(),
+return customInstance<authControllerRegisterResponse>(getAuthControllerRegisterUrl(),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(registerDto)
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: authControllerRegisterResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as authControllerRegisterResponse
-}
+);}
 
 
 
@@ -96,15 +90,15 @@ const res = await fetch(getAuthControllerRegisterUrl(),
 export const getAuthControllerRegisterMutationKey = () => ['authControllerRegister'] as const;
 
 export const getAuthControllerRegisterMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerRegister>>, TError,AuthControllerRegisterMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerRegister>>, TError,AuthControllerRegisterMutationVariables, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof authControllerRegister>>, TError,AuthControllerRegisterMutationVariables, TContext> => {
 
 const mutationKey = getAuthControllerRegisterMutationKey();
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }};
 
 
 
@@ -112,7 +106,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof authControllerRegister>>, AuthControllerRegisterMutationVariables> = (props) => {
           const {data} = props ?? {};
 
-          return  authControllerRegister(data,fetchOptions)
+          return  authControllerRegister(data,)
         }
 
 
@@ -131,7 +125,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
  * @summary Register as a new user
  */
 export const useAuthControllerRegister = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerRegister>>, TError,AuthControllerRegisterMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerRegister>>, TError,AuthControllerRegisterMutationVariables, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof authControllerRegister>>,
         TError,
@@ -179,21 +173,14 @@ export const authControllerLogin = async (loginDto: LoginDto, options?: RequestI
     }
     return headers;
   };
-const res = await fetch(getAuthControllerLoginUrl(),
+return customInstance<authControllerLoginResponse>(getAuthControllerLoginUrl(),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(loginDto)
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: authControllerLoginResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as authControllerLoginResponse
-}
+);}
 
 
 
@@ -202,15 +189,15 @@ const res = await fetch(getAuthControllerLoginUrl(),
 export const getAuthControllerLoginMutationKey = () => ['authControllerLogin'] as const;
 
 export const getAuthControllerLoginMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerLogin>>, TError,AuthControllerLoginMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerLogin>>, TError,AuthControllerLoginMutationVariables, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof authControllerLogin>>, TError,AuthControllerLoginMutationVariables, TContext> => {
 
 const mutationKey = getAuthControllerLoginMutationKey();
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }};
 
 
 
@@ -218,7 +205,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof authControllerLogin>>, AuthControllerLoginMutationVariables> = (props) => {
           const {data} = props ?? {};
 
-          return  authControllerLogin(data,fetchOptions)
+          return  authControllerLogin(data,)
         }
 
 
@@ -237,7 +224,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
  * @summary User login
  */
 export const useAuthControllerLogin = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerLogin>>, TError,AuthControllerLoginMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerLogin>>, TError,AuthControllerLoginMutationVariables, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof authControllerLogin>>,
         TError,

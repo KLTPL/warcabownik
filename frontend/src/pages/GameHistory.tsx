@@ -1,37 +1,44 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { GameHistoryList } from "@/components/GameHistoryList";
-import { useAuth } from "@/context/AuthContext";
+import { useGameControllerGetHistory } from "../api/endpoints/game/game";
+import type { GameHistoryItemDto } from "../api/models";
 
 export function GameHistory() {
-  const [games, setGames] = useState([]);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const { fetchWithAuth } = useAuth();
+  const [accumulatedGames, setAccumulatedGames] = useState<
+    GameHistoryItemDto[]
+  >([]);
 
-  const fetchGames = async (pageNumber: number) => {
-    const res = await fetchWithAuth(
-      `${import.meta.env.VITE_API_URL}/game/history?page=${pageNumber}&limit=10`
-    );
-    const data = await res.json();
-
-    if (pageNumber === 1) setGames(data.games);
-    else setGames((prev) => [...prev, ...data.games]);
-
-    setHasMore(data.page < data.totalPages);
-  };
+  const { data, isLoading } = useGameControllerGetHistory({ page, limit: 10 });
 
   useEffect(() => {
-    fetchGames(page);
-  }, [page]);
+    if (data?.data?.games) {
+      if (page === 1) {
+        setAccumulatedGames(data.data.games);
+      } else {
+        setAccumulatedGames((prev) => [...prev, ...data.data.games]);
+      }
+    }
+  }, [data, page]);
+
+  const hasMore = data?.data ? data.data.page < data.data.totalPages : false;
 
   return (
     <div className="max-w-2xl mx-auto mt-10 space-y-4">
       <h2 className="text-2xl font-bold">Match History</h2>
-      <div className="space-y-2">{<GameHistoryList games={games} />}</div>
+
+      <div className="space-y-2">
+        <GameHistoryList games={accumulatedGames} />
+      </div>
+
       {hasMore && (
-        <Button onClick={() => setPage((p) => p + 1)} className="w-full">
-          Load More
+        <Button
+          onClick={() => setPage((p) => p + 1)}
+          className="w-full"
+          disabled={isLoading}
+        >
+          {isLoading ? "Loading..." : "Load More"}
         </Button>
       )}
     </div>
