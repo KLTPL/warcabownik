@@ -10,15 +10,19 @@ import {
 import { Server, Socket } from "socket.io";
 import { Logger, UseGuards } from "@nestjs/common";
 import { GameService } from "../../game/game.service";
+import { CORS_ORIGIN } from "../../game/game.constants";
+import { WsJwtGuard } from "src/auth/guards/ws-jwt-auth.guard";
 import {
+  ClientToServerEvents,
   MovePayload,
+  ServerToClientEvents,
   SocketEvents,
   SocketStatus,
-  CORS_ORIGIN,
-} from "../../game/game.constants";
-import { WsJwtGuard } from "src/auth/guards/ws-jwt-auth.guard";
+} from "@warcabownik/shared";
 
-interface AuthenticatedSocket extends Socket {
+type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
+
+interface AuthenticatedSocket extends TypedSocket {
   user?: {
     sub: string;
   };
@@ -32,23 +36,23 @@ interface AuthenticatedSocket extends Socket {
 })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
-  server!: Server;
+  server!: Server<ClientToServerEvents, ServerToClientEvents>;
 
   private readonly logger = new Logger(GameGateway.name);
 
   constructor(private readonly gameService: GameService) {}
 
-  handleConnection(client: Socket) {
+  handleConnection(client: TypedSocket) {
     this.logger.log(`Client connected: ${client.id}`);
   }
 
-  handleDisconnect(client: Socket) {
+  handleDisconnect(client: TypedSocket) {
     this.logger.log(`Client disconnected: ${client.id}`);
   }
 
   @SubscribeMessage(SocketEvents.JOIN_GAME)
   async handleJoinGame(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: { gameId: string },
   ) {
     await client.join(payload.gameId);
@@ -67,7 +71,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage(SocketEvents.SEND_PLAYER_MOVE)
   async handlePlayerMove(
     @MessageBody() data: { gameId: string; move: MovePayload },
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: TypedSocket,
   ) {
     this.logger.log(`Received move from ${client.id} for game ${data.gameId}`);
 

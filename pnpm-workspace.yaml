@@ -1,10 +1,11 @@
 packages:
   - "frontend"
   - "server"
+  - "packages/*"
 allowBuilds:
-  '@parcel/watcher': false
-  '@prisma/engines': true
-  '@scarf/scarf': false
+  "@parcel/watcher": false
+  "@prisma/engines": true
+  "@scarf/scarf": false
   bcrypt: true
   esbuild: true
   prisma: true

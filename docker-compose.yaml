@@ -26,7 +26,12 @@ services:
       - ./ai:/app
 
   server:
-    build: ./server
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
     container_name: checkers_server
     user: "${UID:-1000}:${GID:-1000}"
     command: pnpm run start:dev
@@ -40,12 +45,20 @@ services:
     depends_on:
       - postgres
       - ai
+    working_dir: /workspace/server
     volumes:
-      - ./server:/app
-      - /app/node_modules
+      - .:/workspace
+      - /workspace/server/node_modules
+      - /workspace/node_modules
+      - /workspace/packages/shared/node_modules
 
   frontend:
-    build: ./frontend
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
     container_name: checkers_frontend
     ports:
       - "5173:5173"
@@ -53,9 +66,28 @@ services:
       - VITE_API_URL=http://localhost:3000
     depends_on:
       - server
+    working_dir: /workspace/frontend
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - .:/workspace
+      - /workspace/frontend/node_modules
+      - /workspace/node_modules
+      - /workspace/packages/shared/node_modules
 
+  shared-watcher:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+    container_name: checkers_shared_watcher
+    user: "${UID:-1000}:${GID:-1000}"
+    # We override the default start command to just run the watcher
+    command: pnpm --filter @warcabownik/shared run dev
+    volumes:
+      - .:/workspace
+      - /workspace/server/node_modules
+      - /workspace/node_modules
+      - /workspace/packages/shared/node_modules
 volumes:
   postgres_data:

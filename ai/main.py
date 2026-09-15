@@ -45,10 +45,14 @@ def _get_piece_moves(
     captures = []
 
     piece = board[y][x]
-    
+
     is_black_turn = player_id in (BLACK_PLAYER, BLACK_KING)
-    player_pieces = {BLACK_PLAYER, BLACK_KING} if is_black_turn else {WHITE_PLAYER, WHITE_KING}
-    opponent_pieces = {WHITE_PLAYER, WHITE_KING} if is_black_turn else {BLACK_PLAYER, BLACK_KING}
+    player_pieces = (
+        {BLACK_PLAYER, BLACK_KING} if is_black_turn else {WHITE_PLAYER, WHITE_KING}
+    )
+    opponent_pieces = (
+        {WHITE_PLAYER, WHITE_KING} if is_black_turn else {BLACK_PLAYER, BLACK_KING}
+    )
 
     if piece not in player_pieces:
         return moves, captures
