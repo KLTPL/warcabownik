@@ -26,9 +26,9 @@ export class GameController {
   @Get("history")
   async getHistory(
     @CurrentUser() user: AuthUser,
-    @Query("page", ParseIntPipe) page: number,
-    @Query("limit", ParseIntPipe) limit: number,
+    @Query("page", new ParseIntPipe({ optional: true })) page?: number,
+    @Query("limit", new ParseIntPipe({ optional: true })) limit?: number,
   ) {
-    return this.gameService.getUserGameHistory(user.id, page || 1, limit || 5);
+    return this.gameService.getUserGameHistory(user.id, page ?? 1, limit ?? 5);
   }
 }
