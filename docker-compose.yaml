@@ -72,6 +72,7 @@ services:
       - /workspace/frontend/node_modules
       - /workspace/node_modules
       - /workspace/packages/shared/node_modules
+      - /workspace/server/node_modules
 
   shared-watcher:
     build:
