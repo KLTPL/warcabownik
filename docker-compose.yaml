@@ -29,6 +29,9 @@ services:
     build:
       context: .
       dockerfile: server/Dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
     container_name: checkers_server
     user: "${UID:-1000}:${GID:-1000}"
     command: pnpm run start:dev
@@ -47,11 +50,15 @@ services:
       - .:/workspace
       - /workspace/server/node_modules
       - /workspace/node_modules
+      - /workspace/packages/shared/node_modules
 
   frontend:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
     container_name: checkers_frontend
     ports:
       - "5173:5173"
@@ -64,17 +71,23 @@ services:
       - .:/workspace
       - /workspace/frontend/node_modules
       - /workspace/node_modules
+      - /workspace/packages/shared/node_modules
+
   shared-watcher:
     build:
       context: .
       dockerfile: server/Dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
     container_name: checkers_shared_watcher
+    user: "${UID:-1000}:${GID:-1000}"
     # We override the default start command to just run the watcher
     command: pnpm --filter @warcabownik/shared run dev
     volumes:
       - .:/workspace
       - /workspace/server/node_modules
       - /workspace/node_modules
-
+      - /workspace/packages/shared/node_modules
 volumes:
   postgres_data:
