@@ -1,26 +1,26 @@
 FROM node:20-alpine
 
-WORKDIR /workspace
+ARG UID=1000
+ARG GID=1000
 
 RUN npm install -g pnpm@8
 
-COPY pnpm-workspace.yaml ./
+RUN mkdir -p /workspace && chown ${UID}:${GID} /workspace
 
-COPY packages/shared/package.json ./packages/shared/
-COPY frontend/package.json ./frontend/
+USER ${UID}:${GID}
+WORKDIR /workspace
+
+COPY --chown=${UID}:${GID} pnpm-workspace.yaml ./
+COPY --chown=${UID}:${GID} packages/shared/package.json ./packages/shared/
+COPY --chown=${UID}:${GID} frontend/package.json ./frontend/
 
 RUN pnpm install
 
-COPY packages/shared ./packages/shared
-COPY frontend ./frontend
+COPY --chown=${UID}:${GID} packages/shared ./packages/shared
+COPY --chown=${UID}:${GID} frontend ./frontend
 
 RUN pnpm --filter @warcabownik/shared run build
 
 WORKDIR /workspace/frontend
-
-ARG UID=1000
-ARG GID=1000
-
-RUN chown -R ${UID}:${GID} /workspace
 
 CMD ["pnpm", "run", "dev", "--host"]
