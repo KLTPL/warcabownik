@@ -5,6 +5,10 @@ EMPTY = 0
 MAN = 1
 KING = 2
 BOARD_SIZE = 8
+
+MAN_REWARD = 0.07
+KING_REWARD = 0.12
+PROMOTION_REWARD = 0.04
 #the opponent checks are represented as negative Ones
 
 class CheckersEnv:
@@ -42,6 +46,14 @@ class CheckersEnv:
     def get_board(self):
         return self.board
     
+    def get_reward(self, next_layout):
+        MAN_DIFF = np.count_nonzero(self.board == -MAN) - np.count_nonzero(next_layout == -MAN)
+        KING_DIFF = np.count_nonzero(self.board == -KING) - np.count_nonzero(next_layout == -KING)
+        PROMOTION_DIFF = np.count_nonzero(next_layout == KING) - np.count_nonzero(self.board == KING)
+        
+        reward = MAN_DIFF*MAN_REWARD + KING_DIFF*KING_REWARD + PROMOTION_DIFF*PROMOTION_REWARD
+        return reward
+        
     def next_move(self, new_board):
         self.board = new_board
         self.rotate_board
