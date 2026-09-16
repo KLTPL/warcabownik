@@ -16,7 +16,7 @@ from CheckersEnv import CheckersEnv
 from Model import CheckersValueNet, prepare_layout_for_network
 
 class CheckersTrainer:
-    def __init__(self, episodes=50000, lr=0.0002, model_path="checkers_model.pth"):
+    def __init__(self, episodes=100000, lr=0.0002, model_path="checkers_model.pth"):
         self.episodes = episodes
         self.lr = lr
         
@@ -129,8 +129,9 @@ class CheckersTrainer:
         
         for episode in range(self.episodes):
             history = self.play_self_play_episode()
+            history_len = len(history)
             avg_loss = self.train_on_episode(history)
-            
+        
            
             self.epsilon = max(self.min_epsilon, self.epsilon * self.epsilon_decay)
             if (episode + 1) % 10000 == 0:
@@ -138,12 +139,11 @@ class CheckersTrainer:
                 torch.save(self.model.state_dict(), checkpoint_path)
                 print(f"--> saved checkpoint: {checkpoint_path}")
             if (episode + 1) % 500 == 0:  
-                if winner == 1:
+                if history_len %2 == 1:
                     winner_str = "white (1)"
-                elif winner ==0:
-                    winner_str = "Tie (0)"
                 else:
                     winner_str = "Black (-1)"
+                    
                 print(f"Ep {episode + 1}/{self.episodes} | Epsilon: {self.epsilon:.3f} | Winner: {winner_str} | Loss: {avg_loss:.4f}")
             torch.cuda.empty_cache()
 
