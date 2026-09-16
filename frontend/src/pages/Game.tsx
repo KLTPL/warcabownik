@@ -53,6 +53,7 @@ export function Game() {
   const [status, setStatus] = useState("Connecting to server...");
   const [gameStatus, setGameStatus] = useState<string>("IN_PROGRESS");
   const [winner, setWinner] = useState<string | null>(null);
+  const [isAiThinking, setIsAiThinking] = useState(true);
 
   const [board, setBoard] = useState<Board>(getInitialBoard());
   const [selectedPiece, setSelectedPiece] = useState<BoardPosition | null>(
@@ -81,6 +82,7 @@ export function Game() {
     });
 
     newSocket.on(SocketEvents.GAME_STATE_UPDATE, (updatedGame: GameState) => {
+      setIsAiThinking(false);
       const rawBoard: string[][] = JSON.parse(updatedGame.boardStateJson);
       const numericBoard: Board = rawBoard.map((row: string[]) =>
         row.map((cell: string): BoardCell =>
@@ -104,6 +106,7 @@ export function Game() {
   }, [id]);
 
   const handleSquareClick = (x: number, y: number): void => {
+    if (isAiThinking || gameStatus === "FINISHED") return;
     if ((x + y) % 2 === 0) return;
 
     const piece = board[y][x];
@@ -125,7 +128,7 @@ export function Game() {
       const toPosition = `${toCol}${toRow}`;
 
       const attemptedPiece = { ...selectedPiece };
-
+      setIsAiThinking(true);
       socket.emit(
         SocketEvents.SEND_PLAYER_MOVE,
         {
@@ -134,6 +137,7 @@ export function Game() {
         },
         (response) => {
           if (response.status === "ERROR") {
+            setIsAiThinking(false);
             setErrorPosition(attemptedPiece);
 
             setTimeout(() => {
@@ -150,11 +154,39 @@ export function Game() {
     <div className="flex flex-col items-center mt-8 space-y-6">
       <div className="text-center">
         <h2 className="text-2xl font-bold">Match ID: {id}</h2>
-        <p
-          className={`font-medium ${status.includes("error") ? "text-red-500" : "text-neutral-500"}`}
-        >
-          {status}
-        </p>
+        {isAiThinking ? (
+          <div className="flex items-center justify-center space-x-2 mt-2 text-blue-600">
+            <svg
+              className="animate-spin h-5 w-5"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            <span className="font-semibold text-sm">
+              AI is waking up & calculating...
+            </span>
+          </div>
+        ) : (
+          <p
+            className={`font-medium mt-2 ${status.includes("error") ? "text-red-500" : "text-neutral-500"}`}
+          >
+            {status}
+          </p>
+        )}
       </div>
 
       <Card className="p-2 bg-neutral-300 relative">
