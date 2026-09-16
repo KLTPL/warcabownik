@@ -8,7 +8,15 @@ import {
   ConnectedSocket,
 } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
-import { Logger, UseGuards } from "@nestjs/common";
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpException,
+  Logger,
+  UseFilters,
+  UseGuards,
+} from "@nestjs/common";
 import { GameService } from "../../game/game.service";
 import { CORS_ORIGIN } from "../../game/game.constants";
 import { WsJwtGuard } from "src/auth/guards/ws-jwt-auth.guard";
@@ -26,6 +34,28 @@ interface AuthenticatedSocket extends TypedSocket {
   user?: {
     sub: string;
   };
+}
+
+@Catch()
+export class WsAuthExceptionFilter implements ExceptionFilter {
+  catch(exception: unknown, host: ArgumentsHost): void {
+    const client = host.switchToWs().getClient<Socket>();
+
+    let errorMessage = "Unauthorized";
+    let statusCode = 401;
+
+    if (exception instanceof HttpException) {
+      statusCode = exception.getStatus();
+      errorMessage = exception.message;
+    } else if (exception instanceof Error) {
+      errorMessage = exception.message;
+    }
+
+    client.emit("exception", {
+      message: errorMessage,
+      statusCode: statusCode,
+    });
+  }
 }
 
 @WebSocketGateway({
@@ -79,6 +109,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @UseGuards(WsJwtGuard)
+  @UseFilters(new WsAuthExceptionFilter())
   @SubscribeMessage(SocketEvents.SEND_PLAYER_MOVE)
   async handlePlayerMove(
     @MessageBody() data: { gameId: string; move: MovePayload },

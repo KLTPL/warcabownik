@@ -9,6 +9,7 @@ import {
   SocketEvents,
   type GameState,
 } from "@warcabownik/shared";
+import { useAuth } from "@/context/AuthContext";
 
 interface BoardPosition {
   x: number;
@@ -54,7 +55,7 @@ export function Game() {
   const [gameStatus, setGameStatus] = useState<string>("IN_PROGRESS");
   const [winner, setWinner] = useState<string | null>(null);
   const [isAiThinking, setIsAiThinking] = useState(false);
-
+  const { logout } = useAuth();
   const [board, setBoard] = useState<Board>(getInitialBoard());
   const [selectedPiece, setSelectedPiece] = useState<BoardPosition | null>(
     null
@@ -105,13 +106,20 @@ export function Game() {
     newSocket.on("connect_error", (err) => {
       setStatus(`Connection error: ${err.message}`);
     });
+    newSocket.on("exception" as any, (error: any) => {
+      if (error?.message === "Unauthorized" || error?.statusCode === 401) {
+        logout();
+        navigate("/auth");
+      }
+    });
 
     setSocket(newSocket);
     return () => {
+      newSocket.off("exception" as any);
       newSocket.off(SocketEvents.GAME_STATE_UPDATE);
       newSocket.disconnect();
     };
-  }, [id]);
+  }, [id, logout, navigate]);
 
   const handleSquareClick = (x: number, y: number): void => {
     if (isAiThinking || gameStatus === "FINISHED") return;
