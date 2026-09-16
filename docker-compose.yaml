@@ -64,6 +64,7 @@ services:
       - "5173:5173"
     environment:
       - VITE_API_URL=http://localhost:3000
+      - VITE_AI_URL=http://localhost:5000
     depends_on:
       - server
     working_dir: /workspace/frontend

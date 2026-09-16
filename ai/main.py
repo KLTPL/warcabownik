@@ -99,6 +99,11 @@ def find_possible_moves(board: list[list[int]], player_id: int) -> list[dict]:
     return captures if captures else moves
 
 
+@app.get("/health")
+def health_check():
+    return {"status": "awake"}
+
+
 @app.post("/predict-move", response_model=MoveResponse)
 async def predict_move(request: BoardRequest):
     if len(request.board) != BOARD_SIZE or any(

@@ -67,7 +67,15 @@ export function Game() {
   const myId = getMyUserId();
   const isWinner = winner === myId;
   const isLoser = winner !== null && winner !== myId;
+  useEffect(() => {
+    const aiUrl = import.meta.env.VITE_AI_URL;
 
+    if (aiUrl) {
+      fetch(`${aiUrl}/health`)
+        .then(() => console.log("AI pinged successfully"))
+        .catch(() => console.log("AI ping finished"));
+    }
+  }, []);
   useEffect(() => {
     if (!id) return;
 
