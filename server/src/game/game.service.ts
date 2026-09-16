@@ -298,6 +298,26 @@ export class GameService {
     return true;
   }
 
+  public async checkAndTriggerAi(gameId: string): Promise<GameState | null> {
+    try {
+      const game = await this.getValidGame(gameId);
+      const boardState = JSON.parse(game.boardStateJson) as string[][];
+
+      const isWhiteTurn = this.determineIsWhiteTurn(game, boardState);
+
+      if (!isWhiteTurn && !game.blackPlayerId) {
+        this.logger.log(`Resuming AI turn for game ${gameId} on tab open.`);
+
+        const updatedGame = await this.processAiTurns(gameId, game);
+        return updatedGame;
+      }
+
+      return null;
+    } catch (error) {
+      this.logger.error(`Failed to auto-resume AI for game ${gameId}`);
+      return null;
+    }
+  }
   async getUserGameHistory(
     userId: string,
     page: number = 1,
