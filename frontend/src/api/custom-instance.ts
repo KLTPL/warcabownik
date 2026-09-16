@@ -17,8 +17,12 @@ AXIOS_INSTANCE.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      window.location.href = "/auth";
+      const isLoginRequest = error.config?.url?.includes("/auth/login");
+
+      if (!isLoginRequest) {
+        localStorage.removeItem("token");
+        window.location.href = "/auth";
+      }
     }
     return Promise.reject(error);
   }
