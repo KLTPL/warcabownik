@@ -33,6 +33,9 @@ export class AiService {
     let retries = 5;
     while (retries > 0) {
       try {
+        this.logger.log(
+          `Making a POST request to ${process.env.AI_URL}/predict-move `,
+        );
         const response = await axios.post<AiMoveResponse>(
           `${process.env.AI_URL}/predict-move`,
           {
@@ -40,6 +43,7 @@ export class AiService {
             player_id: 2,
           },
         );
+        this.logger.log("Response");
 
         const { fromPosition, toPosition } = response.data;
         return {
