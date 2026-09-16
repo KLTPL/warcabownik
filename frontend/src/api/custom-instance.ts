@@ -28,22 +28,22 @@ export const customInstance = <T>(
   configOrUrl: AxiosRequestConfig | string,
   options?: AxiosRequestConfig
 ): Promise<T> => {
-  let mergedConfig: AxiosRequestConfig;
+  let mergedConfig: any;
 
-  // 1. dynamically catch orval's arguments
   if (typeof configOrUrl === "string") {
     mergedConfig = { url: configOrUrl, ...options };
   } else {
     mergedConfig = { ...configOrUrl, ...options };
   }
 
-  if (
-    mergedConfig.data &&
-    typeof mergedConfig.data === "object" &&
-    "data" in mergedConfig.data &&
-    Object.keys(mergedConfig.data).length === 1
-  ) {
-    mergedConfig.data = mergedConfig.data.data;
+  // TRANSLATE FETCH TO AXIOS
+  if (mergedConfig.body) {
+    mergedConfig.data =
+      typeof mergedConfig.body === "string"
+        ? JSON.parse(mergedConfig.body)
+        : mergedConfig.body;
+
+    delete mergedConfig.body;
   }
 
   return AXIOS_INSTANCE(mergedConfig).then(({ data }) => data);

@@ -54,29 +54,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoggedIn(true);
       }
     }
-
-    const reqInterceptor = axios.interceptors.request.use((config) => {
-      const currentToken = localStorage.getItem("token");
-      if (currentToken) {
-        config.headers.Authorization = `Bearer ${currentToken}`;
-      }
-      return config;
-    });
-
-    const resInterceptor = axios.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
-          logout();
-        }
-        return Promise.reject(error);
-      }
-    );
-
-    return () => {
-      axios.interceptors.request.eject(reqInterceptor);
-      axios.interceptors.response.eject(resInterceptor);
-    };
   }, []);
 
   return (
