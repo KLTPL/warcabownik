@@ -4,6 +4,8 @@ import {
   Logger,
 } from "@nestjs/common";
 import axios from "axios";
+import * as http from "http";
+import * as https from "https";
 
 interface AiMoveResponse {
   fromPosition: { x: number; y: number };
@@ -36,11 +38,22 @@ export class AiService {
         this.logger.log(
           `Making a POST request to ${process.env.AI_URL}/predict-move `,
         );
+
         const response = await axios.post<AiMoveResponse>(
           `${process.env.AI_URL}/predict-move`,
           {
             board: numericBoard,
             player_id: 2,
+          },
+          {
+            // force IPv4 and add standard headers
+            httpAgent: new http.Agent({ family: 4 }),
+            httpsAgent: new https.Agent({ family: 4 }),
+            headers: {
+              "User-Agent": "warcabownik-backend/1.0",
+              Accept: "application/json",
+              Connection: "close",
+            },
           },
         );
         this.logger.log("Response");
