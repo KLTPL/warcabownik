@@ -38,4 +38,7 @@ export const INITIAL_WHITE_ROWS = 3;
 export const INITIAL_BLACK_ROW_START = 5;
 export const DEFAULT_WHITE_ID = "WHITE";
 export const DEFAULT_BLACK_ID = "BLACK";
-export const CORS_ORIGIN = "http://localhost:5173";
+export const CORS_ORIGIN = [
+  "http://localhost:5173",
+  process.env.FRONTEND_URL || "",
+];
