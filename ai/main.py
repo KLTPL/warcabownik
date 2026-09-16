@@ -1,6 +1,8 @@
+import os
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
 import random
+from fastapi.middleware.cors import CORSMiddleware
 
 BOARD_SIZE = 8
 EMPTY_CELL = 0
@@ -10,6 +12,17 @@ WHITE_KING = 3
 BLACK_KING = 4
 
 app = FastAPI(title="Checkers AI Mock")
+
+
+frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[frontend_url],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class BoardRequest(BaseModel):
