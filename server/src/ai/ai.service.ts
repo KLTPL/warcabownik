@@ -30,7 +30,7 @@ export class AiService {
       }),
     );
 
-    let retries = 5;
+    let retries = 15;
     while (retries > 0) {
       try {
         this.logger.log(
