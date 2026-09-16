@@ -1,12 +1,25 @@
-import { Injectable, InternalServerErrorException } from "@nestjs/common";
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from "@nestjs/common";
 import axios from "axios";
+
+interface AiMoveResponse {
+  fromPosition: { x: number; y: number };
+  toPosition: { x: number; y: number };
+}
 
 @Injectable()
 export class AiService {
+  private readonly logger = new Logger(AiService.name);
+
   async getAiMove(
     boardStateJson: string,
   ): Promise<{ fromPosition: string; toPosition: string }> {
-    const rawBoard: string[][] = JSON.parse(boardStateJson);
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    const parsedJson: unknown = JSON.parse(boardStateJson);
+    const rawBoard = parsedJson as string[][];
 
     const numericBoard: number[][] = rawBoard.map((row) =>
       row.map((cell) => {
@@ -18,19 +31,37 @@ export class AiService {
       }),
     );
 
-    try {
-      const response = await axios.post(`${process.env.AI_URL}/predict-move`, {
-        board: numericBoard,
-        player_id: 2,
-      });
-      const { fromPosition, toPosition } = response.data;
-      return {
-        fromPosition: this.toAlgebraic(fromPosition.x, fromPosition.y),
-        toPosition: this.toAlgebraic(toPosition.x, toPosition.y),
-      };
-    } catch (error) {
-      throw new InternalServerErrorException("FailedToFetchAiMove");
+    let retries = 5;
+    while (retries > 0) {
+      try {
+        const response = await axios.post<AiMoveResponse>(
+          `${process.env.AI_URL}/predict-move`,
+          {
+            board: numericBoard,
+            player_id: 2,
+          },
+        );
+
+        const { fromPosition, toPosition } = response.data;
+        return {
+          fromPosition: this.toAlgebraic(fromPosition.x, fromPosition.y),
+          toPosition: this.toAlgebraic(toPosition.x, toPosition.y),
+        };
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        this.logger.warn(
+          `AI attempt failed (${errorMessage}). Retrying in 3s... (${retries - 1} left)`,
+        );
+
+        retries--;
+        if (retries === 0) {
+          throw new InternalServerErrorException("FailedToFetchAiMove");
+        }
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
     }
+    throw new InternalServerErrorException("FailedToFetchAiMove");
   }
 
   private toAlgebraic(x: number, y: number): string {
