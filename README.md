@@ -197,4 +197,3 @@ The commit structure should look like this:
 - **`sick:`** – 'boring' activity, e.g. initialization of repo, raising of the build number, release
 - **`docs:`** – change of documentation (e.g. README, LICENSE).
 - **`test:`** – adding or improving tests
-
