@@ -25,26 +25,8 @@ AXIOS_INSTANCE.interceptors.response.use(
 );
 
 export const customInstance = <T>(
-  configOrUrl: AxiosRequestConfig | string,
+  config: AxiosRequestConfig,
   options?: AxiosRequestConfig
 ): Promise<T> => {
-  let mergedConfig: any;
-
-  if (typeof configOrUrl === "string") {
-    mergedConfig = { url: configOrUrl, ...options };
-  } else {
-    mergedConfig = { ...configOrUrl, ...options };
-  }
-
-  // TRANSLATE FETCH TO AXIOS
-  if (mergedConfig.body) {
-    mergedConfig.data =
-      typeof mergedConfig.body === "string"
-        ? JSON.parse(mergedConfig.body)
-        : mergedConfig.body;
-
-    delete mergedConfig.body;
-  }
-
-  return AXIOS_INSTANCE(mergedConfig).then(({ data }) => data);
+  return AXIOS_INSTANCE({ ...config, ...options }).then(({ data }) => data);
 };

@@ -33,6 +33,8 @@ import type {
 import { customInstance } from '../../custom-instance';
 
 
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
 
 
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
@@ -50,40 +52,20 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export type gameControllerCreateAiGameResponse201 = {
-  data: GameResponseDto
-  status: 201
-}
-
-export type gameControllerCreateAiGameResponseSuccess = (gameControllerCreateAiGameResponse201) & {
-  headers: Headers;
-};
-;
-
-export type gameControllerCreateAiGameResponse = (gameControllerCreateAiGameResponseSuccess)
-
-export const getGameControllerCreateAiGameUrl = () => {
-
-
-
-
-  return `/game/create-ai`
-}
-
 /**
  * @summary Create a new game against the AI
  */
-export const gameControllerCreateAiGame = async ( options?: RequestInit): Promise<gameControllerCreateAiGameResponse> => {
+export const gameControllerCreateAiGame = (
 
-  return customInstance<gameControllerCreateAiGameResponse>(getGameControllerCreateAiGameUrl(),
-  {
-    ...options,
-    method: 'POST'
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
 
 
-  }
-);}
-
+      return customInstance<GameResponseDto>(
+      {url: `/game/create-ai`, method: 'POST', signal
+    },
+      options);
+    }
 
 
 
@@ -91,15 +73,15 @@ export const gameControllerCreateAiGame = async ( options?: RequestInit): Promis
 export const getGameControllerCreateAiGameMutationKey = () => ['gameControllerCreateAiGame'] as const;
 
 export const getGameControllerCreateAiGameMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof gameControllerCreateAiGame>>, TError,void, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof gameControllerCreateAiGame>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof gameControllerCreateAiGame>>, TError,void, TContext> => {
 
 const mutationKey = getGameControllerCreateAiGameMutationKey();
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -107,7 +89,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof gameControllerCreateAiGame>>, void> = () => {
 
 
-          return  gameControllerCreateAiGame()
+          return  gameControllerCreateAiGame(requestOptions)
         }
 
 
@@ -126,7 +108,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Create a new game against the AI
  */
 export const useGameControllerCreateAiGame = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof gameControllerCreateAiGame>>, TError,void, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof gameControllerCreateAiGame>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof gameControllerCreateAiGame>>,
         TError,
@@ -135,47 +117,21 @@ export const useGameControllerCreateAiGame = <TError = unknown,
       > => {
       return useMutation(getGameControllerCreateAiGameMutationOptions(options), queryClient);
     }
-    export type gameControllerGetHistoryResponse200 = {
-  data: PaginatedGameHistoryDto
-  status: 200
-}
-
-export type gameControllerGetHistoryResponseSuccess = (gameControllerGetHistoryResponse200) & {
-  headers: Headers;
-};
-;
-
-export type gameControllerGetHistoryResponse = (gameControllerGetHistoryResponseSuccess)
-
-export const getGameControllerGetHistoryUrl = (params?: GameControllerGetHistoryParams,) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0 ? `/game/history?${stringifiedParams}` : `/game/history`
-}
-
-/**
+    /**
  * @summary Get paginated game history of a particular user
  */
-export const gameControllerGetHistory = async (params?: GameControllerGetHistoryParams, options?: RequestInit): Promise<gameControllerGetHistoryResponse> => {
-
-  return customInstance<gameControllerGetHistoryResponse>(getGameControllerGetHistoryUrl(params),
-  {
-    ...options,
-    method: 'GET'
+export const gameControllerGetHistory = (
+    params?: GameControllerGetHistoryParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
 
 
-  }
-);}
-
+      return customInstance<PaginatedGameHistoryDto>(
+      {url: `/game/history`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
 
 
 
@@ -187,16 +143,16 @@ export const getGameControllerGetHistoryQueryKey = (params?: GameControllerGetHi
     }
 
 
-export const getGameControllerGetHistoryQueryOptions = <TData = Awaited<ReturnType<typeof gameControllerGetHistory>>, TError = unknown>(params?: GameControllerGetHistoryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof gameControllerGetHistory>>, TError, TData>>, }
+export const getGameControllerGetHistoryQueryOptions = <TData = Awaited<ReturnType<typeof gameControllerGetHistory>>, TError = unknown>(params?: GameControllerGetHistoryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof gameControllerGetHistory>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGameControllerGetHistoryQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof gameControllerGetHistory>>> = ({ signal }) => gameControllerGetHistory(params, { signal });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof gameControllerGetHistory>>> = ({ signal }) => gameControllerGetHistory(params, requestOptions, signal);
 
 
 
@@ -216,7 +172,7 @@ export function useGameControllerGetHistory<TData = Awaited<ReturnType<typeof ga
           TError,
           Awaited<ReturnType<typeof gameControllerGetHistory>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGameControllerGetHistory<TData = Awaited<ReturnType<typeof gameControllerGetHistory>>, TError = unknown>(
@@ -226,11 +182,11 @@ export function useGameControllerGetHistory<TData = Awaited<ReturnType<typeof ga
           TError,
           Awaited<ReturnType<typeof gameControllerGetHistory>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGameControllerGetHistory<TData = Awaited<ReturnType<typeof gameControllerGetHistory>>, TError = unknown>(
- params?: GameControllerGetHistoryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof gameControllerGetHistory>>, TError, TData>>, }
+ params?: GameControllerGetHistoryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof gameControllerGetHistory>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -238,7 +194,7 @@ export function useGameControllerGetHistory<TData = Awaited<ReturnType<typeof ga
  */
 
 export function useGameControllerGetHistory<TData = Awaited<ReturnType<typeof gameControllerGetHistory>>, TError = unknown>(
- params?: GameControllerGetHistoryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof gameControllerGetHistory>>, TError, TData>>, }
+ params?: GameControllerGetHistoryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof gameControllerGetHistory>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 

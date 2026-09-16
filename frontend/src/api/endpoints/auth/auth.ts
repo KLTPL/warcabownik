@@ -25,64 +25,27 @@ import type {
 import { customInstance } from '../../custom-instance';
 
 
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
-export type authControllerRegisterResponse201 = {
-  data: UserEntity
-  status: 201
-}
-
-export type authControllerRegisterResponse409 = {
-  data: void
-  status: 409
-}
-
-export type authControllerRegisterResponseSuccess = (authControllerRegisterResponse201) & {
-  headers: Headers;
-};
-export type authControllerRegisterResponseError = (authControllerRegisterResponse409) & {
-  headers: Headers;
-};
-
-export type authControllerRegisterResponse = (authControllerRegisterResponseSuccess | authControllerRegisterResponseError)
-
-export const getAuthControllerRegisterUrl = () => {
-
-
-
-
-  return `/auth/register`
-}
 
 /**
  * Add an expense to the database.
  * @summary Register as a new user
  */
-export const authControllerRegister = async (registerDto: RegisterDto, options?: RequestInit): Promise<authControllerRegisterResponse> => {
+export const authControllerRegister = (
+    registerDto: RegisterDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customInstance<authControllerRegisterResponse>(getAuthControllerRegisterUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(registerDto)
-  }
-);}
 
+      return customInstance<UserEntity>(
+      {url: `/auth/register`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: registerDto, signal
+    },
+      options);
+    }
 
 
 
@@ -90,15 +53,15 @@ return customInstance<authControllerRegisterResponse>(getAuthControllerRegisterU
 export const getAuthControllerRegisterMutationKey = () => ['authControllerRegister'] as const;
 
 export const getAuthControllerRegisterMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerRegister>>, TError,AuthControllerRegisterMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerRegister>>, TError,AuthControllerRegisterMutationVariables, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof authControllerRegister>>, TError,AuthControllerRegisterMutationVariables, TContext> => {
 
 const mutationKey = getAuthControllerRegisterMutationKey();
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -106,7 +69,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof authControllerRegister>>, AuthControllerRegisterMutationVariables> = (props) => {
           const {data} = props ?? {};
 
-          return  authControllerRegister(data,)
+          return  authControllerRegister(data,requestOptions)
         }
 
 
@@ -125,7 +88,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Register as a new user
  */
 export const useAuthControllerRegister = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerRegister>>, TError,AuthControllerRegisterMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerRegister>>, TError,AuthControllerRegisterMutationVariables, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof authControllerRegister>>,
         TError,
@@ -134,54 +97,22 @@ export const useAuthControllerRegister = <TError = void,
       > => {
       return useMutation(getAuthControllerRegisterMutationOptions(options), queryClient);
     }
-    export type authControllerLoginResponse200 = {
-  data: LoginResponseDto
-  status: 200
-}
-
-export type authControllerLoginResponseSuccess = (authControllerLoginResponse200) & {
-  headers: Headers;
-};
-;
-
-export type authControllerLoginResponse = (authControllerLoginResponseSuccess)
-
-export const getAuthControllerLoginUrl = () => {
-
-
-
-
-  return `/auth/login`
-}
-
-/**
+    /**
  * @summary User login
  */
-export const authControllerLogin = async (loginDto: LoginDto, options?: RequestInit): Promise<authControllerLoginResponse> => {
+export const authControllerLogin = (
+    loginDto: LoginDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customInstance<authControllerLoginResponse>(getAuthControllerLoginUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(loginDto)
-  }
-);}
 
+      return customInstance<LoginResponseDto>(
+      {url: `/auth/login`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: loginDto, signal
+    },
+      options);
+    }
 
 
 
@@ -189,15 +120,15 @@ return customInstance<authControllerLoginResponse>(getAuthControllerLoginUrl(),
 export const getAuthControllerLoginMutationKey = () => ['authControllerLogin'] as const;
 
 export const getAuthControllerLoginMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerLogin>>, TError,AuthControllerLoginMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerLogin>>, TError,AuthControllerLoginMutationVariables, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof authControllerLogin>>, TError,AuthControllerLoginMutationVariables, TContext> => {
 
 const mutationKey = getAuthControllerLoginMutationKey();
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -205,7 +136,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof authControllerLogin>>, AuthControllerLoginMutationVariables> = (props) => {
           const {data} = props ?? {};
 
-          return  authControllerLogin(data,)
+          return  authControllerLogin(data,requestOptions)
         }
 
 
@@ -224,7 +155,7 @@ const {mutation: mutationOptions} = options ?
  * @summary User login
  */
 export const useAuthControllerLogin = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerLogin>>, TError,AuthControllerLoginMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerLogin>>, TError,AuthControllerLoginMutationVariables, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof authControllerLogin>>,
         TError,

@@ -13,16 +13,18 @@ export function GameHistory() {
   const { data, isLoading } = useGameControllerGetHistory({ page, limit: 10 });
 
   useEffect(() => {
-    if (data?.data?.games) {
+    // Access data.games directly
+    if (data?.games) {
       if (page === 1) {
-        setAccumulatedGames(data.data.games);
+        setAccumulatedGames(data.games);
       } else {
-        setAccumulatedGames((prev) => [...prev, ...data.data.games]);
+        setAccumulatedGames((prev) => [...prev, ...data.games]);
       }
     }
   }, [data, page]);
 
-  const hasMore = data?.data ? data.data.page < data.data.totalPages : false;
+  // Access data.page and data.totalPages directly
+  const hasMore = data ? data.page < data.totalPages : false;
 
   return (
     <div className="max-w-2xl mx-auto mt-10 space-y-4">

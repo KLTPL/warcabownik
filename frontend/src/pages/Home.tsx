@@ -24,8 +24,8 @@ export function Home() {
     try {
       const response = await createAiGameMutation.mutateAsync();
 
-      if (response.data?.id) {
-        navigate(`/game/${response.data.id}`);
+      if (response?.id) {
+        navigate(`/game/${response.id}`);
       }
     } catch (error) {
       console.error("Błąd tworzenia gry", error);
@@ -49,7 +49,7 @@ export function Home() {
     );
   }
 
-  const recentGames = historyData?.data?.games || [];
+  const recentGames = historyData?.games || [];
 
   return (
     <div className="max-w-md mx-auto mt-10">
