@@ -5,7 +5,6 @@ import {
   type ReactNode,
   useContext,
 } from "react";
-import axios from "axios";
 
 interface AuthContextType {
   isLoggedIn: boolean;
