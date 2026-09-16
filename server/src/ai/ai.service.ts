@@ -17,7 +17,6 @@ export class AiService {
   async getAiMove(
     boardStateJson: string,
   ): Promise<{ fromPosition: string; toPosition: string }> {
-    await new Promise((resolve) => setTimeout(resolve, 3000));
     const parsedJson: unknown = JSON.parse(boardStateJson);
     const rawBoard = parsedJson as string[][];
 
