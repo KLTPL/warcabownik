@@ -53,7 +53,7 @@ export function Game() {
   const [status, setStatus] = useState("Connecting to server...");
   const [gameStatus, setGameStatus] = useState<string>("IN_PROGRESS");
   const [winner, setWinner] = useState<string | null>(null);
-  const [isAiThinking, setIsAiThinking] = useState(true);
+  const [isAiThinking, setIsAiThinking] = useState(false);
 
   const [board, setBoard] = useState<Board>(getInitialBoard());
   const [selectedPiece, setSelectedPiece] = useState<BoardPosition | null>(
