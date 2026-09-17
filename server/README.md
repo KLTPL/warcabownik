@@ -14,7 +14,7 @@
    POSTGRES_USER="myuser"
    POSTGRES_PASSWORD="mypassword"
    POSTGRES_DB="nestjs_db"
-   AI_URL=http://localhost:8000
+   AI_URL=http://localhost:5000
 
 
    # JWT

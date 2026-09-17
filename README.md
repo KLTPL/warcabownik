@@ -99,6 +99,7 @@ JWT_SECRET=secret
 EXPIRY_TIME_MS=3600000
 
 VITE_API_URL=http://localhost:3000
+AI_URL=http://localhost:5000
 ```
 
 ### 2. Start the Environment
