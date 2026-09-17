@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "module": "./dist/index.js",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch"
