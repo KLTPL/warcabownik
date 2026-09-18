@@ -3,8 +3,7 @@ FROM node:20-alpine
 ARG UID=1000
 ARG GID=1000
 
-RUN npm install -g pnpm@8
-
+RUN npm install -g pnpm@12.4.1
 RUN mkdir -p /workspace && chown ${UID}:${GID} /workspace
 
 USER ${UID}:${GID}
