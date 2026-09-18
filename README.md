@@ -79,66 +79,64 @@ warcabownik/
     └── Dockerfile            # Container build instructions for the FastAPI app
 ```
 
-## 🐳 Local Development with Docker
+## 🐳 Local Development (Hybrid Workflow)
 
-This project uses Docker Compose to run the entire stack (React, NestJS, Python AI, and PostgreSQL) locally with hot-reloading enabled.
+This project uses a hybrid development approach. Docker Compose is used to run the infrastructure (PostgreSQL and the Python AI service), while the Node.js applications (React frontend, NestJS backend, and Shared packages) run directly on your host machine.
 
-> **Note:** You can run the project without using Docker. Follow the instructions in `server/README.md`, `frontend/README.md`, and `ai/README.md`.
+### 1. Environment Setup
 
-### 1. Initial Setup
-
-Create a global `.env` file in the root directory based on your configuration. Minimal example:
-
-```env
-POSTGRES_USER=myuser
-POSTGRES_PASSWORD=mypassword
-POSTGRES_DB=nestjs_db
-DATABASE_URL="postgresql://myuser:mypassword@postgres:5432/nestjs_db?schema=public"
-
-JWT_SECRET=secret
-EXPIRY_TIME_MS=3600000
-
-VITE_API_URL=http://localhost:3000
-AI_URL=http://localhost:5000
-```
-
-### 2. Start the Environment
-
-Run the following command to build the images and start all containers:
+Copy the example environment files to create your own local configurations:
 
 ```bash
-docker compose up --build
+cp .env.example .env
+cp server/.env.example server/.env
+cp frontend/.env.example frontend/.env
 ```
 
-> **Note:** Use the `--build` flag the first time or whenever you change `Dockerfile`, `package.json`, or `requirements.txt`. For regular starts, just use `docker compose up`.
+### 2. Start the Infrastructure
 
-### 3. Generate Types & Initialize the Database
-
-On a fresh clone, your local folders will mount over the container's generated files. While the containers are running, open a new terminal and generate the Prisma types to clear any NestJS compiler errors:
+Run the following command to build the AI image and start the database in the background:
 
 ```bash
-docker exec -it checkers_server pnpm prisma generate
+docker compose up -d --build
 ```
 
-Next, push the Prisma schema to the empty PostgreSQL database:
+### 3. Install Node.js Dependencies
+
+With your infrastructure running, install the monorepo dependencies on your local machine:
 
 ```bash
-docker exec -it checkers_server pnpm prisma db push
+pnpm install
 ```
 
-> **Note:** To migrate your schema instead, run `docker exec -it checkers_server pnpm prisma migrate dev`.
+### 4. Initialize the Database & Generate Types
 
-### 4. Seed the Database (Optional)
-
-If your project includes a seed script, you can populate the database with initial test data:
+Before starting the server, you need to sync the Prisma schema with your running PostgreSQL database and generate the local TypeScript definitions:
 
 ```bash
-docker exec -it checkers_server pnpm prisma db seed
+cd server
+pnpm prisma db push
+pnpm prisma generate
 ```
 
-> **Tip:** If you ever need to wipe all data and start fresh, run `docker exec -it checkers_server pnpm prisma migrate reset`. This drops the database, recreates it, and runs the seed script.
+> **Note:** To use migrations instead of a direct schema push, run `pnpm prisma migrate dev`. To populate the database with initial test data, run `pnpm prisma db seed`.
 
-### 5. Access the Services
+### 5. Start the Development Servers
+
+Open separate terminal tabs (or use a multiplexer) to run the frontend, backend, and shared packages in watch mode on your host machine:
+
+```bash
+# Tab 1: Compile shared packages in watch mode
+pnpm --filter @warcabownik/shared run dev
+
+# Tab 2: Start the NestJS backend
+pnpm --filter @warcabownik/server run start:dev
+
+# Tab 3: Start the React frontend
+pnpm --filter @warcabownik/frontend run dev
+```
+
+### 6. Access the Services
 
 Once running, the services are available at:
 
@@ -146,44 +144,26 @@ Once running, the services are available at:
 - **Backend (NestJS API):** <http://localhost:3000>
 - **AI Service (FastAPI Docs):** <http://localhost:5000/docs>
 
-### 6. Development Workflow (Hot-Reload)
-
-- **Code Changes:** Local folders are mapped to the containers via volumes. Saving a file in your IDE will instantly trigger a hot-reload for both React and NestJS.
-- **Installing Packages:** To add a new dependency without stopping the environment, execute the command directly inside the container:
-
-  ```bash
-  docker exec -it checkers_server pnpm install <package-name>
-  ```
-
-  _(Remember to run `docker compose up --build` next time to bake the new package into the image)._
-
 ### 7. Stopping the Environment
 
-To stop the containers gracefully:
+To stop the background Docker containers (database and AI):
 
 ```bash
 docker compose down
 ```
 
-_(Your database data is safely persisted in a Docker volume)._
+_(Your database data is safely persisted in a Docker volume)._ To stop the Node.js servers, simply press `Ctrl+C` in their respective terminal tabs.
 
 ### 8. Prisma Studio (Database GUI)
 
-If you want to view or edit your database via the browser using Prisma Studio, you should run it locally on your host machine rather than inside Docker.
-
-Because Prisma Studio must be run from the `server/` directory, **you must copy your global `.env` file into the `server/` folder** so Prisma can resolve the `DATABASE_URL`.
+You can view or edit your database via the browser using Prisma Studio.
 
 ```bash
 cd server
 pnpm prisma studio
 ```
 
-> **Troubleshooting:** If you get a `Permission denied` error when trying to run Prisma commands locally, it means Docker created root-owned files in your workspace. To fix this, delete the locked modules and reinstall them as your local user:
->
-> ```bash
-> sudo rm -rf ../node_modules node_modules ../frontend/node_modules ../packages/shared/node_modules
-> pnpm install
-> ```
+> **Note:** Because Prisma Studio runs from the `server/` directory, ensure your `.env` file is accessible to it so it can resolve the `DATABASE_URL`.
 
 ## 📝 Conventional Commits
 
