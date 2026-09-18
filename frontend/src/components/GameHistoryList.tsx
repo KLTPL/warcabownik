@@ -49,7 +49,7 @@ export function GameHistoryList({ games }: GameHistoryListProps) {
             className="p-4 border hover:border-primary/50 hover:shadow-md cursor-pointer transition-all duration-200 group relative overflow-hidden"
           >
             <div className="flex items-center justify-between gap-4">
-              {/* Lewa strona: Status i detale meczu */}
+              {/* Left side: Status and match details */}
               <div className="flex items-start gap-3 min-w-0">
                 <div className="p-2.5 rounded-lg bg-muted text-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors shrink-0">
                   <Swords className="w-5 h-5" />
@@ -61,7 +61,7 @@ export function GameHistoryList({ games }: GameHistoryListProps) {
                       Match #{game.id.slice(0, 8)}
                     </span>
 
-                    {/* Odznaka Statusu */}
+                    {/* Status Badge */}
                     {isFinished ? (
                       hasWinner ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
@@ -79,7 +79,7 @@ export function GameHistoryList({ games }: GameHistoryListProps) {
                     )}
                   </div>
 
-                  {/* Metadane czasowe */}
+                  {/* Timestamp Metadata */}
                   <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5" />
@@ -96,7 +96,7 @@ export function GameHistoryList({ games }: GameHistoryListProps) {
                 </div>
               </div>
 
-              {/* Prawa strona: Ikona przejścia */}
+              {/* Right side: Transition Icon */}
               <div className="flex items-center gap-1 text-muted-foreground group-hover:text-primary transition-colors shrink-0">
                 <span className="text-xs font-medium hidden sm:inline">View</span>
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
