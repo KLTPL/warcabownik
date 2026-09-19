@@ -87,7 +87,7 @@ class CheckersTrainer:
                 if t %2 == 1:
                     gamma *= self.gamma
                 t=t+1
-            targets_list.append([target])
+            targets_list.append([float(target)])
         return targets_list
 
     def train_on_episode(self, game_history):
