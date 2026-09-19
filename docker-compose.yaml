@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   postgres:
     image: postgres:15
@@ -22,75 +20,9 @@ services:
       - "5000:5000"
     environment:
       - PYTHONUNBUFFERED=1
-      - FRONTEND_URL=http://localhost:5173
+      - FRONTEND_URL=${FRONTEND_URL}
     volumes:
       - ./ai:/app
 
-  server:
-    build:
-      context: .
-      dockerfile: server/Dockerfile
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-    container_name: checkers_server
-    user: "${UID:-1000}:${GID:-1000}"
-    command: pnpm run start:dev
-    ports:
-      - "3000:3000"
-    environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
-      - JWT_SECRET=${JWT_SECRET}
-      - EXPIRY_TIME_MS=${EXPIRY_TIME_MS}
-      - AI_URL=http://ai:5000
-    depends_on:
-      - postgres
-      - ai
-    working_dir: /workspace/server
-    volumes:
-      - .:/workspace
-      - /workspace/server/node_modules
-      - /workspace/node_modules
-      - /workspace/packages/shared/node_modules
-
-  frontend:
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-    container_name: checkers_frontend
-    ports:
-      - "5173:5173"
-    environment:
-      - VITE_API_URL=http://localhost:3000
-      - VITE_AI_URL=http://localhost:5000
-    depends_on:
-      - server
-    working_dir: /workspace/frontend
-    volumes:
-      - .:/workspace
-      - /workspace/frontend/node_modules
-      - /workspace/node_modules
-      - /workspace/packages/shared/node_modules
-      - /workspace/server/node_modules
-
-  shared-watcher:
-    build:
-      context: .
-      dockerfile: server/Dockerfile
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-    container_name: checkers_shared_watcher
-    user: "${UID:-1000}:${GID:-1000}"
-    # We override the default start command to just run the watcher
-    command: pnpm --filter @warcabownik/shared run dev
-    volumes:
-      - .:/workspace
-      - /workspace/server/node_modules
-      - /workspace/node_modules
-      - /workspace/packages/shared/node_modules
 volumes:
   postgres_data:

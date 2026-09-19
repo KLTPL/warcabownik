@@ -1,7 +1,12 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
-import { type ServerToClientEvents, type ClientToServerEvents, SocketEvents, type GameState } from "@warcabownik/shared";
+import {
+  type ServerToClientEvents,
+  type ClientToServerEvents,
+  SocketEvents,
+  type GameState,
+} from "@warcabownik/shared";
 import { useAuth } from "@/context/AuthContext";
 
 export interface BoardPosition {
@@ -51,8 +56,12 @@ export function useGame(gameId: string | undefined) {
   const [winner, setWinner] = useState<string | null>(null);
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [board, setBoard] = useState<Board>(getInitialBoard());
-  const [selectedPiece, setSelectedPiece] = useState<BoardPosition | null>(null);
-  const [errorPosition, setErrorPosition] = useState<BoardPosition | null>(null);
+  const [selectedPiece, setSelectedPiece] = useState<BoardPosition | null>(
+    null
+  );
+  const [errorPosition, setErrorPosition] = useState<BoardPosition | null>(
+    null
+  );
 
   const aiDelayTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -71,9 +80,12 @@ export function useGame(gameId: string | undefined) {
     if (!gameId) return;
 
     const token = localStorage.getItem("token");
-    const newSocket: TypedSocket = io(`${import.meta.env.VITE_API_URL}/game`, {
-      auth: { token },
-    });
+    const newSocket: TypedSocket = io(
+      `${import.meta.env.VITE_SERVER_URL}/game`,
+      {
+        auth: { token },
+      }
+    );
 
     newSocket.on("connect", () => {
       setStatus("Connected. Your turn!");
@@ -129,7 +141,7 @@ export function useGame(gameId: string | undefined) {
 
   const handleSquareClick = (x: number, y: number): void => {
     if (isAiThinking || gameStatus === "FINISHED") return;
-    if ((x + y) % 2 === 0) return; 
+    if ((x + y) % 2 === 0) return;
 
     const piece = board[y][x];
 
@@ -161,7 +173,7 @@ export function useGame(gameId: string | undefined) {
       if (Math.abs(toX - fromX) === 2 && Math.abs(toY - fromY) === 2) {
         const capturedX = (fromX + toX) / 2;
         const capturedY = (fromY + toY) / 2;
-        optimisticBoard[capturedY][capturedX] = 0; 
+        optimisticBoard[capturedY][capturedX] = 0;
       }
 
       setBoard(optimisticBoard);
@@ -212,3 +224,4 @@ export function useGame(gameId: string | undefined) {
     handleSquareClick,
   };
 }
+

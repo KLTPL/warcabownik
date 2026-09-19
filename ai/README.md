@@ -2,6 +2,12 @@
 
 ## ⚙️ Project setup
 
+### Create an .env file in the ai directory
+
+```env
+FRONTEND_URL=http://localhost:5731
+```
+
 ### Running localy
 
 ```
