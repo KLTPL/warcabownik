@@ -30,8 +30,10 @@ For more detailed information head on to other README.md files in the three main
 
 ```text
 warcabownik/
-├── docker-compose.yaml       # Local infrastructure orchestration (Postgres, NestJS, React, AI)
+├── docker-compose.yaml       # Local infrastructure orchestration (Postgres and Python AI only)
+├── package.json              # Monorepo root config, package manager enforcement, and concurrent dev scripts
 ├── pnpm-workspace.yaml       # Monorepo workspace mapping
+├── .env.example              # Default Docker infrastructure variables (Postgres credentials)
 ├── .dockerignore             # Excludes local files (like node_modules) from Docker builds
 ├── README.md                 # Project documentation
 │
@@ -40,7 +42,7 @@ warcabownik/
 │       ├── src/
 │       │   └── index.ts      # Central source of truth for shared types and socket events
 │       ├── dist/             # Compiled JavaScript output consumed by frontend and backend
-│       ├── package.json      # Shared module dependencies and build scripts
+│       ├── package.json      # Shared module dependencies (@warcabownik/shared)
 │       └── tsconfig.json     # TypeScript compiler settings for the shared package
 │
 ├── frontend/                 # React (Vite) client
@@ -49,9 +51,10 @@ warcabownik/
 │   │   ├── components/       # Reusable UI elements (Shadcn components, layouts)
 │   │   ├── context/          # Global React state (e.g., AuthContext)
 │   │   └── lib/              # Utilities and typed Socket.io client setup
-│   ├── package.json          # React client dependencies and scripts
+│   ├── .env.example          # Default frontend environment variables (Localhost API/AI URLs)
+│   ├── package.json          # React client dependencies (@warcabownik/frontend)
 │   ├── vite.config.ts        # Vite bundler configuration and workspace resolution
-│   └── Dockerfile            # Container build instructions for the React app
+│   └── Dockerfile            # Production container build instructions for the React app
 │
 ├── server/                   # NestJS backend
 │   ├── prisma/
@@ -64,10 +67,10 @@ warcabownik/
 │   │   ├── auth/             # JWT authentication, guards, and login strategies
 │   │   ├── game/             # Core checkers domain logic and move validation
 │   │   └── gateway/          # WebSocket event listeners and emitters
-│   ├── .env                  # Backend environment variables (DB connection string)
-│   ├── package.json          # NestJS backend dependencies and scripts
+│   ├── .env.example          # Default backend environment variables (Localhost DB URL)
+│   ├── package.json          # NestJS backend dependencies (@warcabownik/server)
 │   ├── prisma.config.ts      # Custom Prisma CLI configuration
-│   └── Dockerfile            # Container build instructions for the NestJS app
+│   └── Dockerfile            # Optimized, multi-stage production container for the NestJS app
 │
 └── ai/                       # Python AI Microservice
     ├── main.py               # FastAPI server exposing move-prediction endpoints
