@@ -108,7 +108,7 @@ class CheckersTrainer:
 
         with torch.no_grad():
             self.model.eval()
-            future_predictions = self.model(batch_layouts_list).squeeze(-1).cpu().numpy()
+            future_predictions = self.model(batch_layouts_list).detach().cpu().numpy().flatten()
 
         self.model.train()
 
