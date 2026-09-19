@@ -1,7 +1,7 @@
 import Axios, { type AxiosRequestConfig } from "axios";
 
 export const AXIOS_INSTANCE = Axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: import.meta.env.VITE_SERVER_URL,
   headers: { "Content-Type": "application/json" },
 });
 
