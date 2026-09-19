@@ -123,17 +123,10 @@ pnpm prisma generate
 
 ### 5. Start the Development Servers
 
-Open separate terminal tabs (or use a multiplexer) to run the frontend, backend, and shared packages in watch mode on your host machine:
+Run the frontend, backend, and shared packages in watch mode on your host machine:
 
 ```bash
-# Tab 1: Compile shared packages in watch mode
-pnpm --filter @warcabownik/shared run dev
-
-# Tab 2: Start the NestJS backend
-pnpm --filter @warcabownik/server run start:dev
-
-# Tab 3: Start the React frontend
-pnpm --filter @warcabownik/frontend run dev
+pnpm run dev
 ```
 
 ### 6. Access the Services

@@ -3,11 +3,15 @@
   "private": true,
   "packageManager": "pnpm@12.4.1",
   "scripts": {
-    "preinstall": "npx only-allow pnpm"
+    "preinstall": "npx only-allow pnpm",
+    "dev": "concurrently -c \"cyan,magenta,yellow\" -n \"SHARED,SERVER,FRONTEND\" \"pnpm --filter @warcabownik/shared run dev\" \"pnpm --filter @warcabownik/server run start:dev\" \"pnpm --filter @warcabownik/frontend run dev\""
   },
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0",
     "yarn": "please-use-pnpm"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
   }
 }
