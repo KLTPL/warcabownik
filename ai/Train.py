@@ -62,6 +62,12 @@ class CheckersTrainer:
 
                 with torch.no_grad():
                     values_prediction = self.model(batch_tensor)
+
+                    if torch.isnan(values_prediction).any(): # checks if all weight values_prediction are Numbers
+                        best_idx = random.randint(0, len(possible_board_layouts) - 1)
+                    else:
+                        best_idx = torch.argmax(values_prediction).item()
+
                     best_idx = torch.argmax(values_prediction).item()
 
                 board_choice = possible_board_layouts[best_idx]
@@ -117,6 +123,7 @@ class CheckersTrainer:
 
         current_predictions=self.model(batch_layouts_list)
 
+        torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0) # protects model from exploding gradient
         loss = self.criterion(current_predictions, batch_targets)
         self.optimizer.zero_grad()
         loss.backward()
