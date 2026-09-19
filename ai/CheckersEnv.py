@@ -56,7 +56,7 @@ class CheckersEnv:
         
     def next_move(self, new_board):
         self.board = new_board
-        self.rotate_board
+        self.rotate_board()
         self.player *= -1
 
     def load_board(self, new_board):
