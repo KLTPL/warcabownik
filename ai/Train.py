@@ -64,6 +64,7 @@ class CheckersTrainer:
                     values_prediction = self.model(batch_tensor)
 
                     if torch.isnan(values_prediction).any(): # checks if all weight values_prediction are Numbers
+                        print("ERROR: Nan value in values_prediction stop training!!!!")
                         best_idx = random.randint(0, len(possible_board_layouts) - 1)
                     else:
                         best_idx = torch.argmax(values_prediction).item()
