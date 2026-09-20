@@ -206,17 +206,24 @@ class CheckersEnv:
     
 
     def print_board(self, state=None):
-        """Prints the board in a readable format."""
+        """Prints the board in a readable format from a fixed perspective."""
         if state is None:
             state = self.board
             
+        
+        display_state = state.copy()
+        
+        
+        if getattr(self, 'player', 1) == -1:
+            display_state = state[::-1, ::-1] * -1
+
         symbols = {EMPTY: '.', MAN: 'w', KING: 'W', -MAN: 'b', -KING: 'B'}
         print("  0 1 2 3 4 5 6 7")
         print(" -----------------")
         for r in range(BOARD_SIZE):
             row_str = f"{r}|"
             for c in range(BOARD_SIZE):
-                row_str += symbols[state[r, c]] + " "
+                field_val = int(display_state[r, c])
+                row_str += symbols[field_val] + " "
             print(row_str)
         print()
-
