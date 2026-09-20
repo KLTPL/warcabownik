@@ -34,17 +34,22 @@ class CheckersEnv:
 
     def get_player(self):
         return self.player
+    
     def set_player(self, new_player):
         if new_player in (-1, 1):
             self.player = new_player
         else:
             raise ValueError("Player value should be 1 or -1")
-        
-    def rotate_board(self):
-        self.board = self.board[::-1, ::-1].copy() * -1
+    def change_sites(self):
+        self.board = self.board.copy() * -1
+    def rotate_board(self, keep_colours=False):
+        if keep_colours:
+            self.board = self.board[::-1, ::-1].copy()
+        else:
+            self.board = self.board[::-1, ::-1].copy() * -1
 
     def get_board(self):
-        return self.board
+        return self.board.copy()
     
     def get_reward(self, next_layout):
         MAN_DIFF = np.count_nonzero(self.board == -MAN) - np.count_nonzero(next_layout == -MAN)
