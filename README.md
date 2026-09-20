@@ -1,6 +1,8 @@
-# Warcabownik
+# Warcabownik (Checkers)
 
 Grupowy projekt Solvro Wakacyjne Wyzwanie 2026 ścieżki Backend i AI/ML
+
+**Warcabownik** is a modern, real-time multiplayer Checkers application featuring a dedicated AI opponent trained via Reinforcement Learning. Containerized with Docker, providing instant hot-reloading and painless local development.
 
 ## 👤 Authors
 
@@ -14,99 +16,123 @@ Grupowy projekt Solvro Wakacyjne Wyzwanie 2026 ścieżki Backend i AI/ML
 - **Backend:** NestJS, TypeScript, Socket.io, Prisma (PostgreSQL).
 - **AI Engine:** Python, FastAPI, PyTorch (Machine Learning model for bot logic).
 
+## Table of Contents
+
+- [Project Structure](#🗂️-project-structure)
+- [Local Development with Docker](#🐳-local-development-with-docker)
+  - [Initial Setup](#1-initial-setup)
+  - [Prisma Studio](#8-prisma-studio-database-gui)
+- [Conventional commits](#📝-conventional-commits)
+
 ## 🗂️ Project Structure
 
 For more detailed information head on to other README.md files in the three main directories.
 
 ```text
 warcabownik/
+├── docker-compose.yaml       # Local infrastructure orchestration (Postgres and Python AI only)
+├── package.json              # Monorepo root config, package manager enforcement, and concurrent dev scripts
+├── pnpm-workspace.yaml       # Monorepo workspace mapping
+├── .env.example              # Default Docker infrastructure variables (Postgres credentials)
+├── .dockerignore             # Excludes local files (like node_modules) from Docker builds
+├── README.md                 # Project documentation
+│
+├── packages/                 # Shared internal libraries
+│   └── shared/
+│       ├── src/
+│       │   └── index.ts      # Central source of truth for shared types and socket events
+│       ├── dist/             # Compiled JavaScript output consumed by frontend and backend
+│       ├── package.json      # Shared module dependencies (@warcabownik/shared)
+│       └── tsconfig.json     # TypeScript compiler settings for the shared package
+│
 ├── frontend/                 # React (Vite) client
 │   ├── src/
-│   │   ├── assets/pages/     # Auth.tsx, Game.tsx, Home.tsx
-│   │   ├── components/       # UI components (Shadcn)
-│   │   ├── context/          # React Context (Auth)
-│   │   └── lib/
-│   ├── package.json
-│   └── vite.config.ts
+│   │   ├── pages/            # Route views (Auth.tsx, Game.tsx, Home.tsx)
+│   │   ├── components/       # Reusable UI elements (Shadcn components, layouts)
+│   │   ├── context/          # Global React state (e.g., AuthContext)
+│   │   └── lib/              # Utilities and typed Socket.io client setup
+│   ├── .env.example          # Default frontend environment variables (Localhost API/AI URLs)
+│   ├── package.json          # React client dependencies (@warcabownik/frontend)
+│   ├── vite.config.ts        # Vite bundler configuration and workspace resolution
+│   └── Dockerfile            # Production container build instructions for the React app
 │
 ├── server/                   # NestJS backend
-│   ├── prisma/               # Database schema
+│   ├── prisma/
+│   │   ├── schema.prisma     # Database models and ORM configuration
+│   │   └── seed.ts           # Database initialization and mock data script
+│   ├── generated/
+│   │   └── prisma/           # Auto-generated Prisma database client and enums
 │   ├── src/
-│   │   ├── ai/               # AI microservice integration
-│   │   ├── auth/             # JWT Authentication
-│   │   ├── game/             # Game logic & validation (GameValidatorService)
-│   │   └── gateway/          # WebSocket endpoints (GameGateway)
-│   ├── docker-compose.yaml   # Local DB/Infrastructure setup
-│   └── package.json
+│   │   ├── ai/               # Integration with the Python AI microservice
+│   │   ├── auth/             # JWT authentication, guards, and login strategies
+│   │   ├── game/             # Core checkers domain logic and move validation
+│   │   └── gateway/          # WebSocket event listeners and emitters
+│   ├── .env.example          # Default backend environment variables (Localhost DB URL)
+│   ├── package.json          # NestJS backend dependencies (@warcabownik/server)
+│   ├── prisma.config.ts      # Custom Prisma CLI configuration
+│   └── Dockerfile            # Optimized, multi-stage production container for the NestJS app
 │
-├── ai/                       # Python AI Microservice
-│   ├── CheckersEnv.py        # RL Environment (Model branch)
-│   ├── Model.py              # Neural Network architecture (Model branch)
-│   ├── Train.py              # Training script (Model branch)
-│   ├── checkers_model.pth    # Trained PyTorch weights (Model branch)
-│   ├── main.py               # FastAPI communication endpoint
-│   └── requirements.txt
-│
-├── pnpm-workspace.yaml       # Monorepo configuration
-└── README.md
+└── ai/                       # Python AI Microservice
+    ├── main.py               # FastAPI server exposing move-prediction endpoints
+    ├── CheckersEnv.py        # Reinforcement learning environment modeling checkers rules
+    ├── Model.py              # PyTorch neural network architecture
+    ├── Train.py              # Training script for the AI model
+    ├── checkers_model.pth    # Saved PyTorch model weights
+    ├── requirements.txt      # Python dependencies (FastAPI, PyTorch, Uvicorn)
+    └── Dockerfile            # Container build instructions for the FastAPI app
 ```
 
-## 🐳 Local Development with Docker
+## 🐳 Local Development (Hybrid Workflow)
 
-This project uses Docker Compose to run the entire stack (React, NestJS, Python AI, and PostgreSQL) locally with hot-reloading enabled.
+This project uses a hybrid development approach. Docker Compose is used to run the infrastructure (PostgreSQL and the Python AI service), while the Node.js applications (React frontend, NestJS backend, and Shared packages) run directly on your host machine.
 
-> **Note:** You can run the project without using docker. Follow the instructions in `/server/README.md`, `/frontend/README.md` and `/ai/README.md`
+### 1. Environment Setup
 
-### 1. Initial Setup
-
-Create a global `.env` file in the root directory based on your configuration. Minimal example:
-
-```env
-POSTGRES_USER=myuser
-POSTGRES_PASSWORD=mypassword
-POSTGRES_DB=nestjs_db
-DATABASE_URL="postgresql://myuser:mypassword@postgres:5432/nestjs_db?schema=public"
-JWT_SECRET=secret
-EXPIRY_TIME_MS=3600000
-```
-
-### 2. Start the Environment
-
-Run the following command to build the images and start all containers:
+Copy the example environment files to create your own local configurations:
 
 ```bash
-docker compose up --build
+cp .env.example .env
+cp server/.env.example server/.env
+cp frontend/.env.example frontend/.env
 ```
 
-> **Note:** Use the `--build` flag the first time or whenever you change `Dockerfile` or `package.json` / `requirements.txt`. For regular starts, just use `docker compose up`.
+### 2. Start the Infrastructure
 
-### 3. Initialize the Database
-
-On the first run (or after clearing volumes), you need to push the Prisma schema to the empty PostgreSQL database. Leave the containers running and open a new terminal:
+Run the following command to build the AI image and start the database in the background:
 
 ```bash
-docker exec -it checkers_server pnpm prisma db push
+docker compose up -d --build
 ```
 
-or deploy a migration
+### 3. Install Node.js Dependencies
+
+With your infrastructure running, install the monorepo dependencies on your local machine:
 
 ```bash
-sudo docker exec -it checkers_server pnpm prisma migrate deploy
+pnpm install
 ```
 
-> **Note:** . To migrate your schema run `sudo docker exec -it checkers_server pnpm prisma migrate dev`
+### 4. Initialize the Database & Generate Types
 
-### 4. Seed the Database (Optional)
-
-If your project includes a seed script (configured in `package.json`), you can populate the database with initial test data by running:
+Before starting the server, you need to sync the Prisma schema with your running PostgreSQL database and generate the local TypeScript definitions:
 
 ```bash
-docker exec -it checkers_server pnpm prisma db seed
+cd server
+pnpm prisma db push
+pnpm prisma generate
 ```
 
-> **Tip:** If you ever need to wipe all data and start fresh, run `docker exec -it checkers_server pnpm prisma migrate reset`. This will drop the database, recreate it, and automatically run the seed script.
+> **Note:** To use migrations instead of a direct schema push, run `pnpm prisma migrate dev`. To populate the database with initial test data, run `pnpm prisma db seed`.
 
-### 5. Access the Services
+### 5. Start the Development Servers
+
+Run the frontend, backend, and shared packages in watch mode on your host machine:
+
+```bash
+pnpm run dev
+```
+
+### 6. Access the Services
 
 Once running, the services are available at:
 
@@ -114,26 +140,26 @@ Once running, the services are available at:
 - **Backend (NestJS API):** <http://localhost:3000>
 - **AI Service (FastAPI Docs):** <http://localhost:5000/docs>
 
-### 6. Development Workflow (Hot-Reload)
-
-- **Code Changes:** Local folders are mapped to the containers via volumes. Saving a file in your IDE will instantly trigger a hot-reload for both React and NestJS.
-- **Installing Packages:** To add a new dependency without stopping the environment, execute the command directly inside the container:
-
-  ```bash
-  docker exec -it checkers_server pnpm install <package-name>
-  ```
-
-  _(Remember to run `docker compnpmpose up --build` next time to bake the new package into the image)._
-
 ### 7. Stopping the Environment
 
-To stop the containers gracefully:
+To stop the background Docker containers (database and AI):
 
 ```bash
 docker compose down
 ```
 
-_(Your database data is safely persisted in a Docker volume)._
+_(Your database data is safely persisted in a Docker volume)._ To stop the Node.js servers, simply press `Ctrl+C` in their respective terminal tabs.
+
+### 8. Prisma Studio (Database GUI)
+
+You can view or edit your database via the browser using Prisma Studio.
+
+```bash
+cd server
+pnpm prisma studio
+```
+
+> **Note:** Because Prisma Studio runs from the `server/` directory, ensure your `.env` file is accessible to it so it can resolve the `DATABASE_URL`.
 
 ## 📝 Conventional Commits
 

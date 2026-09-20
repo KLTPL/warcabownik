@@ -38,6 +38,7 @@ lerna-debug.log*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+skills-lock.json
 
 # dotenv environment variable files
 .env
@@ -95,3 +96,6 @@ __pycache__/
 *.csv
 /ai/models/
 /ai/data/
+.agents
+.claude
+.windsurf

@@ -10,11 +10,11 @@ import {
   REGULAR_DIRECTIONS,
   CAPTURE_DIRECTIONS,
   Position,
-  MovePayload,
   Direction,
   BOARD_MIN,
   BOARD_MAX,
 } from "./game.constants";
+import { MovePayload } from "@warcabownik/shared";
 
 @Injectable()
 export class GameValidatorService {

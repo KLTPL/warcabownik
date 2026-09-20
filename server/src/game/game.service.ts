@@ -14,19 +14,10 @@ import {
   BLACK_PIECE,
   EMPTY_SQUARE,
   CAPTURE_STEP,
-  MovePayload,
   DEFAULT_WHITE_ID,
   DEFAULT_BLACK_ID,
 } from "./game.constants";
-
-export interface GameState {
-  id: string;
-  whitePlayerId: string | null;
-  blackPlayerId: string | null;
-  boardStateJson: string;
-  status: GameStatus;
-  winnerId: string | null;
-}
+import { GameState, MovePayload } from "@warcabownik/shared";
 
 export interface GameWithMoves extends GameState {
   moves: unknown[];
@@ -80,7 +71,7 @@ export class GameService {
 
     if (
       playerResult.canContinueCapture ||
-      playerResult.game.status === GameStatus.FINISHED
+      playerResult.game.status === "FINISHED"
     ) {
       return playerResult.game;
     }
@@ -307,7 +298,31 @@ export class GameService {
     return true;
   }
 
-  async getUserHistory(userId: string, page: number = 1, limit: number = 5) {
+  public async checkAndTriggerAi(gameId: string): Promise<GameState | null> {
+    try {
+      const game = await this.getValidGame(gameId);
+      const boardState = JSON.parse(game.boardStateJson) as string[][];
+
+      const isWhiteTurn = this.determineIsWhiteTurn(game, boardState);
+
+      if (!isWhiteTurn && !game.blackPlayerId) {
+        this.logger.log(`Resuming AI turn for game ${gameId} on tab open.`);
+
+        const updatedGame = await this.processAiTurns(gameId, game);
+        return updatedGame;
+      }
+
+      return null;
+    } catch (error) {
+      this.logger.error(`Failed to auto-resume AI for game ${gameId}`);
+      return null;
+    }
+  }
+  async getUserGameHistory(
+    userId: string,
+    page: number = 1,
+    limit: number = 5,
+  ) {
     const skip = (page - 1) * limit;
 
     const [games, total] = await Promise.all([

@@ -1,10 +1,12 @@
-import { Outlet, Link, useNavigate } from "react-router-dom";
+import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
+import { Crown, LogOut, LogIn, History, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 
 export function Layout() {
   const { isLoggedIn, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     logout();
@@ -12,25 +14,84 @@ export function Layout() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <header className="border-b bg-white p-4 flex justify-between items-center shadow-sm">
-        <Link to="/" className="text-xl font-bold text-neutral-900">
-          Warcabownik
-        </Link>
-        {isLoggedIn ? (
-          <Button variant="outline" onClick={handleLogout}>
-            Logout
-          </Button>
-        ) : (
-          <Link to="/auth">
-            <Button variant="outline">Login</Button>
+    <div className="min-h-screen flex flex-col bg-background text-foreground antialiased">
+      {/* Sticky Header with Blur Effect */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+          
+          {/* Logo & Branding */}
+          <Link 
+            to="/" 
+            className="flex items-center gap-2.5 font-bold text-xl tracking-tight transition-opacity hover:opacity-90"
+          >
+            <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20 shadow-sm">
+              <Crown className="w-5 h-5" />
+            </div>
+            <span>Warcabownik</span>
           </Link>
-        )}
+
+          {/* Navigation & Actions */}
+          <div className="flex items-center gap-2 sm:gap-4">
+            {isLoggedIn ? (
+              <>
+                {/* Navigation links for logged-in users */}
+                <nav className="flex items-center gap-1 mr-2">
+                  <Button
+                    variant={location.pathname === "/" ? "secondary" : "ghost"}
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => navigate("/")}
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    <span className="hidden sm:inline">Dashboard</span>
+                  </Button>
+
+                  <Button
+                    variant={location.pathname === "/history" ? "secondary" : "ghost"}
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => navigate("/history")}
+                  >
+                    <History className="w-4 h-4" />
+                    <span className="hidden sm:inline">History</span>
+                  </Button>
+                </nav>
+
+                {/* Logout button */}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleLogout}
+                  className="gap-2 text-muted-foreground hover:text-foreground"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="hidden sm:inline">Logout</span>
+                </Button>
+              </>
+            ) : (
+              /* Login button */
+              <Link to="/auth">
+                <Button size="sm" className="gap-2">
+                  <LogIn className="w-4 h-4" />
+                  Sign In
+                </Button>
+              </Link>
+            )}
+          </div>
+        </div>
       </header>
 
-      <main className="container mx-auto p-4">
+      {/* Main content of subpages  */}
+      <main className="flex-1 container mx-auto p-4 sm:p-6 md:p-8">
         <Outlet />
       </main>
+
+      {/* Footer */}
+      <footer className="border-t py-6 text-center text-xs text-muted-foreground">
+        <div className="container mx-auto">
+          <p>© {new Date().getFullYear()} Warcabownik. Built with NestJS, React & PyTorch AI.</p>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   postgres:
     image: postgres:15
@@ -22,40 +20,9 @@ services:
       - "5000:5000"
     environment:
       - PYTHONUNBUFFERED=1
+      - FRONTEND_URL=${FRONTEND_URL}
     volumes:
       - ./ai:/app
-
-  server:
-    build: ./server
-    container_name: checkers_server
-    user: "${UID:-1000}:${GID:-1000}"
-    command: pnpm run start:dev
-    ports:
-      - "3000:3000"
-    environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
-      - JWT_SECRET=${JWT_SECRET}
-      - EXPIRY_TIME_MS=${EXPIRY_TIME_MS}
-      - AI_URL=http://ai:5000
-    depends_on:
-      - postgres
-      - ai
-    volumes:
-      - ./server:/app
-      - /app/node_modules
-
-  frontend:
-    build: ./frontend
-    container_name: checkers_frontend
-    ports:
-      - "5173:5173"
-    environment:
-      - VITE_API_URL=http://localhost:3000
-    depends_on:
-      - server
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
 
 volumes:
   postgres_data:
