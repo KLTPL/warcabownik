@@ -5,6 +5,7 @@ import { Home } from "./pages/Home";
 import { Auth } from "./pages/Auth";
 import { Game } from "./pages/Game";
 import { GameHistory } from "./pages/GameHistory";
+import { OAuthSuccess } from "./pages/OAuthSuccess";
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="auth" element={<Auth />} />
+            <Route path="oauth-success" element={<OAuthSuccess />} />
             <Route path="game/:id" element={<Game />} />
             <Route path="history" element={<GameHistory />} />
           </Route>
