@@ -7,6 +7,8 @@ import { LoginDto } from "./dto/login.dto";
 import { LoginResponseDto } from "./dto/login-response.dto";
 import { AuthGuard } from "@nestjs/passport";
 
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+
 @ApiTags("Auth")
 @Controller("auth")
 export class AuthController {
@@ -52,7 +54,7 @@ export class AuthController {
   @ApiOperation({ summary: "Google OAuth callback" })
   async googleAuthRedirect(@Req() req, @Res() res) {
     const { access_token } = await this.authService.validateOAuthUser(req.user);
-    return res.redirect(`http://localhost:5173/oauth-success?token=${access_token}`);
+    return res.redirect(`${FRONTEND_URL}/oauth-success?token=${access_token}`);
   }
 
   @Get("github")
@@ -66,6 +68,6 @@ export class AuthController {
   @ApiOperation({ summary: "GitHub OAuth callback" })
   async githubAuthRedirect(@Req() req, @Res() res) {
     const { access_token } = await this.authService.validateOAuthUser(req.user);
-    return res.redirect(`http://localhost:5173/oauth-success?token=${access_token}`);
+    return res.redirect(`${FRONTEND_URL}/oauth-success?token=${access_token}`);
   }
 }
