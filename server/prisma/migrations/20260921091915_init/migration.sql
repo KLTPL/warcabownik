@@ -5,8 +5,10 @@ CREATE TYPE "GameStatus" AS ENUM ('IN_PROGRESS', 'FINISHED', 'DRAW', 'ABANDONED'
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "passwordHash" TEXT NOT NULL,
+    "passwordHash" TEXT,
     "username" TEXT NOT NULL,
+    "googleId" TEXT,
+    "githubId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -45,6 +47,12 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_googleId_key" ON "User"("googleId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_githubId_key" ON "User"("githubId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Move_gameId_turnNumber_key" ON "Move"("gameId", "turnNumber");

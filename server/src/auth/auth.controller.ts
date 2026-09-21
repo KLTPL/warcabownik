@@ -1,10 +1,11 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, UseGuards } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { RegisterDto } from "./dto/register.dto";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { UserEntity } from "src/user/entities/user.entity";
 import { LoginDto } from "./dto/login.dto";
 import { LoginResponseDto } from "./dto/login-response.dto";
+import { AuthGuard } from "@nestjs/passport";
 
 @ApiTags("Auth")
 @Controller("auth")
@@ -38,5 +39,31 @@ export class AuthController {
   })
   async login(@Body() dto: LoginDto): Promise<LoginResponseDto> {
     return this.authService.login(dto);
+  }
+
+  @Get("google")
+  @UseGuards(AuthGuard("google"))
+  @ApiOperation({ summary: "Redirect to Google OAuth" })
+  async googleAuth() {
+  }
+
+  @Get("google/callback")
+  @UseGuards(AuthGuard("google"))
+  @ApiOperation({ summary: "Google OAuth callback" })
+  async googleAuthRedirect(@Req() req) {
+    return this.authService.validateOAuthUser(req.user);
+  }
+
+  @Get("github")
+  @UseGuards(AuthGuard("github"))
+  @ApiOperation({ summary: "Redirect to GitHub OAuth" })
+  async githubAuth() {
+  }
+
+  @Get("github/callback")
+  @UseGuards(AuthGuard("github"))
+  @ApiOperation({ summary: "GitHub OAuth callback" })
+  async githubAuthRedirect(@Req() req) {
+    return this.authService.validateOAuthUser(req.user);
   }
 }

@@ -10,6 +10,27 @@ export class UserService {
   async findByEmail(email: string) {
     return await this.prisma.user.findUnique({ where: { email } });
   }
+  
+  async findByGoogleId(googleId: string) {
+  return this.prisma.user.findUnique({ where: { googleId } });
+  }
+
+  async findByGithubId(githubId: string) {
+    return this.prisma.user.findUnique({ where: { githubId } });
+  }
+
+  async createOAuthUser(dto: { email: string; username: string; googleId?: string; githubId?: string }) {
+    return this.prisma.user.create({
+      data: dto,
+    });
+  }
+
+  async linkOAuthProvider(userId: string, data: { googleId?: string; githubId?: string }) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data,
+    });
+  }
 
   async create(data: Prisma.UserCreateInput): Promise<UserEntity | undefined> {
     try {
