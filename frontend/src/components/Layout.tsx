@@ -1,10 +1,12 @@
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
-import { Crown, LogOut, LogIn, History, LayoutDashboard } from "lucide-react";
+import { Crown, LogOut, LogIn, History, LayoutDashboard, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 
 export function Layout() {
   const { isLoggedIn, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -32,6 +34,20 @@ export function Layout() {
 
           {/* Navigation & Actions */}
           <div className="flex items-center gap-2 sm:gap-4">
+            {/* Theme toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+            >
+              {theme === "dark" ? (
+                <Sun className="w-4 h-4" />
+              ) : (
+                <Moon className="w-4 h-4" />
+              )}
+            </Button>
+
             {isLoggedIn ? (
               <>
                 {/* Navigation links for logged-in users */}
