@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { RegisterDto } from "./dto/register.dto";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
@@ -50,8 +50,9 @@ export class AuthController {
   @Get("google/callback")
   @UseGuards(AuthGuard("google"))
   @ApiOperation({ summary: "Google OAuth callback" })
-  async googleAuthRedirect(@Req() req) {
-    return this.authService.validateOAuthUser(req.user);
+  async googleAuthRedirect(@Req() req, @Res() res) {
+    const { access_token } = await this.authService.validateOAuthUser(req.user);
+    return res.redirect(`http://localhost:5173/oauth-success?token=${access_token}`);
   }
 
   @Get("github")
@@ -63,7 +64,8 @@ export class AuthController {
   @Get("github/callback")
   @UseGuards(AuthGuard("github"))
   @ApiOperation({ summary: "GitHub OAuth callback" })
-  async githubAuthRedirect(@Req() req) {
-    return this.authService.validateOAuthUser(req.user);
+  async githubAuthRedirect(@Req() req, @Res() res) {
+    const { access_token } = await this.authService.validateOAuthUser(req.user);
+    return res.redirect(`http://localhost:5173/oauth-success?token=${access_token}`);
   }
 }
