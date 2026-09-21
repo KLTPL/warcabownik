@@ -171,7 +171,7 @@ export function Auth() {
               variant="outline"
               className="w-full gap-2 border-border/60 hover:bg-accent/80 transition-all"
               onClick={() => {
-                window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
+                window.location.href = `${import.meta.env.VITE_SERVER_URL}/auth/google`;
               }}
             >
               <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
@@ -200,7 +200,7 @@ export function Auth() {
               variant="outline"
               className="w-full gap-2 border-border/60 hover:bg-accent/80 transition-all"
               onClick={() => {
-                window.location.href = `${import.meta.env.VITE_API_URL}/auth/github`;
+                window.location.href = `${import.meta.env.VITE_SERVER_URL}/auth/github`;
               }}
             >
               <svg className="w-4 h-4 shrink-0 fill-current" viewBox="0 0 24 24">
