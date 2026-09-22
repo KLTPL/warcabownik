@@ -55,9 +55,12 @@ class BoardRequest(BaseModel):
     player_id: int = API_BLACK_PLAYER
 
 
-class MoveResponse(BaseModel):
+class SingleMove(BaseModel):
     fromPosition: dict[str, int]
     toPosition: dict[str, int]
+
+class MoveResponse(BaseModel):
+    moves: list[SingleMove]
 
 
 
@@ -86,18 +89,25 @@ def translate_board_to_env(board_request, player):
         env.set_player(ENV_WHITE_PLAYER)
        
     return env
+def unpack_possible_layouts_packages(possible_layouts_packages):
+    possible_layouts = []
+    layouts_moves_list = []
+    for package in possible_layouts_packages:
+        possible_layouts.append(package["board"])
+        layouts_moves_list.append(package["moves"])
+
+    return possible_layouts, layouts_moves_list
 
 def select_move(env: CheckersEnv):
-    possible_layouts = env.get_next_states()
+    possible_layouts_packages = env.get_next_states(collect_moves=True)
 
-    if not possible_layouts:
+    if not possible_layouts_packages:
         return None
 
-    if not possible_layouts:
-        return None
+    possible_layouts, layouts_moves_list = unpack_possible_layouts_packages(possible_layouts_packages)
     
     if len(possible_layouts)==1:
-        return possible_layouts[0]
+        return layouts_moves_list[0]
 
     tensor_layout_list=[prepare_layout_for_network(layout) for layout in possible_layouts]
     batch_tensor = torch.stack(tensor_layout_list).to(device)
@@ -106,25 +116,29 @@ def select_move(env: CheckersEnv):
         predictions = model(batch_tensor)
         best_idx = torch.argmax(predictions).item()
 
-    return possible_layouts[best_idx]
-    
-def translate_layout_to_response(old_layout, next_layout, player):
+    return layouts_moves_list[best_idx]
 
-    if player == ENV_WHITE_PLAYER:
-        next_layout = next_layout[::-1, ::-1].copy() #rotating board back to input state 
-        old_layout = old_layout[::-1, ::-1].copy()
-    if player == ENV_BLACK_PLAYER:
-        next_layout = next_layout.copy() * -1
-        old_layout = old_layout.copy() *-1
-    first_cord = None
-    second_cord = None
-    for row in range(BOARD_SIZE):
-        for col in range(BOARD_SIZE):
-            if old_layout[row,col]*player > ENV_EMPTY and next_layout[row,col]==ENV_EMPTY:
-                first_cord = {"y": row, "x":col}
-            if next_layout[row,col]*player > ENV_EMPTY and old_layout[row,col]==ENV_EMPTY:
-                second_cord = {"y": row, "x":col}
-    return first_cord, second_cord
+def translate_moves_list_to_response(moves_list, player):
+    response_moves_list = []
+    for move in moves_list:
+        first_cord = None
+        second_cord = None
+        from_row_cord = move["fromPosition"][0]
+        from_col_cord = move["fromPosition"][1]
+        to_row_cord = move["toPosition"][0]
+        to_col_cord = move["toPosition"][1]
+        if player == ENV_BLACK_PLAYER:
+            first_cord = {"y": from_row_cord, "x": from_col_cord}
+            second_cord = {"y": to_row_cord, "x": to_col_cord}
+        elif player == ENV_WHITE_PLAYER:
+            first_cord = {"y": BOARD_SIZE - from_row_cord -1 , "x": BOARD_SIZE - from_col_cord -1}
+            second_cord = {"y": BOARD_SIZE - to_row_cord -1, "x": BOARD_SIZE - to_col_cord -1}
+        SingleMove = {
+            "fromPosition":first_cord,
+            "toPosition":second_cord
+        }
+        response_moves_list.append(SingleMove)
+    return response_moves_list
 
 @app.get("/health")
 def health_check():
@@ -140,22 +154,20 @@ async def predict_move(request: BoardRequest):
             detail=f"Board must be {BOARD_SIZE}x{BOARD_SIZE}",
         )
     env = translate_board_to_env(request.board, request.player_id)
-    old_board = env.get_board()
     player = env.get_player()
 
-    best_next_layout = select_move(env)
+    best_layout_moves = select_move(env)
 
-    if best_next_layout is None:
+    if best_layout_moves is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="No valid moves available"
         )
 
-    from_pos, to_pos = translate_layout_to_response(old_board, best_next_layout, player)
+    moves_to_response = translate_moves_list_to_response(best_layout_moves, player)
 
-    if from_pos is None or to_pos is None:
+    if not moves_to_response:
          raise HTTPException(status_code=500, detail="Error calculating move coordinates")
 
     return {
-        "fromPosition": from_pos,
-        "toPosition": to_pos
+        "moves": moves_to_response
     }
