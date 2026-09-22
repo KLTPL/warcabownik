@@ -317,4 +317,3 @@ class CheckersEnv:
                 row_str += symbols[field_val] + " "
             print(row_str)
         print()
-

@@ -106,8 +106,13 @@ export class GameService {
     }
     const isLastPieceWhite = piece.toLowerCase() === WHITE_PIECE;
     const wasCapture = Math.abs(lastTo.x - lastFrom.x) === CAPTURE_STEP;
+
+    const isWhite = isLastPieceWhite;
+    const isPromotionRow = isWhite ? lastTo.y === BOARD_MAX : lastTo.y === BOARD_MIN;
+
     const canContinue =
       wasCapture &&
+      !isPromotionRow &&
       this.gameValidator.hasAdditionalCaptures(boardState, lastTo.x, lastTo.y);
 
     if (canContinue) {
@@ -235,22 +240,29 @@ export class GameService {
   ): Promise<GameState> {
     let currentBoardJson = initialGame.boardStateJson;
     let finalGame = initialGame;
-    let aiCanContinue = true;
+    let aiCanContinue = true
+    
+    const aiMovesData = await this.aiService.getAiMove(currentBoardJson);
 
-    while (aiCanContinue && finalGame.status === GameStatus.IN_PROGRESS) {
-      const aiMoveData = await this.aiService.getAiMove(currentBoardJson);
+    this.logger.log(`Processing AI move sequence for game: ${gameId}`);
+
+    for (const step of aiMovesData){
       const aiMove: MovePayload = {
-        fromPosition: aiMoveData.fromPosition,
-        toPosition: aiMoveData.toPosition,
+        fromPosition: step.fromPosition,
+        toPosition: step.toPosition,
       };
 
-      this.logger.log(`Processing AI move for game: ${gameId}`);
-
       const aiResult = await this.applyMove(gameId, null, aiMove);
+
       finalGame = aiResult.game;
       currentBoardJson = finalGame.boardStateJson;
       aiCanContinue = aiResult.canContinueCapture;
+
+      if (!aiCanContinue || finalGame.status !== GameStatus.IN_PROGRESS){
+        break;
+      }
     }
+    
 
     return finalGame;
   }

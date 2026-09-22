@@ -171,3 +171,4 @@ async def predict_move(request: BoardRequest):
     return {
         "moves": moves_to_response
     }
+
