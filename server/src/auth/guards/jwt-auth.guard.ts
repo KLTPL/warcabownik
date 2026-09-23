@@ -30,11 +30,11 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
   // activates after canActivate
   handleRequest<TUser>(err: Error, user: TUser, info: unknown): TUser {
     if (info instanceof Error && info.name === "TokenExpiredError") {
-      throw new UnauthorizedException("Token expired");
+      throw new UnauthorizedException("TokenExpired");
     }
 
     if (err || !user) {
-      throw err || new UnauthorizedException("Access forbiden or bad token");
+      throw err || new UnauthorizedException("InvalidToken");
     }
 
     return user;

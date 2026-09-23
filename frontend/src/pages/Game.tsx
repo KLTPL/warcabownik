@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useGame } from "@/hooks/useGame";
+import { useErrorMessage } from "@/i18n/errorKeys";
 
 export function Game() {
   const { id } = useParams();
@@ -14,6 +15,7 @@ export function Game() {
     board,
     selectedPiece,
     errorPosition,
+    moveError,
     status,
     gameStatus,
     winner,
@@ -24,6 +26,8 @@ export function Game() {
   } = useGame(id);
 
   const { t } = useTranslation();
+  const translateError = useErrorMessage();
+  const moveErrorMessage = translateError(moveError);
 
   return (
     <div className="max-w-4xl mx-auto mt-4 px-4 space-y-6 flex flex-col items-center">
@@ -53,14 +57,19 @@ export function Game() {
           </Badge>
         ) : (
           <Badge
-            variant={status.kind === "error" ? "destructive" : "secondary"}
+            variant={
+              status.kind === "error" || moveErrorMessage
+                ? "destructive"
+                : "secondary"
+            }
             className="px-4 py-1.5 text-xs font-medium"
           >
-            {status.kind === "connecting"
-              ? t("game.statusConnecting")
-              : status.kind === "connected"
-                ? t("game.statusConnected")
-                : t("game.statusError", { detail: status.detail })}
+            {moveErrorMessage ??
+              (status.kind === "connecting"
+                ? t("game.statusConnecting")
+                : status.kind === "connected"
+                  ? t("game.statusConnected")
+                  : t("game.statusError", { detail: status.detail }))}
           </Badge>
         )}
       </div>

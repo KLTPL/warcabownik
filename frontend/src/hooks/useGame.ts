@@ -71,6 +71,8 @@ export function useGame(gameId: string | undefined) {
   const [errorPosition, setErrorPosition] = useState<BoardPosition | null>(
     null
   );
+  // Raw server code for the last rejected move; translated at render time.
+  const [moveError, setMoveError] = useState<string | null>(null);
 
   const aiDelayTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -148,6 +150,7 @@ export function useGame(gameId: string | undefined) {
     const piece = board[y][x];
 
     if (piece === 1 || piece === 3) {
+      setMoveError(null);
       setSelectedPiece(
         selectedPiece?.x === x && selectedPiece?.y === y ? null : { x, y }
       );
@@ -206,6 +209,7 @@ export function useGame(gameId: string | undefined) {
             setBoard(rollbackBoard);
             setIsAiThinking(false);
             setErrorPosition(attemptedPiece);
+            setMoveError(response.message);
             setTimeout(() => setErrorPosition(null), 500);
           }
         }
@@ -217,6 +221,7 @@ export function useGame(gameId: string | undefined) {
     board,
     selectedPiece,
     errorPosition,
+    moveError,
     status,
     gameStatus,
     winner,

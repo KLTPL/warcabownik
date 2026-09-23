@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthForm } from "@/hooks/useAuthForm";
+import { useErrorMessage } from "@/i18n/errorKeys";
 
 export function Auth() {
   const {
@@ -17,6 +18,8 @@ export function Auth() {
   } = useAuthForm();
 
   const { t } = useTranslation();
+  const translateError = useErrorMessage();
+  const errorMessage = translateError(error);
 
   return (
     <div className="flex flex-col items-center justify-center flex-1 w-full h-full min-h-0 py-2 px-4">
@@ -112,10 +115,10 @@ export function Auth() {
               </div>
             </div>
 
-            {error && (
+            {errorMessage && (
               <div className="p-2.5 text-sm rounded-lg bg-destructive/10 text-destructive border border-destructive/20 flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>{error}</span>
+                <span>{errorMessage}</span>
               </div>
             )}
 
