@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { History, Loader2, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GameHistoryList } from "@/components/GameHistoryList";
@@ -13,6 +14,8 @@ export function GameHistory() {
   const [accumulatedGames, setAccumulatedGames] = useState<
     GameHistoryItemDto[]
   >([]);
+
+  const { t } = useTranslation();
 
   const { data, isLoading } = useGameControllerGetHistory({ page, limit: 10 });
 
@@ -38,7 +41,7 @@ export function GameHistory() {
           className="gap-2 text-muted-foreground hover:text-foreground"
           onClick={() => navigate("/")}
         >
-          <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+          <ArrowLeft className="w-4 h-4" /> {t("common.backToDashboard")}
         </Button>
       </div>
 
@@ -50,10 +53,10 @@ export function GameHistory() {
             </div>
             <div>
               <CardTitle className="text-2xl font-bold tracking-tight">
-                Match History
+                {t("history.title")}
               </CardTitle>
               <CardDescription>
-                View and review all your previously played games
+                {t("history.description")}
               </CardDescription>
             </div>
           </div>
@@ -74,10 +77,10 @@ export function GameHistory() {
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Loading games...
+                  {t("history.loading")}
                 </>
               ) : (
-                "Load More Matches"
+                t("history.loadMore")
               )}
             </Button>
           )}

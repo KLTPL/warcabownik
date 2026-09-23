@@ -25,7 +25,7 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const ERR_MESSAGE = "Wrong email or password";
+    const ERR_MESSAGE = "InvalidCredentials";
     const user = await this.userService.findByEmail(loginDto.email);
     if (!user || !user.passwordHash) {
       throw new UnauthorizedException(ERR_MESSAGE);

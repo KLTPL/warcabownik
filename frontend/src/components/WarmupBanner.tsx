@@ -1,8 +1,11 @@
 import { AlertTriangle, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import type { WarmupPhase } from "@/hooks/useServiceWarmup";
 
 export function WarmupBanner({ phase }: { phase: WarmupPhase }) {
+  const { t } = useTranslation();
+
   if (phase === "waking") {
     return (
       <div
@@ -11,10 +14,7 @@ export function WarmupBanner({ phase }: { phase: WarmupPhase }) {
       >
         <div className="container mx-auto flex items-center gap-2 px-4 py-2">
           <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
-          <span>
-            Waking up the servers (free hosting). The first load can take up
-            to a minute…
-          </span>
+          <span>{t("warmup.waking")}</span>
         </div>
       </div>
     );
@@ -28,13 +28,13 @@ export function WarmupBanner({ phase }: { phase: WarmupPhase }) {
       >
         <div className="container mx-auto flex items-center gap-2 px-4 py-2">
           <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span className="flex-1">Server unreachable. Try refreshing.</span>
+          <span className="flex-1">{t("warmup.unreachable")}</span>
           <Button
             variant="outline"
             size="sm"
             onClick={() => window.location.reload()}
           >
-            Refresh
+            {t("common.refresh")}
           </Button>
         </div>
       </div>

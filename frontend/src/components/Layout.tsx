@@ -1,10 +1,12 @@
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { Crown, LogOut, LogIn, History, LayoutDashboard, Sun, Moon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useServiceWarmup } from "@/hooks/useServiceWarmup";
 import { WarmupBanner } from "@/components/WarmupBanner";
+import { LanguageToggle } from "@/components/LanguageToggle";
 
 export function Layout() {
   const { isLoggedIn, logout } = useAuth();
@@ -12,6 +14,7 @@ export function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const warmupPhase = useServiceWarmup();
+  const { t } = useTranslation();
 
   const handleLogout = () => {
     logout();
@@ -27,22 +30,29 @@ export function Layout() {
           {/* Logo & Branding */}
           <Link 
             to="/" 
-            className="flex items-center gap-2.5 font-bold text-xl tracking-tight transition-opacity hover:opacity-90"
+            className="flex items-center gap-2.5 font-bold text-base sm:text-xl tracking-tight transition-opacity hover:opacity-90"
           >
             <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20 shadow-sm">
               <Crown className="w-5 h-5" />
             </div>
-            <span>Warcabownik</span>
+            <span>{t("brand")}</span>
           </Link>
 
           {/* Navigation & Actions */}
           <div className="flex items-center gap-2 sm:gap-4">
+            {/* Language toggle */}
+            <LanguageToggle />
+
             {/* Theme toggle */}
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleTheme}
-              aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+              aria-label={
+                theme === "dark"
+                  ? t("nav.switchToLight")
+                  : t("nav.switchToDark")
+              }
             >
               {theme === "dark" ? (
                 <Sun className="w-4 h-4" />
@@ -62,7 +72,7 @@ export function Layout() {
                     onClick={() => navigate("/")}
                   >
                     <LayoutDashboard className="w-4 h-4" />
-                    <span className="hidden sm:inline">Dashboard</span>
+                    <span className="hidden sm:inline">{t("nav.dashboard")}</span>
                   </Button>
 
                   <Button
@@ -72,7 +82,7 @@ export function Layout() {
                     onClick={() => navigate("/history")}
                   >
                     <History className="w-4 h-4" />
-                    <span className="hidden sm:inline">History</span>
+                    <span className="hidden sm:inline">{t("nav.history")}</span>
                   </Button>
                 </nav>
 
@@ -84,7 +94,7 @@ export function Layout() {
                   className="gap-2 text-muted-foreground hover:text-foreground"
                 >
                   <LogOut className="w-4 h-4" />
-                  <span className="hidden sm:inline">Logout</span>
+                  <span className="hidden sm:inline">{t("nav.logout")}</span>
                 </Button>
               </>
             ) : (
@@ -92,7 +102,7 @@ export function Layout() {
               <Link to="/auth">
                 <Button size="sm" className="gap-2">
                   <LogIn className="w-4 h-4" />
-                  Sign In
+                  {t("nav.signIn")}
                 </Button>
               </Link>
             )}
@@ -110,7 +120,7 @@ export function Layout() {
       {/* Footer */}
       <footer className="border-t py-6 text-center text-xs text-muted-foreground">
         <div className="container mx-auto">
-          <p>© {new Date().getFullYear()} Warcabownik. Built with NestJS, React & PyTorch AI.</p>
+          <p>{t("nav.footer", { year: new Date().getFullYear() })}</p>
         </div>
       </footer>
     </div>
