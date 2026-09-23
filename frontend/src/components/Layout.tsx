@@ -30,7 +30,7 @@ export function Layout() {
           {/* Logo & Branding */}
           <Link 
             to="/" 
-            className="flex items-center gap-2.5 font-bold text-xl tracking-tight transition-opacity hover:opacity-90"
+            className="flex items-center gap-2.5 font-bold text-base sm:text-xl tracking-tight transition-opacity hover:opacity-90"
           >
             <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20 shadow-sm">
               <Crown className="w-5 h-5" />
