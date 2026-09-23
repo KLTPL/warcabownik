@@ -5,9 +5,12 @@ import {
 } from "@nestjs/common";
 import axios from "axios";
 
-interface AiMoveResponse {
+interface AiMoveStep {
   fromPosition: { x: number; y: number };
   toPosition: { x: number; y: number };
+}
+interface AiMoveResponse {
+  moves: AiMoveStep[];
 }
 
 @Injectable()
@@ -16,16 +19,17 @@ export class AiService {
 
   async getAiMove(
     boardStateJson: string,
-  ): Promise<{ fromPosition: string; toPosition: string }> {
+  ): Promise<{ fromPosition: string; toPosition: string }[]> {
     const parsedJson: unknown = JSON.parse(boardStateJson);
     const rawBoard = parsedJson as string[][];
 
     const numericBoard: number[][] = rawBoard.map((row) =>
       row.map((cell) => {
-        if (!cell) return 0;
-        const lower = cell.toLowerCase();
-        if (lower === "w") return 1;
-        if (lower === "b") return 2;
+        if (!cell || cell ==="") return 0;
+        if (cell === "w") return 1;
+        if (cell === "b") return 2;
+        if (cell === "W") return 3;
+        if (cell === "B") return 4;
         return 0;
       }),
     );
@@ -45,11 +49,11 @@ export class AiService {
         );
         this.logger.log("Response");
 
-        const { fromPosition, toPosition } = response.data;
-        return {
-          fromPosition: this.toAlgebraic(fromPosition.x, fromPosition.y),
-          toPosition: this.toAlgebraic(toPosition.x, toPosition.y),
-        };
+        return response.data.moves.map(step => ({
+          fromPosition: this.toAlgebraic(step.fromPosition.x, step.fromPosition.y),
+          toPosition: this.toAlgebraic(step.toPosition.x, step.toPosition.y),
+        }));
+        
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);

@@ -4,9 +4,11 @@ import torch.optim as optim
 import random
 import numpy as np
 import torch
+from collections import deque
 
 MAX_GAME_LEN = 150
-TIE =0.0
+TIE_WEIGHT =0.0
+WIN_WEIGHT = 1.0
 import os
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
@@ -14,15 +16,16 @@ from CheckersEnv import CheckersEnv
 from Model import CheckersValueNet, prepare_layout_for_network
 
 class CheckersTrainer:
-    def __init__(self, episodes=50000, lr=0.001, model_path="checkers_model.pth"):
+    def __init__(self, episodes=100000, lr=0.0002, model_path="checkers_model.pth"):
         self.episodes = episodes
         self.lr = lr
         
-        
+        self.gamma = 0.96
         self.epsilon = 1.0           
         self.min_epsilon = 0.05     
-        self.epsilon_decay = 0.9992 
-        
+        self.epsilon_decay = 0.999965
+        self.n_step_looking_forward = 6
+
         self.model_path = model_path
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print(f"Using device: {self.device}")
@@ -41,11 +44,14 @@ class CheckersTrainer:
             possible_board_layouts = self.env.get_next_states()
 
             if len(possible_board_layouts)==0: # that means there are no aviable moves to do so current player loses
-                winner = -self.env.get_player()
-                return game_history, winner
+                last_game = game_history[-1]
+                game_history[-1] = (last_game[0], WIN_WEIGHT)
+                return game_history
             
             if len(game_history)>150:
-                return game_history, TIE
+                last_game = game_history[-1]
+                game_history[-1] = (last_game[0], TIE_WEIGHT)
+                return game_history
             
             if random.random() < self.epsilon or len(possible_board_layouts) == 1: # decides if next move is genereted random with propability of self.epsilon
                 board_choice = random.choice(possible_board_layouts)
@@ -56,35 +62,70 @@ class CheckersTrainer:
 
                 with torch.no_grad():
                     values_prediction = self.model(batch_tensor)
+
+                    if torch.isnan(values_prediction).any(): # checks if all weight values_prediction are Numbers
+                        print("ERROR: Nan value in values_prediction stop training!!!!")
+                        best_idx = random.randint(0, len(possible_board_layouts) - 1)
+                    else:
+                        best_idx = torch.argmax(values_prediction).item()
+
                     best_idx = torch.argmax(values_prediction).item()
 
                 board_choice = possible_board_layouts[best_idx]
 
-            game_history.append((board_choice, self.env.get_player()))
+            game_history.append((board_choice, self.env.get_reward(board_choice)))
             self.env.next_move(board_choice)
 
-    def train_on_episode(self, game_history, winner):
+    def create_targets(self, reward_list, values_predictions):
+        size = len(reward_list)
+        targets_list = []
+        n_steps = self.n_step_looking_forward
+        for index in range(size):
+            target = 0.0
+            gamma = 1.0
+            t=0
+            while (t<n_steps+1 and index+t<size):
+                sign = 1 if t %2 == 0 else -1
+                if t == n_steps:
+                    target += values_predictions[index+t]*gamma*sign
+                else:
+                    target += reward_list[index+t]*gamma*sign
+                    
+                if t %2 == 1:
+                    gamma *= self.gamma
+                t=t+1
+            targets_list.append([float(target)])
+        return targets_list
+
+    def train_on_episode(self, game_history):
         
         if not game_history:
             return 0.0
             
         self.model.train()
         
-        states_list = []
-        targets_list = []
+        tensor_layouts_list = []
+        rewards_list = [] 
         
-        for board, player in game_history:
-            target_value = player * winner 
-            
-            states_list.append(prepare_layout_for_network(board))
-            targets_list.append([target_value])
-            
-        batch_states = torch.stack(states_list).to(self.device)
+        for board, reward in game_history:
+            tensor_layouts_list.append(prepare_layout_for_network(board))
+            rewards_list.append(reward)
+
+        batch_layouts_list = torch.stack(tensor_layouts_list).to(self.device)
+
+        with torch.no_grad():
+            self.model.eval()
+            future_predictions = self.model(batch_layouts_list).detach().cpu().numpy().flatten()
+
+        self.model.train()
+
+        targets_list = self.create_targets(rewards_list, future_predictions)
         batch_targets = torch.tensor(targets_list, dtype=torch.float32, device=self.device)
-        
-        predictions = self.model(batch_states)
-        loss = self.criterion(predictions, batch_targets)
-        
+
+        current_predictions=self.model(batch_layouts_list)
+
+        torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0) # protects model from exploding gradient
+        loss = self.criterion(current_predictions, batch_targets)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -95,9 +136,10 @@ class CheckersTrainer:
         print(f"Starting long training for {self.episodes} episodes...\n")
         
         for episode in range(self.episodes):
-            history, winner = self.play_self_play_episode()
-            avg_loss = self.train_on_episode(history, winner)
-            
+            history = self.play_self_play_episode()
+            history_len = len(history)
+            avg_loss = self.train_on_episode(history)
+        
            
             self.epsilon = max(self.min_epsilon, self.epsilon * self.epsilon_decay)
             if (episode + 1) % 10000 == 0:
@@ -105,12 +147,11 @@ class CheckersTrainer:
                 torch.save(self.model.state_dict(), checkpoint_path)
                 print(f"--> saved checkpoint: {checkpoint_path}")
             if (episode + 1) % 500 == 0:  
-                if winner == 1:
+                if history_len %2 == 1:
                     winner_str = "white (1)"
-                elif winner ==0:
-                    winner_str = "Tie (0)"
                 else:
                     winner_str = "Black (-1)"
+                    
                 print(f"Ep {episode + 1}/{self.episodes} | Epsilon: {self.epsilon:.3f} | Winner: {winner_str} | Loss: {avg_loss:.4f}")
             torch.cuda.empty_cache()
 
