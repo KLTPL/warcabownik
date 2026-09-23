@@ -31,12 +31,12 @@ export function useAuthForm() {
   const validateForm = () => {
     if (!isLogin) {
       if (formData.username.length < 2 || formData.username.length > 50) {
-        return "Username must be between 2 and 50 characters.";
+        return "UsernameTooShort";
       }
       const passwordRegex =
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/;
       if (!passwordRegex.test(formData.password)) {
-        return "Password must be at least 10 characters long and include an uppercase, lowercase, number, and symbol.";
+        return "WeakPassword";
       }
     }
     return null;
@@ -80,12 +80,10 @@ export function useAuthForm() {
       if (isAxiosError(err)) {
         const message = err.response?.data?.message;
         setError(
-          Array.isArray(message)
-            ? message[0]
-            : message || "Authentication failed"
+          Array.isArray(message) ? message[0] : message || "authFailed"
         );
       } else {
-        setError(err.message || "An unexpected error occurred");
+        setError(err.message || "unexpected");
       }
     }
   };

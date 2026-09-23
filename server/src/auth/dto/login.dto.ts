@@ -6,15 +6,15 @@ export class LoginDto {
     example: "contact@example.com",
     description: "Unique email of the user",
   })
-  @IsString()
-  @IsNotEmpty()
-  @IsEmail()
+  @IsString({ message: "InvalidEmail" })
+  @IsNotEmpty({ message: "InvalidEmail" })
+  @IsEmail({}, { message: "InvalidEmail" })
   email: string;
 
   @ApiProperty({
     example: "i-DO-pieca67",
   })
-  @IsString()
-  @IsNotEmpty()
+  @IsString({ message: "InvalidCredentials" })
+  @IsNotEmpty({ message: "InvalidCredentials" })
   password: string;
 }

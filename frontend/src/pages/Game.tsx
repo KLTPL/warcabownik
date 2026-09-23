@@ -1,9 +1,11 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Crown, Loader2, Trophy, Frown, ArrowLeft, Swords, Bot } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useGame } from "@/hooks/useGame";
+import { useErrorMessage } from "@/i18n/errorKeys";
 
 export function Game() {
   const { id } = useParams();
@@ -13,6 +15,7 @@ export function Game() {
     board,
     selectedPiece,
     errorPosition,
+    moveError,
     status,
     gameStatus,
     winner,
@@ -21,6 +24,10 @@ export function Game() {
     isLoser,
     handleSquareClick,
   } = useGame(id);
+
+  const { t } = useTranslation();
+  const translateError = useErrorMessage();
+  const moveErrorMessage = translateError(moveError);
 
   return (
     <div className="max-w-4xl mx-auto mt-4 px-4 space-y-6 flex flex-col items-center">
@@ -32,11 +39,12 @@ export function Game() {
           className="gap-2 text-muted-foreground hover:text-foreground"
           onClick={() => navigate("/")}
         >
-          <ArrowLeft className="w-4 h-4" /> Exit Game
+          <ArrowLeft className="w-4 h-4" /> {t("game.exit")}
         </Button>
 
         <Badge variant="outline" className="px-3 py-1 font-mono text-xs gap-1">
-          <Swords className="w-3.5 h-3.5 text-primary" /> Match ID: {id?.slice(0, 8)}
+          <Swords className="w-3.5 h-3.5 text-primary" />{" "}
+          {t("game.matchId", { id: id?.slice(0, 8) })}
         </Badge>
       </div>
 
@@ -45,14 +53,23 @@ export function Game() {
         {isAiThinking ? (
           <Badge className="px-4 py-1.5 text-sm gap-2 bg-blue-500/10 text-blue-600 border border-blue-500/20 animate-pulse">
             <Loader2 className="w-4 h-4 animate-spin" />
-            <span>AI is calculating next move...</span>
+            <span>{t("game.aiThinking")}</span>
           </Badge>
         ) : (
           <Badge
-            variant={status.includes("error") ? "destructive" : "secondary"}
+            variant={
+              status.kind === "error" || moveErrorMessage
+                ? "destructive"
+                : "secondary"
+            }
             className="px-4 py-1.5 text-xs font-medium"
           >
-            {status}
+            {moveErrorMessage ??
+              (status.kind === "connecting"
+                ? t("game.statusConnecting")
+                : status.kind === "connected"
+                  ? t("game.statusConnected")
+                  : t("game.statusError", { detail: status.detail }))}
           </Badge>
         )}
       </div>
@@ -128,25 +145,29 @@ export function Game() {
 
               <CardHeader className="p-0">
                 <CardTitle className="text-2xl font-black">
-                  {isWinner ? "Victory!" : isLoser ? "Defeat!" : "Draw!"}
+                  {isWinner
+                    ? t("game.victory")
+                    : isLoser
+                      ? t("game.defeat")
+                      : t("game.draw")}
                 </CardTitle>
               </CardHeader>
 
               <div className="text-sm text-muted-foreground">
                 {winner ? (
                   <p>
-                    Winner:{" "}
+                    {t("game.winnerLabel")}{" "}
                     <span className="font-semibold text-foreground">
-                      {isWinner ? "You" : "Enemy (AI)"}
+                      {isWinner ? t("game.winnerYou") : t("game.winnerAi")}
                     </span>
                   </p>
                 ) : (
-                  <p>Game ended in a draw</p>
+                  <p>{t("game.endedInDraw")}</p>
                 )}
               </div>
 
               <Button onClick={() => navigate("/")} className="w-full">
-                Back to Dashboard
+                {t("common.backToDashboard")}
               </Button>
             </Card>
           </div>

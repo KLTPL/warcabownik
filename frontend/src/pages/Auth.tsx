@@ -1,8 +1,10 @@
 import { LogIn, UserPlus, Mail, Lock, User, Loader2, AlertCircle, Crown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthForm } from "@/hooks/useAuthForm";
+import { useErrorMessage } from "@/i18n/errorKeys";
 
 export function Auth() {
   const {
@@ -15,6 +17,10 @@ export function Auth() {
     toggleAuthMode,
   } = useAuthForm();
 
+  const { t } = useTranslation();
+  const translateError = useErrorMessage();
+  const errorMessage = translateError(error);
+
   return (
     <div className="flex flex-col items-center justify-center flex-1 w-full h-full min-h-0 py-2 px-4">
       <div className="flex flex-col items-center mb-3 text-center space-y-1">
@@ -22,12 +28,10 @@ export function Auth() {
           <Crown className="w-7 h-7" />
         </div>
         <h1 className="text-xl font-bold tracking-tight text-foreground">
-          Warcabownik
+          {t("brand")}
         </h1>
         <p className="text-xs text-muted-foreground">
-          {isLogin
-            ? "Sign in to continue your checkers journey"
-            : "Create an account to start playing against AI"}
+          {isLogin ? t("auth.taglineSignIn") : t("auth.taglineSignUp")}
         </p>
       </div>
 
@@ -36,18 +40,18 @@ export function Auth() {
           <CardTitle className="text-xl flex items-center justify-center gap-2">
             {isLogin ? (
               <>
-                <LogIn className="w-5 h-5 text-primary" /> Welcome Back
+                <LogIn className="w-5 h-5 text-primary" /> {t("auth.welcomeBack")}
               </>
             ) : (
               <>
-                <UserPlus className="w-5 h-5 text-primary" /> Create Account
+                <UserPlus className="w-5 h-5 text-primary" /> {t("auth.createAccount")}
               </>
             )}
           </CardTitle>
           <CardDescription>
             {isLogin
-              ? "Enter your credentials to access your account"
-              : "Fill in the details below to register"}
+              ? t("auth.descriptionSignIn")
+              : t("auth.descriptionSignUp")}
           </CardDescription>
         </CardHeader>
 
@@ -56,14 +60,14 @@ export function Auth() {
             {!isLogin && (
               <div className="space-y-1">
                 <label htmlFor="username" className="text-xs font-semibold text-foreground">
-                  Username
+                  {t("auth.username")}
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="username"
                     name="username"
-                    placeholder="johndoe"
+                    placeholder={t("auth.usernamePlaceholder")}
                     className="pl-9"
                     value={formData.username}
                     onChange={handleInputChange}
@@ -75,7 +79,7 @@ export function Auth() {
 
             <div className="space-y-1">
               <label htmlFor="email" className="text-xs font-semibold text-foreground">
-                Email Address
+                {t("auth.email")}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -94,7 +98,7 @@ export function Auth() {
 
             <div className="space-y-1">
               <label htmlFor="password" className="text-xs font-semibold text-foreground">
-                Password
+                {t("auth.password")}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -111,10 +115,10 @@ export function Auth() {
               </div>
             </div>
 
-            {error && (
+            {errorMessage && (
               <div className="p-2.5 text-sm rounded-lg bg-destructive/10 text-destructive border border-destructive/20 flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>{error}</span>
+                <span>{errorMessage}</span>
               </div>
             )}
 
@@ -122,15 +126,15 @@ export function Auth() {
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Processing...
+                  {t("auth.processing")}
                 </>
               ) : isLogin ? (
                 <>
-                  <LogIn className="w-4 h-4" /> Sign In
+                  <LogIn className="w-4 h-4" /> {t("auth.signIn")}
                 </>
               ) : (
                 <>
-                  <UserPlus className="w-4 h-4" /> Sign Up
+                  <UserPlus className="w-4 h-4" /> {t("auth.signUp")}
                 </>
               )}
             </Button>
@@ -141,7 +145,9 @@ export function Auth() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">Or</span>
+              <span className="bg-card px-2 text-muted-foreground">
+                {t("common.or")}
+              </span>
             </div>
           </div>
 
@@ -151,7 +157,7 @@ export function Auth() {
             type="button"
             onClick={toggleAuthMode}
           >
-            {isLogin ? "Need an account? Sign up" : "Already have an account? Sign in"}
+            {isLogin ? t("auth.needAccount") : t("auth.haveAccount")}
           </Button>
 
           <div className="relative my-3">
@@ -160,7 +166,7 @@ export function Auth() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-card px-2 text-muted-foreground font-medium">
-                Or continue with
+                {t("auth.orContinueWith")}
               </span>
             </div>
           </div>

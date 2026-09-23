@@ -22,7 +22,7 @@ export class WsJwtGuard implements CanActivate {
       client["user"] = { sub: payload.sub };
       return true;
     } catch (err) {
-      throw new WsException("Unauthorized WebSocket connection");
+      throw new WsException("Unauthorized");
     }
   }
 }
