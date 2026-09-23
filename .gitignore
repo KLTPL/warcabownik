@@ -87,7 +87,7 @@ __pycache__/
 .ipynb_checkpoints
 
 # AI models
-*.pth
+
 *.pt
 *.h5
 *.hdf5
