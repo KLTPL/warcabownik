@@ -3,12 +3,15 @@ import { Crown, LogOut, LogIn, History, LayoutDashboard, Sun, Moon } from "lucid
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useServiceWarmup } from "@/hooks/useServiceWarmup";
+import { WarmupBanner } from "@/components/WarmupBanner";
 
 export function Layout() {
   const { isLoggedIn, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const warmupPhase = useServiceWarmup();
 
   const handleLogout = () => {
     logout();
@@ -96,6 +99,8 @@ export function Layout() {
           </div>
         </div>
       </header>
+
+      <WarmupBanner phase={warmupPhase} />
 
       {/* Main content of subpages  */}
       <main className="flex-1 container mx-auto p-4 sm:p-6 md:p-8">
