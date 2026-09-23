@@ -70,13 +70,6 @@ export function useGame(gameId: string | undefined) {
   const isLoser = winner !== null && winner !== myId;
 
   useEffect(() => {
-    const aiUrl = import.meta.env.VITE_AI_URL;
-    if (aiUrl) {
-      fetch(`${aiUrl}/health`).catch(() => {});
-    }
-  }, []);
-
-  useEffect(() => {
     if (!gameId) return;
 
     const token = localStorage.getItem("token");
