@@ -14,6 +14,13 @@ export interface BoardPosition {
   y: number;
 }
 
+// Kept as a discriminated union rather than a display string: the UI picks the
+// badge variant from `kind`, so translating the label can never change styling.
+export type ConnectionStatus =
+  | { kind: "connecting" }
+  | { kind: "connected" }
+  | { kind: "error"; detail: string };
+
 export type BoardCell = 0 | 1 | 2 | 3 | 4;
 export type Board = BoardCell[][];
 
@@ -51,7 +58,9 @@ export function useGame(gameId: string | undefined) {
   const { logout } = useAuth();
 
   const [socket, setSocket] = useState<TypedSocket | null>(null);
-  const [status, setStatus] = useState("Connecting to server...");
+  const [status, setStatus] = useState<ConnectionStatus>({
+    kind: "connecting",
+  });
   const [gameStatus, setGameStatus] = useState<string>("IN_PROGRESS");
   const [winner, setWinner] = useState<string | null>(null);
   const [isAiThinking, setIsAiThinking] = useState(false);
@@ -81,7 +90,7 @@ export function useGame(gameId: string | undefined) {
     );
 
     newSocket.on("connect", () => {
-      setStatus("Connected. Your turn!");
+      setStatus({ kind: "connected" });
       newSocket.emit(SocketEvents.JOIN_GAME, { gameId });
     });
 
@@ -110,7 +119,7 @@ export function useGame(gameId: string | undefined) {
     });
 
     newSocket.on("connect_error", (err) => {
-      setStatus(`Connection error: ${err.message}`);
+      setStatus({ kind: "error", detail: err.message });
     });
 
     newSocket.on("exception" as any, (error: any) => {

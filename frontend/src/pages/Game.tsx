@@ -49,10 +49,14 @@ export function Game() {
           </Badge>
         ) : (
           <Badge
-            variant={status.includes("error") ? "destructive" : "secondary"}
+            variant={status.kind === "error" ? "destructive" : "secondary"}
             className="px-4 py-1.5 text-xs font-medium"
           >
-            {status}
+            {status.kind === "connecting"
+              ? "Connecting to server..."
+              : status.kind === "connected"
+                ? "Connected. Your turn!"
+                : `Connection error: ${status.detail}`}
           </Badge>
         )}
       </div>
