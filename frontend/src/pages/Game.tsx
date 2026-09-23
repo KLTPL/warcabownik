@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Crown, Loader2, Trophy, Frown, ArrowLeft, Swords, Bot } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,8 @@ export function Game() {
     handleSquareClick,
   } = useGame(id);
 
+  const { t } = useTranslation();
+
   return (
     <div className="max-w-4xl mx-auto mt-4 px-4 space-y-6 flex flex-col items-center">
       {/* Headline and return button */}
@@ -32,11 +35,12 @@ export function Game() {
           className="gap-2 text-muted-foreground hover:text-foreground"
           onClick={() => navigate("/")}
         >
-          <ArrowLeft className="w-4 h-4" /> Exit Game
+          <ArrowLeft className="w-4 h-4" /> {t("game.exit")}
         </Button>
 
         <Badge variant="outline" className="px-3 py-1 font-mono text-xs gap-1">
-          <Swords className="w-3.5 h-3.5 text-primary" /> Match ID: {id?.slice(0, 8)}
+          <Swords className="w-3.5 h-3.5 text-primary" />{" "}
+          {t("game.matchId", { id: id?.slice(0, 8) })}
         </Badge>
       </div>
 
@@ -45,7 +49,7 @@ export function Game() {
         {isAiThinking ? (
           <Badge className="px-4 py-1.5 text-sm gap-2 bg-blue-500/10 text-blue-600 border border-blue-500/20 animate-pulse">
             <Loader2 className="w-4 h-4 animate-spin" />
-            <span>AI is calculating next move...</span>
+            <span>{t("game.aiThinking")}</span>
           </Badge>
         ) : (
           <Badge
@@ -53,10 +57,10 @@ export function Game() {
             className="px-4 py-1.5 text-xs font-medium"
           >
             {status.kind === "connecting"
-              ? "Connecting to server..."
+              ? t("game.statusConnecting")
               : status.kind === "connected"
-                ? "Connected. Your turn!"
-                : `Connection error: ${status.detail}`}
+                ? t("game.statusConnected")
+                : t("game.statusError", { detail: status.detail })}
           </Badge>
         )}
       </div>
@@ -132,25 +136,29 @@ export function Game() {
 
               <CardHeader className="p-0">
                 <CardTitle className="text-2xl font-black">
-                  {isWinner ? "Victory!" : isLoser ? "Defeat!" : "Draw!"}
+                  {isWinner
+                    ? t("game.victory")
+                    : isLoser
+                      ? t("game.defeat")
+                      : t("game.draw")}
                 </CardTitle>
               </CardHeader>
 
               <div className="text-sm text-muted-foreground">
                 {winner ? (
                   <p>
-                    Winner:{" "}
+                    {t("game.winnerLabel")}{" "}
                     <span className="font-semibold text-foreground">
-                      {isWinner ? "You" : "Enemy (AI)"}
+                      {isWinner ? t("game.winnerYou") : t("game.winnerAi")}
                     </span>
                   </p>
                 ) : (
-                  <p>Game ended in a draw</p>
+                  <p>{t("game.endedInDraw")}</p>
                 )}
               </div>
 
               <Button onClick={() => navigate("/")} className="w-full">
-                Back to Dashboard
+                {t("common.backToDashboard")}
               </Button>
             </Card>
           </div>

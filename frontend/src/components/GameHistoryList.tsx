@@ -1,14 +1,22 @@
 import { useNavigate } from "react-router-dom";
 import { Trophy, Calendar, ChevronRight, Swords, Gamepad2, Hourglass, CheckCircle2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
+import { useLanguage } from "@/context/I18nContext";
+import type { Language } from "@/i18n";
 
 interface GameHistoryListProps {
   games: any[];
 }
 
-const formatDate = (dateString: string) => {
-  if (!dateString) return "N/A";
-  return new Date(dateString).toLocaleString("en-GB", {
+const DATE_LOCALES: Record<Language, string> = {
+  en: "en-GB",
+  pl: "pl-PL",
+};
+
+const formatDate = (dateString: string, lang: Language) => {
+  if (!dateString) return null;
+  return new Date(dateString).toLocaleString(DATE_LOCALES[lang], {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -19,6 +27,8 @@ const formatDate = (dateString: string) => {
 
 export function GameHistoryList({ games }: GameHistoryListProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { lang } = useLanguage();
 
   if (!games || games.length === 0) {
     return (
@@ -27,9 +37,9 @@ export function GameHistoryList({ games }: GameHistoryListProps) {
           <Gamepad2 className="w-8 h-8" />
         </div>
         <div className="space-y-1">
-          <h3 className="font-semibold text-base">No matches found</h3>
+          <h3 className="font-semibold text-base">{t("history.emptyTitle")}</h3>
           <p className="text-sm text-muted-foreground max-w-xs">
-            You haven't played any games yet. Start a new match vs AI to begin tracking your history!
+            {t("history.emptyBody")}
           </p>
         </div>
       </Card>
@@ -58,23 +68,23 @@ export function GameHistoryList({ games }: GameHistoryListProps) {
                 <div className="space-y-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold text-sm truncate">
-                      Match #{game.id.slice(0, 8)}
+                      {t("history.matchNumber", { id: game.id.slice(0, 8) })}
                     </span>
 
                     {/* Status Badge */}
                     {isFinished ? (
                       hasWinner ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                          <CheckCircle2 className="w-3 h-3" /> Finished
+                          <CheckCircle2 className="w-3 h-3" /> {t("history.finished")}
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-zinc-500/10 text-zinc-600 border border-zinc-500/20">
-                          Draw
+                          {t("history.draw")}
                         </span>
                       )
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 border border-amber-500/20 animate-pulse">
-                        <Hourglass className="w-3 h-3" /> In Progress
+                        <Hourglass className="w-3 h-3" /> {t("history.inProgress")}
                       </span>
                     )}
                   </div>
@@ -83,13 +93,13 @@ export function GameHistoryList({ games }: GameHistoryListProps) {
                   <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5" />
-                      {formatDate(game.createdAt)}
+                      {formatDate(game.createdAt, lang) ?? t("common.notAvailable")}
                     </span>
 
                     {game.winnerId && (
                       <span className="flex items-center gap-1 font-medium text-foreground">
                         <Trophy className="w-3.5 h-3.5 text-amber-500" />
-                        Winner: {game.winnerId.slice(0, 8)}
+                        {t("history.winner", { id: game.winnerId.slice(0, 8) })}
                       </span>
                     )}
                   </div>
@@ -98,7 +108,7 @@ export function GameHistoryList({ games }: GameHistoryListProps) {
 
               {/* Right side: Transition Icon */}
               <div className="flex items-center gap-1 text-muted-foreground group-hover:text-primary transition-colors shrink-0">
-                <span className="text-xs font-medium hidden sm:inline">View</span>
+                <span className="text-xs font-medium hidden sm:inline">{t("common.view")}</span>
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </div>
             </div>
