@@ -5,7 +5,7 @@ import { UserService } from "src/user/user.service";
 import { UserEntity } from "src/user/entities/user.entity";
 import { LoginDto } from "./dto/login.dto";
 import { JwtService } from "@nestjs/jwt";
-import { JwtPayload } from "./auth.types";
+import { JwtPayload, OAuthUserDetails } from "./auth.types";
 import { User } from "generated/prisma/client";
 
 @Injectable()
@@ -49,7 +49,8 @@ export class AuthService {
       }),
     };
   }
-  async validateOAuthUser(details: { email: string; username: string; googleId?: string; githubId?: string }) {
+
+  async validateOAuthUser(details: OAuthUserDetails) {
     let user: User | null = null;
     if (details.googleId) {
       user = await this.userService.findByGoogleId(details.googleId);
@@ -66,6 +67,9 @@ export class AuthService {
       }
     }
     if (!user) {
+      if (!details.email) {
+        throw new UnauthorizedException("OAuthEmailUnavailable");
+      }
       user = await this.userService.createOAuthUser({
         email: details.email,
         username: details.username,

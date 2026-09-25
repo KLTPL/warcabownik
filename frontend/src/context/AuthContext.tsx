@@ -1,59 +1,35 @@
-import {
-  createContext,
-  useState,
-  useEffect,
-  type ReactNode,
-  useContext,
-} from "react";
+import { useState, type ReactNode } from "react";
+import { isTokenExpired } from "@/lib/jwt";
+import { AuthContext } from "./auth-context";
 
-interface AuthContextType {
-  isLoggedIn: boolean;
-  token: string | null;
-  login: (token: string) => void;
-  logout: () => void;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const isTokenExpired = (token: string): boolean => {
-  try {
-    const payloadBase64 = token.split(".")[1];
-    const decodedJson = atob(payloadBase64);
-    const decoded = JSON.parse(decodedJson);
-    if (!decoded.exp) return false;
-    return decoded.exp * 1000 < Date.now();
-  } catch {
-    return true;
+/**
+ * Reads the persisted session once, before the first render, so a reload never
+ * paints a logged-out UI for a user who still holds a valid token.
+ */
+const readStoredToken = (): string | null => {
+  const savedToken = localStorage.getItem("token");
+  if (!savedToken) return null;
+  if (isTokenExpired(savedToken)) {
+    localStorage.removeItem("token");
+    return null;
   }
+  return savedToken;
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(readStoredToken);
+
+  const isLoggedIn = token !== null;
 
   const logout = () => {
     localStorage.removeItem("token");
     setToken(null);
-    setIsLoggedIn(false);
   };
 
   const login = (newToken: string) => {
     localStorage.setItem("token", newToken);
     setToken(newToken);
-    setIsLoggedIn(true);
   };
-
-  useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    if (savedToken) {
-      if (isTokenExpired(savedToken)) {
-        logout();
-      } else {
-        setToken(savedToken);
-        setIsLoggedIn(true);
-      }
-    }
-  }, []);
 
   return (
     <AuthContext.Provider value={{ isLoggedIn, token, login, logout }}>
@@ -61,11 +37,3 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     </AuthContext.Provider>
   );
 }
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};

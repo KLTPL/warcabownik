@@ -3,6 +3,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { AiService } from "../ai/ai.service";
 import { GameValidatorService } from "./game-validator.service";
 import { GameStatus } from "../../generated/prisma/enums";
+import { Move } from "../../generated/prisma/client";
 import { parsePosition } from "./board.utils";
 import {
   BOARD_SIZE,
@@ -20,7 +21,7 @@ import {
 import { GameState, MovePayload } from "@warcabownik/shared";
 
 export interface GameWithMoves extends GameState {
-  moves: unknown[];
+  moves: Move[];
 }
 
 @Injectable()
@@ -78,7 +79,7 @@ export class GameService {
 
     try {
       return await this.processAiTurns(gameId, playerResult.game);
-    } catch (error) {
+    } catch {
       this.logger.error(
         `AI failed to respond. Keeping board state after player move.`,
       );
@@ -93,10 +94,7 @@ export class GameService {
     if (game.moves.length === 0) {
       return true;
     }
-    const lastMove = game.moves[game.moves.length - 1] as {
-      fromPosition: string;
-      toPosition: string;
-    };
+    const lastMove = game.moves[game.moves.length - 1];
     const lastFrom = parsePosition(lastMove.fromPosition);
     const lastTo = parsePosition(lastMove.toPosition);
 
@@ -108,7 +106,9 @@ export class GameService {
     const wasCapture = Math.abs(lastTo.x - lastFrom.x) === CAPTURE_STEP;
 
     const isWhite = isLastPieceWhite;
-    const isPromotionRow = isWhite ? lastTo.y === BOARD_MAX : lastTo.y === BOARD_MIN;
+    const isPromotionRow = isWhite
+      ? lastTo.y === BOARD_MAX
+      : lastTo.y === BOARD_MIN;
 
     const canContinue =
       wasCapture &&
@@ -240,13 +240,13 @@ export class GameService {
   ): Promise<GameState> {
     let currentBoardJson = initialGame.boardStateJson;
     let finalGame = initialGame;
-    let aiCanContinue = true
-    
+    let aiCanContinue = true;
+
     const aiMovesData = await this.aiService.getAiMove(currentBoardJson);
 
     this.logger.log(`Processing AI move sequence for game: ${gameId}`);
 
-    for (const step of aiMovesData){
+    for (const step of aiMovesData) {
       const aiMove: MovePayload = {
         fromPosition: step.fromPosition,
         toPosition: step.toPosition,
@@ -258,11 +258,10 @@ export class GameService {
       currentBoardJson = finalGame.boardStateJson;
       aiCanContinue = aiResult.canContinueCapture;
 
-      if (!aiCanContinue || finalGame.status !== GameStatus.IN_PROGRESS){
+      if (!aiCanContinue || finalGame.status !== GameStatus.IN_PROGRESS) {
         break;
       }
     }
-    
 
     return finalGame;
   }
@@ -325,7 +324,7 @@ export class GameService {
       }
 
       return null;
-    } catch (error) {
+    } catch {
       this.logger.error(`Failed to auto-resume AI for game ${gameId}`);
       return null;
     }

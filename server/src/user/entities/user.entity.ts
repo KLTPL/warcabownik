@@ -5,16 +5,16 @@ export class UserEntity {
     example: "contact@example.com",
     description: "Unique email of the user",
   })
-  email: string;
+  email!: string;
 
   @ApiProperty({
     example: "John",
     description: "Username of the user",
   })
-  username: string;
+  username!: string;
   @ApiProperty()
-  createdAt: Date;
+  createdAt!: Date;
 
   @ApiProperty()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

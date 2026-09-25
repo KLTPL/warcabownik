@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
-import { Strategy } from "passport-github2";
+import { Profile, Strategy } from "passport-github2";
+import { OAuthUserDetails, OAuthVerifyCallback } from "../auth.types";
 
 @Injectable()
 export class GithubStrategy extends PassportStrategy(Strategy, "github") {
@@ -8,18 +9,25 @@ export class GithubStrategy extends PassportStrategy(Strategy, "github") {
     super({
       clientID: process.env.GITHUB_CLIENT_ID as string,
       clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
-      callbackURL: process.env.GITHUB_CALLBACK_URL || "http://localhost:3000/auth/github/callback",
+      callbackURL:
+        process.env.GITHUB_CALLBACK_URL ||
+        "http://localhost:3000/auth/github/callback",
       scope: ["user:email"],
     });
   }
 
-  async validate(accessToken: string, refreshToken: string, profile: any, done: Function): Promise<any> {
+  validate(
+    accessToken: string,
+    refreshToken: string,
+    profile: Profile,
+    done: OAuthVerifyCallback,
+  ): void {
     const { id, emails, username, displayName } = profile;
-    const email = emails && emails[0] ? emails[0].value : null;
+    const email = emails?.[0]?.value ?? null;
 
-    const user = {
+    const user: OAuthUserDetails = {
       githubId: id,
-      email: email,
+      email,
       username: username || displayName || `user_${id}`,
     };
     done(null, user);

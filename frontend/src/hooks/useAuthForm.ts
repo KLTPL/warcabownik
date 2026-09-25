@@ -1,11 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { isAxiosError } from "axios";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/auth-context";
 import {
   useAuthControllerLogin,
   useAuthControllerRegister,
 } from "../api/endpoints/auth/auth";
+
+/** Error shape NestJS' validation pipe and exception filters return. */
+interface ApiErrorBody {
+  message?: string | string[];
+}
 
 export function useAuthForm() {
   const navigate = useNavigate();
@@ -58,7 +63,7 @@ export function useAuthForm() {
           data: { email: formData.email, password: formData.password },
         });
 
-        login((response as any).access_token);
+        login(response.access_token);
         navigate("/");
       } else {
         await registerMutation.mutateAsync({
@@ -73,17 +78,19 @@ export function useAuthForm() {
           data: { email: formData.email, password: formData.password },
         });
 
-        login((loginResponse as any).access_token);
+        login(loginResponse.access_token);
         navigate("/");
       }
-    } catch (err: any) {
-      if (isAxiosError(err)) {
+    } catch (err) {
+      if (isAxiosError<ApiErrorBody>(err)) {
         const message = err.response?.data?.message;
         setError(
-          Array.isArray(message) ? message[0] : message || "authFailed"
+          (Array.isArray(message) ? message[0] : message) || "authFailed"
         );
-      } else {
+      } else if (err instanceof Error) {
         setError(err.message || "unexpected");
+      } else {
+        setError("unexpected");
       }
     }
   };

@@ -5,10 +5,7 @@
  * Checkers model with database and API for managing games
  * OpenAPI spec version: 1.0
  */
-import type { GameHistoryItemDtoBlackPlayerId } from './gameHistoryItemDtoBlackPlayerId';
 import type { GameHistoryItemDtoStatus } from './gameHistoryItemDtoStatus';
-import type { GameHistoryItemDtoWhitePlayerId } from './gameHistoryItemDtoWhitePlayerId';
-import type { GameHistoryItemDtoWinnerId } from './gameHistoryItemDtoWinnerId';
 
 export interface GameHistoryItemDto {
   id: string;
@@ -16,10 +13,10 @@ export interface GameHistoryItemDto {
   updatedAt: string;
   status: GameHistoryItemDtoStatus;
   /** @nullable */
-  winnerId?: GameHistoryItemDtoWinnerId;
+  winnerId?: string | null;
   boardStateJson: string;
   /** @nullable */
-  whitePlayerId?: GameHistoryItemDtoWhitePlayerId;
+  whitePlayerId?: string | null;
   /** @nullable */
-  blackPlayerId?: GameHistoryItemDtoBlackPlayerId;
+  blackPlayerId?: string | null;
 }

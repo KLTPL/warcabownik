@@ -16,7 +16,7 @@ export class RegisterDto {
   @IsString({ message: "InvalidEmail" })
   @IsNotEmpty({ message: "InvalidEmail" })
   @IsEmail({}, { message: "InvalidEmail" })
-  email: string;
+  email!: string;
 
   @ApiProperty({
     example: "i-DO-pieca67!",
@@ -35,7 +35,7 @@ export class RegisterDto {
     },
     { message: "WeakPassword" },
   )
-  password: string;
+  password!: string;
 
   @ApiProperty({
     example: "John",
@@ -45,5 +45,5 @@ export class RegisterDto {
   @IsNotEmpty({ message: "UsernameTooShort" })
   @MinLength(2, { message: "UsernameTooShort" })
   @MaxLength(50, { message: "UsernameTooLong" })
-  username: string;
+  username!: string;
 }

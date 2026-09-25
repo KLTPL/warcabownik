@@ -5,9 +5,11 @@ import {
   type ServerToClientEvents,
   type ClientToServerEvents,
   SocketEvents,
+  SocketStatus,
   type GameState,
 } from "@warcabownik/shared";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/auth-context";
+import { decodeJwtPayload } from "@/lib/jwt";
 
 export interface BoardPosition {
   x: number;
@@ -43,12 +45,7 @@ const getInitialBoard = (): Board => {
 const getMyUserId = (): string | null => {
   const token = localStorage.getItem("token");
   if (!token) return null;
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.sub;
-  } catch {
-    return null;
-  }
+  return decodeJwtPayload(token)?.sub ?? null;
 };
 
 type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
@@ -57,7 +54,9 @@ export function useGame(gameId: string | undefined) {
   const navigate = useNavigate();
   const { logout } = useAuth();
 
-  const [socket, setSocket] = useState<TypedSocket | null>(null);
+  // The socket is a mutable connection, not rendered state: keeping it in a ref
+  // avoids a render pass that nothing on screen depends on.
+  const socketRef = useRef<TypedSocket | null>(null);
   const [status, setStatus] = useState<ConnectionStatus>({
     kind: "connecting",
   });
@@ -124,22 +123,23 @@ export function useGame(gameId: string | undefined) {
       setStatus({ kind: "error", detail: err.message });
     });
 
-    newSocket.on("exception" as any, (error: any) => {
-      if (error?.message === "Unauthorized" || error?.statusCode === 401) {
+    newSocket.on(SocketEvents.EXCEPTION, (error) => {
+      if (error.message === "Unauthorized" || error.statusCode === 401) {
         logout();
         navigate("/auth");
       }
     });
 
-    setSocket(newSocket);
+    socketRef.current = newSocket;
 
     return () => {
       if (aiDelayTimeoutRef.current) {
         clearTimeout(aiDelayTimeoutRef.current);
       }
-      newSocket.off("exception" as any);
+      newSocket.off(SocketEvents.EXCEPTION);
       newSocket.off(SocketEvents.GAME_STATE_UPDATE);
       newSocket.disconnect();
+      socketRef.current = null;
     };
   }, [gameId, logout, navigate]);
 
@@ -157,6 +157,7 @@ export function useGame(gameId: string | undefined) {
       return;
     }
 
+    const socket = socketRef.current;
     if (piece === 0 && selectedPiece && socket) {
       const fromX = selectedPiece.x;
       const fromY = selectedPiece.y;
@@ -202,7 +203,7 @@ export function useGame(gameId: string | undefined) {
           move: { fromPosition, toPosition },
         },
         (response) => {
-          if (response.status === "ERROR") {
+          if (response.status === SocketStatus.ERROR) {
             if (aiDelayTimeoutRef.current) {
               clearTimeout(aiDelayTimeoutRef.current);
             }

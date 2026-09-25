@@ -23,23 +23,21 @@ import { WsJwtGuard } from "src/auth/guards/ws-jwt-auth.guard";
 import {
   ClientToServerEvents,
   MovePayload,
+  PlayerMoveResponse,
   ServerToClientEvents,
   SocketEvents,
   SocketStatus,
 } from "@warcabownik/shared";
+import { WithSocketUser } from "src/auth/auth.types";
 
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
-interface AuthenticatedSocket extends TypedSocket {
-  user?: {
-    sub: string;
-  };
-}
+interface AuthenticatedSocket extends TypedSocket, WithSocketUser {}
 
 @Catch()
 export class WsAuthExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
-    const client = host.switchToWs().getClient<Socket>();
+    const client = host.switchToWs().getClient<TypedSocket>();
 
     let errorMessage = "Unauthorized";
     let statusCode = 401;
@@ -51,7 +49,7 @@ export class WsAuthExceptionFilter implements ExceptionFilter {
       errorMessage = exception.message;
     }
 
-    client.emit("exception", {
+    client.emit(SocketEvents.EXCEPTION, {
       message: errorMessage,
       statusCode: statusCode,
     });
@@ -101,7 +99,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           .to(payload.gameId)
           .emit(SocketEvents.GAME_STATE_UPDATE, autoUpdatedGame);
       }
-    } catch (error) {
+    } catch {
       this.logger.error(
         `Failed to fetch game state for room: ${payload.gameId}`,
       );
@@ -113,12 +111,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage(SocketEvents.SEND_PLAYER_MOVE)
   async handlePlayerMove(
     @MessageBody() data: { gameId: string; move: MovePayload },
-    @ConnectedSocket() client: TypedSocket,
-  ) {
+    @ConnectedSocket() client: AuthenticatedSocket,
+  ): Promise<PlayerMoveResponse> {
     this.logger.log(`Received move from ${client.id} for game ${data.gameId}`);
 
-    const authClient = client as AuthenticatedSocket;
-    const userId = authClient.user?.sub ?? "";
+    const userId = client.user?.sub ?? "";
 
     try {
       const updatedGame = await this.gameService.playTurn(

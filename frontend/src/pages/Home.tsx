@@ -3,7 +3,7 @@ import { Bot, Users, Swords, Sparkles, History, ArrowRight, Loader2 } from "luci
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card,CardContent,CardDescription,CardHeader,CardTitle} from "@/components/ui/card";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/auth-context";
 import { GameHistoryList } from "@/components/GameHistoryList";
 import { useGameControllerGetHistory, useGameControllerCreateAiGame } from "../api/endpoints/game/game";
 

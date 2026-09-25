@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { History, Loader2, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -14,20 +14,22 @@ export function GameHistory() {
   const [accumulatedGames, setAccumulatedGames] = useState<
     GameHistoryItemDto[]
   >([]);
+  const [foldedPage, setFoldedPage] = useState(0);
 
   const { t } = useTranslation();
 
   const { data, isLoading } = useGameControllerGetHistory({ page, limit: 10 });
 
-  useEffect(() => {
-    if (data?.games) {
-      if (page === 1) {
-        setAccumulatedGames(data.games);
-      } else {
-        setAccumulatedGames((prev) => [...prev, ...data.games]);
-      }
-    }
-  }, [data, page]);
+  // Each page is folded into the running list while rendering rather than from
+  // an effect, so the list never paints one frame behind the fetched data.
+  // `foldedPage` makes it idempotent: a refetch of a page already folded in
+  // cannot append it twice.
+  if (data?.games && data.page !== foldedPage) {
+    setFoldedPage(data.page);
+    setAccumulatedGames(
+      data.page === 1 ? data.games : [...accumulatedGames, ...data.games]
+    );
+  }
 
   const hasMore = data ? data.page < data.totalPages : false;
 
