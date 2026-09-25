@@ -1,7 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { Profile, Strategy } from "passport-github2";
-import { OAuthUserDetails, OAuthVerifyCallback } from "../auth.types";
 
 @Injectable()
 export class GithubStrategy extends PassportStrategy(Strategy, "github") {
@@ -16,20 +15,14 @@ export class GithubStrategy extends PassportStrategy(Strategy, "github") {
     });
   }
 
-  validate(
-    accessToken: string,
-    refreshToken: string,
-    profile: Profile,
-    done: OAuthVerifyCallback,
-  ): void {
+  validate(accessToken: string, refreshToken: string, profile: Profile) {
     const { id, emails, username, displayName } = profile;
     const email = emails?.[0]?.value ?? null;
 
-    const user: OAuthUserDetails = {
+    return {
       githubId: id,
       email,
       username: username || displayName || `user_${id}`,
     };
-    done(null, user);
   }
 }

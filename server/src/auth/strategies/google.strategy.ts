@@ -1,7 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { Profile, Strategy } from "passport-google-oauth20";
-import { OAuthUserDetails, OAuthVerifyCallback } from "../auth.types";
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, "google") {
@@ -16,24 +15,17 @@ export class GoogleStrategy extends PassportStrategy(Strategy, "google") {
     });
   }
 
-  validate(
-    accessToken: string,
-    refreshToken: string,
-    profile: Profile,
-    done: OAuthVerifyCallback,
-  ): void {
+  validate(accessToken: string, refreshToken: string, profile: Profile) {
     const { id, emails, displayName } = profile;
     const email = emails?.[0]?.value;
     if (!email) {
       // Passport turns a throw here into a failed authentication attempt.
       throw new Error("GoogleProfileMissingEmail");
     }
-
-    const user: OAuthUserDetails = {
+    return {
       googleId: id,
       email,
       username: displayName || email.split("@")[0],
     };
-    done(null, user);
   }
 }
