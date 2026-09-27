@@ -5,6 +5,7 @@ import {
   Get,
   Query,
   ParseIntPipe,
+  Body,
 } from "@nestjs/common";
 import { GameService } from "./game.service";
 import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
@@ -19,6 +20,8 @@ import {
 } from "@nestjs/swagger";
 import { PaginatedGameHistoryDto } from "./dto/paginated-game-history.dto";
 import { GameResponseDto } from "./dto/game-response.dto";
+import { CreateAiGameDto } from "./dto/create-ai-game.dto";
+import { Side } from "@warcabownik/shared";
 
 @ApiBearerAuth()
 @ApiTags("Game")
@@ -34,9 +37,14 @@ export class GameController {
     description: "Game successfully created",
     type: GameResponseDto,
   })
-  async createAiGame(@CurrentUser() user: AuthUser): Promise<GameResponseDto> {
-    const game = await this.gameService.createGame(user.id);
-    return game;
+  async createAiGame(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: CreateAiGameDto,
+  ): Promise<GameResponseDto> {
+    const side = dto.side ?? Side.WHITE;
+    return side === Side.BLACK
+      ? this.gameService.createGame(undefined, user.id)
+      : this.gameService.createGame(user.id, undefined);
   }
 
   @Get("history")
