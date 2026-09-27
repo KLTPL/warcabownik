@@ -12,6 +12,18 @@ KING_REWARD = 0.12
 PROMOTION_REWARD = 0.04
 #the opponent checks are represented as negative Ones
 
+def create_cord_field_dict():
+    field_cord_dict={}
+    cols = [1,3,5,7]
+    field = 0
+    for row in range(8):
+        for col in cols:
+            cord = row, col - (row % 2)
+            field_cord_dict[cord] = field
+            field += 1
+    return field_cord_dict
+
+    
 class CheckersEnv:
     def __init__(self):
         self.player = None
@@ -349,3 +361,6 @@ class CheckersEnv:
                 row_str += symbols[field_val] + " "
             print(row_str)
         print()
+if __name__ =="__main__":
+    env= CheckersEnv()
+    env.print_board()

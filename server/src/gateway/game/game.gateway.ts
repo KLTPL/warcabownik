@@ -27,7 +27,7 @@ import {
   SocketEvents,
   SocketStatus,
 } from "@warcabownik/shared";
-
+import { AiService } from "src/ai/ai.service";
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
 interface AuthenticatedSocket extends TypedSocket {
@@ -70,7 +70,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private readonly logger = new Logger(GameGateway.name);
 
-  constructor(private readonly gameService: GameService) {}
+  constructor(private readonly gameService: GameService, private readonly aiService: AiService) {}
 
   handleConnection(client: TypedSocket) {
     this.logger.log(`Client connected: ${client.id}`);
@@ -90,6 +90,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     try {
       const game = await this.gameService.getGameById(payload.gameId);
+      this.aiService.wakeUpAi();
       client.emit(SocketEvents.GAME_STATE_UPDATE, game);
 
       const autoUpdatedGame = await this.gameService.checkAndTriggerAi(

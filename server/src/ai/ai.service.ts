@@ -17,6 +17,20 @@ interface AiMoveResponse {
 export class AiService {
   private readonly logger = new Logger(AiService.name);
 
+  public wakeUpAi(): void {
+    this.logger.log(`Sending ping to wake up the AI server...`);
+
+    axios.get(`${process.env.AI_URL}/docs`, { timeout: 3000 })
+      .then(() => {
+        this.logger.log('Wake-up signal: AI server is already active and ready to respond.');
+      })
+      .catch((error) => {
+        const msg = axios.isAxiosError(error) ? error.message: String(error);
+        this.logger.log(`Wake-up signal sent. The AI server is probably waking up now (${msg}).`)
+      });
+  }
+
+
   async getAiMove(
     boardStateJson: string,
   ): Promise<{ fromPosition: string; toPosition: string }[]> {
@@ -46,6 +60,7 @@ export class AiService {
             board: numericBoard,
             player_id: 2,
           },
+          { timeout: 10000 }
         );
         this.logger.log("Response");
 
@@ -55,8 +70,18 @@ export class AiService {
         }));
         
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
+        let errorMessage = "Unknown error";
+        if (axios.isAxiosError(error)){
+          errorMessage = `Axios Error: ${error.message}`;
+          if (error.response?.data) {
+            errorMessage += ` | Data: ${JSON.stringify(error.response.data)}`;
+          }
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
+        } else {
+          errorMessage = String(error)
+        }
+        
         this.logger.warn(
           `AI attempt failed (${errorMessage}). Retrying in 3s... (${retries - 1} left)`,
         );
