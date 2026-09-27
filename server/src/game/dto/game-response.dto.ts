@@ -6,29 +6,29 @@ export class GameResponseDto {
     example: "cm11x...",
     description: "Unique identifier of the game",
   })
-  id: string;
+  id!: string;
 
   @ApiProperty({ example: "2026-09-15T12:00:00Z" })
-  createdAt: Date;
+  createdAt!: Date;
 
   @ApiProperty({ example: "2026-09-15T12:00:00Z" })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @ApiProperty({ enum: GameStatus, example: "WAITING_FOR_PLAYERS" })
-  status: GameStatus;
+  status!: GameStatus;
 
   @ApiProperty({ type: String, nullable: true, example: null })
-  winnerId: string | null;
+  winnerId!: string | null;
 
   @ApiProperty({
     example: '{"board": [...]}',
     description: "Serialized board state",
   })
-  boardStateJson: string;
+  boardStateJson!: string;
 
   @ApiProperty({ type: String, nullable: true, example: "uuid-1234" })
-  whitePlayerId: string | null;
+  whitePlayerId!: string | null;
 
   @ApiProperty({ type: String, nullable: true, example: null })
-  blackPlayerId: string | null;
+  blackPlayerId!: string | null;
 }

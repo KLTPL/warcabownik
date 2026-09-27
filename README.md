@@ -16,11 +16,11 @@ Grupowy projekt Solvro Wakacyjne Wyzwanie 2026 ścieżki Backend i AI/ML
 - **Backend:** NestJS, TypeScript, Socket.io, Prisma (PostgreSQL).
 - **AI Engine:** Python, FastAPI, PyTorch (Machine Learning model for bot logic).
 
-## Table of Contents
+## 📃 Table of Contents
 
 - [Project Structure](#🗂️-project-structure)
-- [Local Development with Docker](#🐳-local-development-with-docker)
-  - [Initial Setup](#1-initial-setup)
+- [Local Development (Hybrid Workflow)](#🐳-local-development-hybrid-workflow)
+  - [Environment Setup](#1-environment-setup)
   - [Prisma Studio](#8-prisma-studio-database-gui)
 - [Conventional commits](#📝-conventional-commits)
 

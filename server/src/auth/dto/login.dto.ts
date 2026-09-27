@@ -9,12 +9,12 @@ export class LoginDto {
   @IsString({ message: "InvalidEmail" })
   @IsNotEmpty({ message: "InvalidEmail" })
   @IsEmail({}, { message: "InvalidEmail" })
-  email: string;
+  email!: string;
 
   @ApiProperty({
     example: "i-DO-pieca67",
   })
   @IsString({ message: "InvalidCredentials" })
   @IsNotEmpty({ message: "InvalidCredentials" })
-  password: string;
+  password!: string;
 }

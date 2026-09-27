@@ -2,11 +2,12 @@ import { useNavigate } from "react-router-dom";
 import { Trophy, Calendar, ChevronRight, Swords, Gamepad2, Hourglass, CheckCircle2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
-import { useLanguage } from "@/context/I18nContext";
+import { useLanguage } from "@/context/i18n-context";
 import type { Language } from "@/i18n";
+import type { GameHistoryItemDto } from "@/api/models";
 
 interface GameHistoryListProps {
-  games: any[];
+  games: GameHistoryItemDto[];
 }
 
 const DATE_LOCALES: Record<Language, string> = {
@@ -50,7 +51,12 @@ export function GameHistoryList({ games }: GameHistoryListProps) {
     <div className="space-y-3">
       {games.map((game) => {
         const isFinished = game.status === "FINISHED";
-        const hasWinner = Boolean(game.winnerId);
+        // Swagger currently describes `winnerId` as a free-form object, so the
+        // generated model cannot promise a string. Narrow it once, here.
+        const rawWinnerId: unknown = game.winnerId;
+        const winnerId =
+          typeof rawWinnerId === "string" && rawWinnerId ? rawWinnerId : null;
+        const hasWinner = winnerId !== null;
 
         return (
           <Card
@@ -96,10 +102,10 @@ export function GameHistoryList({ games }: GameHistoryListProps) {
                       {formatDate(game.createdAt, lang) ?? t("common.notAvailable")}
                     </span>
 
-                    {game.winnerId && (
+                    {winnerId && (
                       <span className="flex items-center gap-1 font-medium text-foreground">
                         <Trophy className="w-3.5 h-3.5 text-amber-500" />
-                        {t("history.winner", { id: game.winnerId.slice(0, 8) })}
+                        {t("history.winner", { id: winnerId.slice(0, 8) })}
                       </span>
                     )}
                   </div>
