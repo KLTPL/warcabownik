@@ -31,6 +31,7 @@ class Node:
         self.board = board_state
         self.childs = None
         self.puct_const = PUCT_CONST
+        
 
     def PUCT_counting(self,  sqrt_parent_visit_count):
         values_mean = (self.values_sum / self.visit_count) if self.visit_count > 0 else 0 
@@ -71,6 +72,7 @@ class DynamicMCTS:
         self.current_board = current_board 
         self.time_limit = TIME_LIMIT
         self.moves = None
+        self.cache = {}
 
     def set_time_limit(self, time_limit):
         self.time_limit = time_limit
@@ -92,7 +94,6 @@ class DynamicMCTS:
                 nodes_array.append(current_node)
         
             self.env.next_move(current_node.get_board())
-
             possible_next_layouts = []
             if first_iteration: # making sure that the lists of childrens have same arrange as the moves list
                 next_moves_packages = self.env.get_next_states(collect_moves = True)
@@ -107,13 +108,31 @@ class DynamicMCTS:
                 possible_next_layouts = self.env.get_next_states()
 
             if not possible_next_layouts: # that means current node is the end of the game
-                current_node.model_rating = 1
                 leaf_value = 1
             else:
-                tensor_layout_list = [prepare_layout_for_onnx_network(layout) for layout in possible_next_layouts]
-                batch_np_array = np.stack(tensor_layout_list).astype(np.float32)
-                predictions_raw = self.model.run(None, {self.model_input_name : batch_np_array})[0]
-                predictions_np_array = predictions_raw.flatten()
+                predictions_np_array = np.zeros(len(possible_next_layouts), dtype = np.float32)
+                layouts_to_predict = []
+                indexes_to_predict = []
+
+                for idx, layout in enumerate(possible_next_layouts):
+                    board_hash = hash(layout.tobytes())
+                    if board_hash in self.cache:
+                        predictions_np_array[idx] = self.cache[board_hash]
+                    else:
+                        layouts_to_predict.append(layout)
+                        indexes_to_predict.append(idx)
+
+                if len(layouts_to_predict) > 0:
+                    tensor_layout_list = [prepare_layout_for_onnx_network(layout) for layout in layouts_to_predict]
+                    batch_np_array = np.stack(tensor_layout_list).astype(np.float32)
+                    predictions_raw = self.model.run(None, {self.model_input_name : batch_np_array})[0]
+                    raw_values = predictions_raw.flatten()
+                    
+                    for val, original_idx, layout in zip(raw_values, indexes_to_predict, layouts_to_predict):
+                        predictions_np_array[original_idx] = val
+                        board_hash = hash(layout.tobytes())
+                        self.cache[board_hash] = val
+                 
                 best_idx = np.argmax(predictions_np_array)
 
                 max_prediction = np.max(predictions_np_array)
