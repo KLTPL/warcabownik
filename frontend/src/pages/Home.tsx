@@ -137,31 +137,42 @@ export function Home() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-2 mb-3">
-                <Button
+              <p className="text-xs font-medium text-muted-foreground mb-1.5">
+                {t("home.chooseSide")}
+              </p>
+              <div
+                role="radiogroup"
+                aria-label={t("home.chooseSide")}
+                className="grid grid-cols-2 gap-1 p-1 mb-3 rounded-lg bg-muted border border-border"
+              >
+                <button
                   type="button"
-                  variant={
-                    selectedSide === CreateAiGameDtoSide.WHITE
-                      ? "default"
-                      : "outline"
-                  }
-                  className="flex-1"
+                  role="radio"
+                  aria-checked={selectedSide === CreateAiGameDtoSide.WHITE}
                   onClick={() => setSelectedSide(CreateAiGameDtoSide.WHITE)}
+                  className={`flex items-center justify-center gap-2 rounded-md py-2 text-sm font-semibold border-2 transition-all ${
+                    selectedSide === CreateAiGameDtoSide.WHITE
+                      ? "bg-background text-foreground border-primary shadow-sm"
+                      : "text-muted-foreground border-transparent hover:bg-background/60 hover:text-foreground"
+                  }`}
                 >
+                  <span className="w-3.5 h-3.5 rounded-full bg-gradient-to-br from-slate-100 to-slate-300 border border-slate-400 shrink-0" />
                   {t("home.playAsWhite")}
-                </Button>
-                <Button
+                </button>
+                <button
                   type="button"
-                  variant={
-                    selectedSide === CreateAiGameDtoSide.BLACK
-                      ? "default"
-                      : "outline"
-                  }
-                  className="flex-1"
+                  role="radio"
+                  aria-checked={selectedSide === CreateAiGameDtoSide.BLACK}
                   onClick={() => setSelectedSide(CreateAiGameDtoSide.BLACK)}
+                  className={`flex items-center justify-center gap-2 rounded-md py-2 text-sm font-semibold border-2 transition-all ${
+                    selectedSide === CreateAiGameDtoSide.BLACK
+                      ? "bg-background text-foreground border-primary shadow-sm"
+                      : "text-muted-foreground border-transparent hover:bg-background/60 hover:text-foreground"
+                  }`}
                 >
+                  <span className="w-3.5 h-3.5 rounded-full bg-gradient-to-br from-neutral-800 to-neutral-950 border border-black shrink-0" />
                   {t("home.playAsBlack")}
-                </Button>
+                </button>
               </div>
               <Button
                 className="w-full gap-2"
