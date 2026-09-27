@@ -4,7 +4,6 @@ import torch.optim as optim
 import random
 import numpy as np
 import torch
-from collections import deque
 
 MAX_GAME_LEN = 150
 TIE_WEIGHT =0.0
@@ -13,7 +12,7 @@ import os
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
 from CheckersEnv import CheckersEnv
-from Model import CheckersValueNet, prepare_layout_for_network
+from model import CheckersValueNet, prepare_layout_for_network
 
 class CheckersTrainer:
     def __init__(self, episodes=100000, lr=0.0002, model_path="checkers_model.pth"):
