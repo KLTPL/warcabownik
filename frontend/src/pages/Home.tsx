@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bot, Users, Swords, Sparkles, History, ArrowRight, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -6,6 +7,7 @@ import { Card,CardContent,CardDescription,CardHeader,CardTitle} from "@/componen
 import { useAuth } from "@/context/auth-context";
 import { GameHistoryList } from "@/components/GameHistoryList";
 import { useGameControllerGetHistory, useGameControllerCreateAiGame } from "../api/endpoints/game/game";
+import { CreateAiGameDtoSide } from "../api/models";
 
 export function Home() {
   const { isLoggedIn } = useAuth();
@@ -20,10 +22,15 @@ export function Home() {
   );
 
   const createAiGameMutation = useGameControllerCreateAiGame();
+  const [selectedSide, setSelectedSide] = useState<CreateAiGameDtoSide>(
+    CreateAiGameDtoSide.WHITE
+  );
 
   const handlePlayAI = async () => {
     try {
-      const response = await createAiGameMutation.mutateAsync();
+      const response = await createAiGameMutation.mutateAsync({
+        data: { side: selectedSide },
+      });
 
       if (response?.id) {
         navigate(`/game/${response.id}`);
@@ -130,6 +137,32 @@ export function Home() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="flex gap-2 mb-3">
+                <Button
+                  type="button"
+                  variant={
+                    selectedSide === CreateAiGameDtoSide.WHITE
+                      ? "default"
+                      : "outline"
+                  }
+                  className="flex-1"
+                  onClick={() => setSelectedSide(CreateAiGameDtoSide.WHITE)}
+                >
+                  {t("home.playAsWhite")}
+                </Button>
+                <Button
+                  type="button"
+                  variant={
+                    selectedSide === CreateAiGameDtoSide.BLACK
+                      ? "default"
+                      : "outline"
+                  }
+                  className="flex-1"
+                  onClick={() => setSelectedSide(CreateAiGameDtoSide.BLACK)}
+                >
+                  {t("home.playAsBlack")}
+                </Button>
+              </div>
               <Button
                 className="w-full gap-2"
                 onClick={handlePlayAI}

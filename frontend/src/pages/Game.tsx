@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Crown, Loader2, Trophy, Frown, ArrowLeft, Swords, Bot } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Side } from "@warcabownik/shared";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,7 @@ export function Game() {
     isAiThinking,
     isWinner,
     isLoser,
+    myColor,
     handleSquareClick,
   } = useGame(id);
 
@@ -77,8 +79,14 @@ export function Game() {
       {/* Board Container */}
       <Card className="p-3 bg-amber-950/20 border-4 border-amber-900/40 rounded-xl shadow-2xl relative overflow-hidden">
         <CardContent className="p-0 grid grid-cols-8 border-2 border-amber-950 rounded-lg overflow-hidden shadow-inner">
-          {[7, 6, 5, 4, 3, 2, 1, 0].map((y) =>
-            [0, 1, 2, 3, 4, 5, 6, 7].map((x) => {
+          {(myColor === Side.BLACK
+            ? [0, 1, 2, 3, 4, 5, 6, 7]
+            : [7, 6, 5, 4, 3, 2, 1, 0]
+          ).map((y) =>
+            (myColor === Side.BLACK
+              ? [7, 6, 5, 4, 3, 2, 1, 0]
+              : [0, 1, 2, 3, 4, 5, 6, 7]
+            ).map((x) => {
               const piece = board[y][x];
               const isDark = (x + y) % 2 === 1;
               const isSelected = selectedPiece?.x === x && selectedPiece?.y === y;

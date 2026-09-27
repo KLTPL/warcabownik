@@ -4,6 +4,7 @@ import {
   Logger,
 } from "@nestjs/common";
 import axios from "axios";
+import { Side } from "@warcabownik/shared";
 
 interface AiMoveStep {
   fromPosition: { x: number; y: number };
@@ -19,9 +20,11 @@ export class AiService {
 
   async getAiMove(
     boardStateJson: string,
+    aiSide: Side,
   ): Promise<{ fromPosition: string; toPosition: string }[]> {
     const parsedJson: unknown = JSON.parse(boardStateJson);
     const rawBoard = parsedJson as string[][];
+    const playerId = aiSide === Side.WHITE ? 1 : 2;
 
     const numericBoard: number[][] = rawBoard.map((row) =>
       row.map((cell) => {
@@ -44,7 +47,7 @@ export class AiService {
           `${process.env.AI_URL}/predict-move`,
           {
             board: numericBoard,
-            player_id: 2,
+            player_id: playerId,
           },
         );
         this.logger.log("Response");

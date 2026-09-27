@@ -42,6 +42,8 @@
     "singleplayerBody": "Test your skills against our neural network bot.",
     "creatingMatch": "Creating Match...",
     "playVsAi": "Play vs AI",
+    "playAsWhite": "Play as White",
+    "playAsBlack": "Play as Black",
     "multiplayerTitle": "Online Multiplayer",
     "multiplayerBadge": "Coming Soon",
     "multiplayerBody": "Find online opponents in real-time matchmaking.",
