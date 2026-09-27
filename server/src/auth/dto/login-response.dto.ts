@@ -5,5 +5,5 @@ export class LoginResponseDto {
     example: "eyJhbGciOiJIUzI1...",
     description: "JWT Access Token",
   })
-  access_token: string;
+  access_token!: string;
 }

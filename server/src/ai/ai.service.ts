@@ -25,7 +25,7 @@ export class AiService {
 
     const numericBoard: number[][] = rawBoard.map((row) =>
       row.map((cell) => {
-        if (!cell || cell ==="") return 0;
+        if (!cell || cell === "") return 0;
         if (cell === "w") return 1;
         if (cell === "b") return 2;
         if (cell === "W") return 3;
@@ -49,11 +49,13 @@ export class AiService {
         );
         this.logger.log("Response");
 
-        return response.data.moves.map(step => ({
-          fromPosition: this.toAlgebraic(step.fromPosition.x, step.fromPosition.y),
+        return response.data.moves.map((step) => ({
+          fromPosition: this.toAlgebraic(
+            step.fromPosition.x,
+            step.fromPosition.y,
+          ),
           toPosition: this.toAlgebraic(step.toPosition.x, step.toPosition.y),
         }));
-        
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
