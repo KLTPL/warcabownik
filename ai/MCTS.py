@@ -108,7 +108,7 @@ class DynamicMCTS:
                 possible_next_layouts = self.env.get_next_states()
 
             if not possible_next_layouts: # that means current node is the end of the game
-                leaf_value = 1
+                leaf_value = -1
             else:
                 predictions_np_array = np.zeros(len(possible_next_layouts), dtype = np.float32)
                 layouts_to_predict = []
