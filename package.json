@@ -13,5 +13,8 @@
   },
   "devDependencies": {
     "concurrently": "^10.0.5"
+  },
+  "dependencies": {
+    "vercel": "^61.0.0"
   }
 }
