@@ -12,16 +12,18 @@ KING_REWARD = 0.12
 PROMOTION_REWARD = 0.04
 #the opponent checks are represented as negative Ones
 
-def create_cord_field_dict():
+def create_cord_field_dict_list():
     field_cord_dict={}
+    cord_field_list = []
     cols = [1,3,5,7]
     field = 0
     for row in range(8):
         for col in cols:
             cord = row, col - (row % 2)
+            cord_field_list.append(cord)
             field_cord_dict[cord] = field
             field += 1
-    return field_cord_dict
+    return field_cord_dict, cord_field_list
 
     
 class CheckersEnv:
@@ -31,6 +33,7 @@ class CheckersEnv:
         self.create_starting_state()
         self.non_capture_counter = 0
         self.six_last_layouts_hashes = deque(maxlen=6)
+        self.cord_field_dict , self.field_cord_list = create_cord_field_dict_list()
         
 
     def create_starting_state(self):
@@ -111,6 +114,18 @@ class CheckersEnv:
     def load_board(self, new_board):
         self.board = new_board
 
+    def get_possible_moves_ids_and_mask(self, possible_board_layouts_with_moves):
+        mask = np.zeros(1024, np.float32)
+        action_ids = []
+        for layout_and_moves in possible_board_layouts_with_moves:
+            moves = layout_and_moves["moves"]
+            from_position = moves[0]["fromPosition"]
+            to_position = moves[-1]["toPosition"]
+            idx = self.cord_field_dict[from_position]*32 + self.cord_field_dict[to_position]
+            action_ids.append(idx)
+            mask[idx] = 1.0
+
+        return action_ids, mask
 
     def get_next_states(self, collect_moves=False):
         possible_board_layouts = self._get_capture_states(collect_moves=collect_moves)
