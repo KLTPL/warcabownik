@@ -7,7 +7,9 @@ cdef enum:
     NON_CAPTURE_MOVES_LIMIT = 80
     ALL_POSSIBLE_FIELDS_SIZE = 32
     CORD_ARRAY_SIZE = 2
-    SIX_LAST_LAYOUTS_SIZE = 6
+    LAYOUTS_HISTORY_SIZE = 81 # NON_CAPTURE_MOVES_LIMIT + 1, positions since the last capture / man move
+    REPETITION_STEP = 4 # a position can only repeat after a multiple of 4 plies
+    REPETITION_LIMIT = 3
     POSSIBLE_NEXT_MOVES_SIZE = 128
     MOVES_SERIES_SIZE = 12
     FROM_FIELD_ID = 0
@@ -20,22 +22,15 @@ cdef enum:
     STATE_TENSOR_SIZE = 4
     BATCH_SIZE = 1
 
-cdef class fifo:
-    cdef public int pointer
-    cdef public unsigned long long values[SIX_LAST_LAYOUTS_SIZE]
-    cdef public int size
-
-    cdef void push(self, unsigned long long value)
-    cdef int len(self)
-    cdef unsigned long long id(self, int idx)
-
 cdef class CheckersEnv:
     cdef public int cord_field_translator[BOARD_SIZE][BOARD_SIZE]
     cdef public int field_cord_translator[ALL_POSSIBLE_FIELDS_SIZE][CORD_ARRAY_SIZE]
     cdef int board[8][8]
     cdef public int player
     cdef public int non_capture_counter
-    cdef public fifo six_last_layouts_hashes
+    cdef unsigned long long layouts_hashes[LAYOUTS_HISTORY_SIZE]
+    cdef public int layouts_hashes_len
+    cdef public int position_repeats
     cdef int MAN_MOVES[MAN_MOVES_SIZE][CORD_ARRAY_SIZE]
     cdef int KING_MOVES[KING_MOVES_SIZE][CORD_ARRAY_SIZE]
 
@@ -58,6 +53,8 @@ cdef class CheckersEnv:
     cdef bint was_man_moved(self, int[:,:] next_layout)
     cdef void load_board(self, int[:,:] next_layout)
     cdef unsigned long long _hash_board(self)
+    cdef void _reset_layouts_history(self)
+    cdef void _push_layout_hash(self)
     
     cpdef void next_move_py(self, int[:,:] new_board)
     cdef void next_move(self, int[:,:] new_board)

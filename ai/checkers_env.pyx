@@ -6,33 +6,6 @@ cdef float PROMOTION_REWARD = 0.04
 #the opponent checks are represented as negative Ones
 
 
-cdef class fifo:
-    def __init__(self):
-        cdef int id
-        self.pointer = 0
-        self.size = 0
-        
-
-        for id in range(SIX_LAST_LAYOUTS_SIZE):
-            self.values[id] = 0
-
-    cdef void push(self, unsigned long long value):
-        self.values[self.pointer] = value
-        self.pointer = (self.pointer + 1)% SIX_LAST_LAYOUTS_SIZE
-        if self.size<SIX_LAST_LAYOUTS_SIZE:
-            self.size += 1
-
-    cdef int len(self):
-        return self.size
-
-    cdef unsigned long long id(self, int  idx):
-        cdef int new_idx = (self.pointer + idx)% SIX_LAST_LAYOUTS_SIZE
-        if self.size < SIX_LAST_LAYOUTS_SIZE:
-            new_idx = (idx)% SIX_LAST_LAYOUTS_SIZE
-        else:
-            new_idx = (self.pointer + idx)% SIX_LAST_LAYOUTS_SIZE
-        return self.values[new_idx]
-
 cdef class CheckersEnv:
     def __init__(self):
         self._create_starting_state()
@@ -86,7 +59,7 @@ cdef class CheckersEnv:
                         self.board[row][col] = EMPTY
         self.player = 1
         self.non_capture_counter = 0
-        self.six_last_layouts_hashes = fifo()
+        self._reset_layouts_history()
         
 
     cpdef void create_starting_state_py(self):
@@ -114,7 +87,7 @@ cdef class CheckersEnv:
         for row in range(8):
             for col in range(4):
                 first_check = self.board[row][col]
-                second_check = self.board[BOARD_SIZE - row][BOARD_SIZE - col]
+                second_check = self.board[BOARD_SIZE - 1 - row][BOARD_SIZE - 1 - col]
                 if keep_colours:
                     self.board[row][col] = second_check
                     self.board[BOARD_SIZE -1 - row ][BOARD_SIZE -1 - col] = first_check
@@ -163,13 +136,9 @@ cdef class CheckersEnv:
         return man_diff + king_diff > 0
     
     cdef bint is_tie(self):
-        if self.six_last_layouts_hashes.len() == 6:
-            if ((self.six_last_layouts_hashes.id(0) == self.six_last_layouts_hashes.id(2) and
-                self.six_last_layouts_hashes.id(0) == self.six_last_layouts_hashes.id(4)) or 
-                (self.six_last_layouts_hashes.id(1) == self.six_last_layouts_hashes.id(3) and
-                self.six_last_layouts_hashes.id(1) == self.six_last_layouts_hashes.id(5))):
-                return True
-            
+        if self.position_repeats >= REPETITION_LIMIT:
+            return True
+
         if self.non_capture_counter >= NON_CAPTURE_MOVES_LIMIT:
             return True
 
@@ -209,21 +178,51 @@ cdef class CheckersEnv:
                 hash_value = hash_value * fnv_prime
                 
         return hash_value
+
+    cdef void _reset_layouts_history(self):
+        # history starts with the current position
+        self.layouts_hashes_len = 0
+        self._push_layout_hash()
+
+    cdef void _push_layout_hash(self):
+        cdef unsigned long long current_hash = self._hash_board()
+        cdef int last_id = self.layouts_hashes_len
+        cdef int history_id
+        cdef int repeats = 1
+
+        if last_id >= LAYOUTS_HISTORY_SIZE: # only after NON_CAPTURE_MOVES_LIMIT plies, the game is already a tie then
+            return
+
+        self.layouts_hashes[last_id] = current_hash
+        self.layouts_hashes_len += 1
+
+        # same player to move and reachable position only every REPETITION_STEP plies
+        history_id = last_id - REPETITION_STEP
+        while history_id >= 0:
+            if self.layouts_hashes[history_id] == current_hash:
+                repeats += 1
+            history_id -= REPETITION_STEP
+
+        self.position_repeats = repeats
         
     cpdef void next_move_py(self, int[:,:] new_board):
         self.next_move(new_board)
     
     cdef void next_move(self, int[:,:] new_board):
-        if self.was_captured(new_board) or self.was_man_moved(new_board):
+        cdef bint irreversible = self.was_captured(new_board) or self.was_man_moved(new_board)
+        if irreversible:
             self.non_capture_counter = 0
         else:
             self.non_capture_counter += 1
 
-        self.six_last_layouts_hashes.push(self._hash_board()) #tutaj może się rozsypać 
-        
         self.load_board(new_board)
         self.rotate_board(False)
         self.player *= -1
+
+        if irreversible: # positions from before a capture / man move can never occur again
+            self._reset_layouts_history()
+        else:
+            self._push_layout_hash()
 
     cdef bint moves_empty(self, int[:,:,:] moves):
         return moves[0][0][0] == ILLEGAL_FIELD
@@ -334,6 +333,8 @@ cdef class CheckersEnv:
         cdef int jump[2]
         cdef int jump_cord[2]
         cdef int move_id
+        cdef int first_layout_id
+        cdef int layout_id
         cord[0] = row
         cord[1] = col
         for move_id in range(KING_MOVES_SIZE):
@@ -348,10 +349,12 @@ cdef class CheckersEnv:
                 captured_mask[mid_cord[0]][mid_cord[1]] = False
                 able_to_move=True
 
-                moves[current_layout_id[0]][current_move_id][FROM_FIELD_ID] = self.cord_field_translator[cord[0]][cord[1]]
-                moves[current_layout_id[0]][current_move_id][TO_FIELD_ID] = self.cord_field_translator[jump_cord[0]][jump_cord[1]]
-                
+                first_layout_id = current_layout_id[0] # layouts created in this branch share this jump
                 self._king_capture_moves_recursive(jump_cord[0], jump_cord[1], True, current_layout_id, current_move_id+1, captured_mask, possible_next_layouts, moves) # tutaj może być błąd z captured mask
+
+                for layout_id in range(first_layout_id, min(current_layout_id[0], POSSIBLE_NEXT_MOVES_SIZE)):
+                    moves[layout_id][current_move_id][FROM_FIELD_ID] = self.cord_field_translator[cord[0]][cord[1]]
+                    moves[layout_id][current_move_id][TO_FIELD_ID] = self.cord_field_translator[jump_cord[0]][jump_cord[1]]
                 captured_mask[mid_cord[0]][mid_cord[1]] = True
 
         if not able_to_move and check_moved:
@@ -420,6 +423,8 @@ cdef class CheckersEnv:
         cdef int jump[2]
         cdef int jump_cord[2]
         cdef int move_id
+        cdef int first_layout_id
+        cdef int layout_id
         cord[0]=row
         cord[1]=col
         for move_id in range(MAN_MOVES_SIZE):
@@ -434,10 +439,12 @@ cdef class CheckersEnv:
                 captured_mask[mid_cord[0]][mid_cord[1]] = False
                 able_to_move=True
 
-                moves[current_layout_id[0]][current_move_id][FROM_FIELD_ID] = self.cord_field_translator[cord[0]][cord[1]]
-                moves[current_layout_id[0]][current_move_id][TO_FIELD_ID] = self.cord_field_translator[jump_cord[0]][jump_cord[1]]
-                
+                first_layout_id = current_layout_id[0] # layouts created in this branch share this jump
                 self._man_capture_moves_recursive(jump_cord[0], jump_cord[1], True, current_layout_id, current_move_id+1, captured_mask, possible_next_layouts, moves) # tutaj może być błąd z captured mask
+
+                for layout_id in range(first_layout_id, min(current_layout_id[0], POSSIBLE_NEXT_MOVES_SIZE)):
+                    moves[layout_id][current_move_id][FROM_FIELD_ID] = self.cord_field_translator[cord[0]][cord[1]]
+                    moves[layout_id][current_move_id][TO_FIELD_ID] = self.cord_field_translator[jump_cord[0]][jump_cord[1]]
                 captured_mask[mid_cord[0]][mid_cord[1]] = True
 
         if not able_to_move and check_moved:
