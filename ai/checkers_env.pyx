@@ -227,19 +227,19 @@ cdef class CheckersEnv:
     cdef bint moves_empty(self, int[:,:,:] moves):
         return moves[0][0][0] == ILLEGAL_FIELD
 
-    cdef void generate_mask_and_action_ids(self, int [:,:,:] moves, int[:] mask, int[:] legal_actions_mask_ids): 
+    cdef void generate_action_ids_and_counts(self, int [:,:,:] moves, int[:] action_counts, int[:] action_ids): 
         cdef int id
-        cdef int legal_actions_mask_ids_iterator = 0
+        cdef int action_ids_iterator = 0
         cdef int move_id
         cdef int from_field
         cdef int to_field =0
         cdef int current_to_field
-        cdef int updated_mask_id
+        cdef int updated_action_id
 
-        for id in range(MASK_SIZE):
-            mask[id] = 0
+        for id in range(ACTION_SPACE_SIZE):
+            action_counts[id] = 0
         for id in range(POSSIBLE_NEXT_MOVES_SIZE):
-            legal_actions_mask_ids[id] = ILLEGAL_MOVE
+            action_ids[id] = ILLEGAL_MOVE
 
         if not self.moves_empty(moves):
             for id in range(POSSIBLE_NEXT_MOVES_SIZE):
@@ -254,10 +254,10 @@ cdef class CheckersEnv:
                         break
                     to_field = current_to_field
                 
-                updated_mask_id = from_field *32 + to_field
-                mask[updated_mask_id] = 1
-                legal_actions_mask_ids[legal_actions_mask_ids_iterator] = updated_mask_id
-                legal_actions_mask_ids_iterator += 1
+                updated_action_id = from_field *32 + to_field
+                action_counts[updated_action_id] += 1
+                action_ids[action_ids_iterator] = updated_action_id
+                action_ids_iterator += 1
 
     cdef void fill_possible_next_layouts_and_moves(self, int [:,:,:] possible_next_layouts, int [:,:,:] moves):
         cdef int layout

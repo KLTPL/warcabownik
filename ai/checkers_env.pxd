@@ -14,7 +14,7 @@ cdef enum:
     MOVES_SERIES_SIZE = 12
     FROM_FIELD_ID = 0
     TO_FIELD_ID = 1
-    MASK_SIZE = 1024
+    ACTION_SPACE_SIZE = 1024
     ILLEGAL_MOVE = -1
     ILLEGAL_PAWN = -3
     KING_MOVES_SIZE = 4
@@ -60,7 +60,7 @@ cdef class CheckersEnv:
     cdef void next_move(self, int[:,:] new_board)
 
     cdef bint moves_empty(self, int[:,:,:] moves)
-    cdef void generate_mask_and_action_ids(self, int[:,:,:] moves, int[:] mask, int[:] legal_actions_mask_ids)
+    cdef void generate_action_ids_and_counts(self, int[:,:,:] moves, int[:] action_counts, int[:] action_ids)
     cdef void fill_possible_next_layouts_and_moves(self, int[:,:,:] possible_next_layouts, int[:,:,:] moves)
     cdef bint possible_next_layouts_empty(self, int[:,:,:] possible_next_layouts)
     cdef void get_next_states(self, int[:,:,:] possible_next_layouts, int[:,:,:] moves)

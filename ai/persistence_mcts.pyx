@@ -163,7 +163,7 @@ cdef class Node:
 
         env.next_move(self.board) # obraca planszę aby była z perspektywy przeciwnika
         env.get_next_states(possible_next_layouts, moves) #loaded possible moves and layouts
-        env.generate_mask_and_action_ids(moves, mask, possible_moves_mask_ids)
+        env.generate_action_ids_and_counts(moves, mask, possible_moves_mask_ids)
         
         for next_layouts_size in range(POSSIBLE_NEXT_MOVES_SIZE):
             if possible_next_layouts[next_layouts_size][0][0] == ILLEGAL_PAWN:
