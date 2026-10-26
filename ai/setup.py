@@ -12,6 +12,11 @@ extensions = [
         "persistence_mcts", 
         ["persistence_mcts.pyx"], 
         include_dirs=[np.get_include()]
+    ),
+    Extension(
+        "persistence_mcts2", 
+        ["persistence_mcts2.pyx"], 
+        include_dirs=[np.get_include()]
     )
 ]
 
