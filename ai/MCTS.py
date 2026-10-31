@@ -32,7 +32,6 @@ class Node:
         self.childs = None
         self.puct_const = PUCT_CONST
         
-
     def PUCT_counting(self,  sqrt_parent_visit_count):
         values_mean = (self.values_sum / self.visit_count) if self.visit_count > 0 else 0 
         PUCT = values_mean + self.puct_const * self.policy * (sqrt_parent_visit_count / (self.visit_count + 1))
@@ -92,7 +91,7 @@ class DynamicMCTS:
             while not current_node.empty():
                 current_node = current_node.select_child()
                 nodes_array.append(current_node)
-        
+         
             self.env.next_move(current_node.get_board())
             possible_next_layouts = []
             if first_iteration: # making sure that the lists of childrens have same arrange as the moves list
@@ -108,7 +107,7 @@ class DynamicMCTS:
                 possible_next_layouts = self.env.get_next_states()
 
             if not possible_next_layouts: # that means current node is the end of the game
-                leaf_value = 1
+                leaf_value = -1
             else:
                 predictions_np_array = np.zeros(len(possible_next_layouts), dtype = np.float32)
                 layouts_to_predict = []
