@@ -15,13 +15,20 @@ cdef enum:
     MAN_MOVES_SIZE = 2
     STATE_TENSOR_SIZE = 4
     BATCH_SIZE = 1
-    ITERATION_LIMIT = 6
-    MAX_NODES = 3000000 # pojemność tablic drzewa
     MAX_GAME_PLIES = 512 # pojemność paczek treningowych jednej partii
 
 cdef class PersistenceMCTS:
     cdef public CheckersEnv env
     cdef public object model
+    cdef object rng
+
+    # parametry przeszukiwania, podawane do __init__
+    cdef int iteration_limit
+    cdef int max_nodes
+    cdef int temperature_moves
+    cdef float puct_const
+    cdef float dirichlet_alpha
+    cdef float dirichlet_eps
 
     cdef int root_id
     cdef int new_node_id
@@ -40,6 +47,7 @@ cdef class PersistenceMCTS:
     cdef int[:] action_counts
     cdef int[:] action_ids
     cdef int[:, :, :] moves
+    cdef int[:] visited_nodes_ids
     cdef int[:, :, :] possible_next_layouts
     cdef float[:, :, :, :] uncut_batch
 
@@ -61,7 +69,8 @@ cdef class PersistenceMCTS:
     cdef void generate_new_childs(self, int node_id)
     cdef void node_visit(self, int node_id, float new_value)
     cdef void generate_new_branches(self)
-    cdef int select_next_root(self)
+    cdef int select_next_root(self, bint select_by_propability)
+    cdef void noise_root_policy(self)
     cdef void fill_package(self)
     cdef void set_tie(self)
     cdef void set_lose(self)

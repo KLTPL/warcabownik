@@ -6,11 +6,22 @@ from checkers_env cimport CheckersEnv
 from libc.math cimport sqrt
 
 
-cdef float PUCT_CONST = 1.41
 
 cdef class PersistenceMCTS:
 
-    def __init__(self, int[:,:] board, object model):
+    def __init__(self, int[:,:] board, object model,
+                 int iteration_limit=256,
+                 int max_nodes=1000000,
+                 int temperature_moves=20,
+                 float puct_const=1.41,
+                 float dirichlet_alpha=1.0,
+                 float dirichlet_eps=0.25):
+        self.iteration_limit = iteration_limit # search iterations per move
+        self.max_nodes = max_nodes # capacity of the tree arrays
+        self.temperature_moves = temperature_moves # first moves sampled proportionally to visits
+        self.puct_const = puct_const
+        self.dirichlet_alpha = dirichlet_alpha # ~10 / average number of legal moves
+        self.dirichlet_eps = dirichlet_eps # share of the noise in root priors
         self.new_node_id = 0
         self.root_id = 0
         self.current_package_id = 0
@@ -18,20 +29,21 @@ cdef class PersistenceMCTS:
         self.env.next_move(board)
         self.env.get_board(board) # on purpose rotating board so the start is seems as opponent move
         
-        self.boards = np.zeros((MAX_NODES, BOARD_SIZE, BOARD_SIZE), dtype=np.int32)
-        self.move_policys_id = np.full((MAX_NODES,), ILLEGAL_MOVE, dtype=np.int32)
-        self.policys = np.zeros((MAX_NODES,), dtype=np.float32)
-        self.values_sum = np.zeros((MAX_NODES,), dtype=np.float32)
-        self.childs_real_sizes = np.full((MAX_NODES,), -1, dtype=np.int32)
-        self.self_values = np.zeros((MAX_NODES,), dtype=np.float32)
-        self.first_child_ids = np.full((MAX_NODES,), -1, dtype=np.int32)
-        self.visits_counts = np.zeros((MAX_NODES,), dtype=np.int32)
+        self.boards = np.zeros((max_nodes, BOARD_SIZE, BOARD_SIZE), dtype=np.int32)
+        self.move_policys_id = np.full((max_nodes,), ILLEGAL_MOVE, dtype=np.int32)
+        self.policys = np.zeros((max_nodes,), dtype=np.float32)
+        self.values_sum = np.zeros((max_nodes,), dtype=np.float32)
+        self.childs_real_sizes = np.full((max_nodes,), -1, dtype=np.int32)
+        self.self_values = np.zeros((max_nodes,), dtype=np.float32)
+        self.first_child_ids = np.full((max_nodes,), -1, dtype=np.int32)
+        self.visits_counts = np.zeros((max_nodes,), dtype=np.int32)
 
 
         self.action_counts = np.empty((ACTION_SPACE_SIZE), np.int32)
         self.action_ids = np.empty((POSSIBLE_NEXT_MOVES_SIZE,), dtype=np.int32)
         self.moves = np.empty((POSSIBLE_NEXT_MOVES_SIZE, MOVES_SERIES_SIZE, 2), dtype=np.int32)
         self.possible_next_layouts = np.empty((POSSIBLE_NEXT_MOVES_SIZE, BOARD_SIZE, BOARD_SIZE), dtype=np.int32)
+        self.visited_nodes_ids = np.empty((iteration_limit + 1,), dtype=np.int32) # search path never gets deeper than the root's visits
         self.uncut_batch = np.empty((1, STATE_TENSOR_SIZE, BOARD_SIZE, BOARD_SIZE), dtype=np.float32)
 
         self.predictions_boards_batch = np.zeros((MAX_GAME_PLIES, STATE_TENSOR_SIZE, BOARD_SIZE, BOARD_SIZE), dtype=np.float32)
@@ -39,9 +51,9 @@ cdef class PersistenceMCTS:
         self.expected_values_batch = np.zeros((MAX_GAME_PLIES, 1), dtype=np.float32)
 
         self.model = model
+        self.rng = np.random.default_rng() # seeded from OS entropy per object, so forked processes don't play identical games
 
         self.create_root(board)
-        self.generate_new_branches()
 
     cdef void change_root(self, int node_id):
         self.root_id = node_id 
@@ -93,7 +105,7 @@ cdef class PersistenceMCTS:
         else:
             Q = self.values_sum[node_id] / self.visits_counts[node_id]
 
-        U = self.policys[node_id] * PUCT_CONST * (parent_sqrt_visits/(self.visits_counts[node_id] +1))
+        U = self.policys[node_id] * self.puct_const * (parent_sqrt_visits/(self.visits_counts[node_id] +1))
         return Q + U
 
     cdef int select_child(self, int node_id):
@@ -114,6 +126,38 @@ cdef class PersistenceMCTS:
             
 
 
+    cdef void noise_root_policy(self):
+        cdef double[:] noise
+        cdef int root_childs_size 
+        cdef int first_child_id 
+        cdef int last_child_id 
+        cdef int child_id
+        cdef float policys_sum = 0.0
+        cdef float policy_sum_reversed
+
+        if not self.node_exists(self.root_id):
+            self.generate_new_childs(self.root_id)
+
+        root_childs_size = self.childs_real_sizes[self.root_id]
+        first_child_id = self.first_child_ids[self.root_id]
+        last_child_id = first_child_id + root_childs_size
+
+        if self.node_empty(self.root_id):
+            return 
+
+        noise = self.rng.dirichlet(np.full(root_childs_size, self.dirichlet_alpha))
+
+        for child_id in range(first_child_id, last_child_id):
+            policys_sum += self.policys[child_id]
+
+        if policys_sum != 0.0:
+            policy_sum_reversed = 1 / policys_sum
+        else:
+
+            policy_sum_reversed = 0.0
+
+        for child_id in range(first_child_id, last_child_id):
+            self.policys[child_id] = self.policys[child_id] * (1 - self.dirichlet_eps) * policy_sum_reversed + noise[child_id - first_child_id] * self.dirichlet_eps
 
     cdef void fill_batch(self, int node_id, ):
         cdef int layer
@@ -155,8 +199,8 @@ cdef class PersistenceMCTS:
                 next_layouts_len = layout_id
                 break
 
-        if self.new_node_id + next_layouts_len > MAX_NODES:
-            raise MemoryError(f"MCTS tree is full: {self.new_node_id} nodes used, {next_layouts_len} more needed, MAX_NODES = {MAX_NODES}")
+        if self.new_node_id + next_layouts_len > self.max_nodes:
+            raise MemoryError(f"MCTS tree is full: {self.new_node_id} nodes used, {next_layouts_len} more needed, max_nodes = {self.max_nodes}")
 
         self.childs_real_sizes[node_id] = 0 # create_node counts the children
 
@@ -189,14 +233,14 @@ cdef class PersistenceMCTS:
 
     cdef void generate_new_branches(self):
         cdef int iter
-        cdef int limit = ITERATION_LIMIT - self.visits_counts[self.root_id]
+        cdef int limit = self.iteration_limit - self.visits_counts[self.root_id]
         cdef int current_node_id
         cdef int last_node_id
         cdef int next_node_id
         cdef int visit_node_id
         cdef int reversed_visit_node_id
         cdef int visited_nodes_iter
-        cdef int visited_nodes_ids[ITERATION_LIMIT + 1]
+        cdef int[:] visited_nodes_ids = self.visited_nodes_ids
         cdef float leaf_value
 
 
@@ -228,7 +272,7 @@ cdef class PersistenceMCTS:
                 self.node_visit(current_node_id, leaf_value)
                 leaf_value = -leaf_value
             
-    cdef int select_next_root(self):
+    cdef int select_next_root(self, bint select_by_propability):
         cdef int child_id 
         cdef int best_root_child = -1
         cdef int root_id = self.root_id
@@ -236,12 +280,25 @@ cdef class PersistenceMCTS:
         cdef int last_child_id = first_child_id + self.childs_real_sizes[root_id]
         cdef int max_visits_count = -1
         cdef int current_visits_count  
+        cdef int visits_sum = 0
+        cdef int random_visit
 
         for child_id in range(first_child_id, last_child_id):
-            current_visits_count = self.visits_counts[child_id]
-            if current_visits_count > max_visits_count:
-                max_visits_count = current_visits_count
-                best_root_child = child_id
+            visits_sum += self.visits_counts[child_id]
+
+        if select_by_propability and visits_sum > 0:
+            random_visit = self.rng.integers(visits_sum)
+            visits_sum = 0
+            for child_id in range(first_child_id, last_child_id):
+                visits_sum += self.visits_counts[child_id]
+                if random_visit < visits_sum:
+                    return child_id
+        else: 
+            for child_id in range(first_child_id, last_child_id):
+                current_visits_count = self.visits_counts[child_id]
+                if current_visits_count > max_visits_count:
+                    max_visits_count = current_visits_count
+                    best_root_child = child_id
 
         return best_root_child
 
@@ -311,21 +368,26 @@ cdef class PersistenceMCTS:
         
 
     cdef void self_play_episode(self):
+        cdef bint select_by_propability
         cdef int next_root
+        cdef int move = 0
         cdef CheckersEnv env = CheckersEnv()
+    
         while True:
+            self.noise_root_policy()
             self.generate_new_branches()
             if self.node_empty(self.root_id):
                 self.set_lose()
                 break
             self.fill_package()
-            next_root = self.select_next_root()
+            select_by_propability = (move < self.temperature_moves)
+            next_root = self.select_next_root(select_by_propability)
             self.change_root(next_root)
             env.next_move(self.boards[self.root_id])
-
             if env.is_tie():
                 self.set_tie()
                 break
+            move += 1
 
     cpdef get_packages(self):
         cdef int n = self.current_package_id
@@ -335,3 +397,4 @@ cdef class PersistenceMCTS:
         return( np.asarray(self.predictions_boards_batch[:n]),
                 np.asarray(self.expected_policys_batch[:n]),
                 np.asarray(self.expected_values_batch[:n]))
+
