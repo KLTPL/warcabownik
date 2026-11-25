@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bot, Users, Swords, Sparkles, History, ArrowRight, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -6,6 +7,7 @@ import { Card,CardContent,CardDescription,CardHeader,CardTitle} from "@/componen
 import { useAuth } from "@/context/auth-context";
 import { GameHistoryList } from "@/components/GameHistoryList";
 import { useGameControllerGetHistory, useGameControllerCreateAiGame } from "../api/endpoints/game/game";
+import { CreateAiGameDtoSide } from "../api/models";
 
 export function Home() {
   const { isLoggedIn } = useAuth();
@@ -20,10 +22,15 @@ export function Home() {
   );
 
   const createAiGameMutation = useGameControllerCreateAiGame();
+  const [selectedSide, setSelectedSide] = useState<CreateAiGameDtoSide>(
+    CreateAiGameDtoSide.WHITE
+  );
 
   const handlePlayAI = async () => {
     try {
-      const response = await createAiGameMutation.mutateAsync();
+      const response = await createAiGameMutation.mutateAsync({
+        data: { side: selectedSide },
+      });
 
       if (response?.id) {
         navigate(`/game/${response.id}`);
@@ -130,6 +137,43 @@ export function Home() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              <p className="text-xs font-medium text-muted-foreground mb-1.5">
+                {t("home.chooseSide")}
+              </p>
+              <div
+                role="radiogroup"
+                aria-label={t("home.chooseSide")}
+                className="grid grid-cols-2 gap-1 p-1 mb-3 rounded-lg bg-muted border border-border"
+              >
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={selectedSide === CreateAiGameDtoSide.WHITE}
+                  onClick={() => setSelectedSide(CreateAiGameDtoSide.WHITE)}
+                  className={`flex items-center justify-center gap-2 rounded-md py-2 text-sm font-semibold border-2 transition-all ${
+                    selectedSide === CreateAiGameDtoSide.WHITE
+                      ? "bg-background text-foreground border-primary shadow-sm"
+                      : "text-muted-foreground border-transparent hover:bg-background/60 hover:text-foreground"
+                  }`}
+                >
+                  <span className="w-3.5 h-3.5 rounded-full bg-gradient-to-br from-slate-100 to-slate-300 border border-slate-400 shrink-0" />
+                  {t("home.playAsWhite")}
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={selectedSide === CreateAiGameDtoSide.BLACK}
+                  onClick={() => setSelectedSide(CreateAiGameDtoSide.BLACK)}
+                  className={`flex items-center justify-center gap-2 rounded-md py-2 text-sm font-semibold border-2 transition-all ${
+                    selectedSide === CreateAiGameDtoSide.BLACK
+                      ? "bg-background text-foreground border-primary shadow-sm"
+                      : "text-muted-foreground border-transparent hover:bg-background/60 hover:text-foreground"
+                  }`}
+                >
+                  <span className="w-3.5 h-3.5 rounded-full bg-gradient-to-br from-neutral-800 to-neutral-950 border border-black shrink-0" />
+                  {t("home.playAsBlack")}
+                </button>
+              </div>
               <Button
                 className="w-full gap-2"
                 onClick={handlePlayAI}

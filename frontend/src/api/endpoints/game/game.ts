@@ -25,6 +25,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  CreateAiGameDto,
   GameControllerGetHistoryParams,
   GameResponseDto,
   PaginatedGameHistoryDto
@@ -56,13 +57,15 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
  * @summary Create a new game against the AI
  */
 export const gameControllerCreateAiGame = (
-
+    createAiGameDto: CreateAiGameDto,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
 
 
       return customInstance<GameResponseDto>(
-      {url: `/game/create-ai`, method: 'POST', signal
+      {url: `/game/create-ai`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createAiGameDto, signal
     },
       options);
     }
@@ -73,8 +76,8 @@ export const gameControllerCreateAiGame = (
 export const getGameControllerCreateAiGameMutationKey = () => ['gameControllerCreateAiGame'] as const;
 
 export const getGameControllerCreateAiGameMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof gameControllerCreateAiGame>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof gameControllerCreateAiGame>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof gameControllerCreateAiGame>>, TError,GameControllerCreateAiGameMutationVariables, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof gameControllerCreateAiGame>>, TError,GameControllerCreateAiGameMutationVariables, TContext> => {
 
 const mutationKey = getGameControllerCreateAiGameMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -86,10 +89,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof gameControllerCreateAiGame>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof gameControllerCreateAiGame>>, GameControllerCreateAiGameMutationVariables> = (props) => {
+          const {data} = props ?? {};
 
-
-          return  gameControllerCreateAiGame(requestOptions)
+          return  gameControllerCreateAiGame(data,requestOptions)
         }
 
 
@@ -100,19 +103,19 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type GameControllerCreateAiGameMutationResult = NonNullable<Awaited<ReturnType<typeof gameControllerCreateAiGame>>>
-
+    export type GameControllerCreateAiGameMutationBody = CreateAiGameDto
     export type GameControllerCreateAiGameMutationError = unknown
-
+    export type GameControllerCreateAiGameMutationVariables = {data: CreateAiGameDto}
 
     /**
  * @summary Create a new game against the AI
  */
 export const useGameControllerCreateAiGame = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof gameControllerCreateAiGame>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof gameControllerCreateAiGame>>, TError,GameControllerCreateAiGameMutationVariables, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof gameControllerCreateAiGame>>,
         TError,
-        void,
+        GameControllerCreateAiGameMutationVariables,
         TContext
       > => {
       return useMutation(getGameControllerCreateAiGameMutationOptions(options), queryClient);

@@ -18,7 +18,7 @@ import {
   DEFAULT_WHITE_ID,
   DEFAULT_BLACK_ID,
 } from "./game.constants";
-import { GameState, MovePayload } from "@warcabownik/shared";
+import { GameState, MovePayload, Side } from "@warcabownik/shared";
 
 export interface GameWithMoves extends GameState {
   moves: Move[];
@@ -242,7 +242,11 @@ export class GameService {
     let finalGame = initialGame;
     let aiCanContinue = true;
 
-    const aiMovesData = await this.aiService.getAiMove(currentBoardJson);
+    const aiSide: Side = initialGame.whitePlayerId ? Side.BLACK : Side.WHITE;
+    const aiMovesData = await this.aiService.getAiMove(
+      currentBoardJson,
+      aiSide,
+    );
 
     this.logger.log(`Processing AI move sequence for game: ${gameId}`);
 
@@ -316,7 +320,10 @@ export class GameService {
 
       const isWhiteTurn = this.determineIsWhiteTurn(game, boardState);
 
-      if (!isWhiteTurn && !game.blackPlayerId) {
+      const aiPlaysWhite = !game.whitePlayerId && !!game.blackPlayerId;
+      const aiPlaysBlack = !game.blackPlayerId && !!game.whitePlayerId;
+
+      if ((aiPlaysWhite && isWhiteTurn) || (aiPlaysBlack && !isWhiteTurn)) {
         this.logger.log(`Resuming AI turn for game ${gameId} on tab open.`);
 
         const updatedGame = await this.processAiTurns(gameId, game);

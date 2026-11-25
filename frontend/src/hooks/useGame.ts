@@ -7,6 +7,7 @@ import {
   SocketEvents,
   SocketStatus,
   type GameState,
+  Side,
 } from "@warcabownik/shared";
 import { useAuth } from "@/context/auth-context";
 import { decodeJwtPayload } from "@/lib/jwt";
@@ -63,6 +64,7 @@ export function useGame(gameId: string | undefined) {
   const [gameStatus, setGameStatus] = useState<string>("IN_PROGRESS");
   const [winner, setWinner] = useState<string | null>(null);
   const [isAiThinking, setIsAiThinking] = useState(false);
+  const [myColor, setMyColor] = useState<Side | null>(null);
   const [board, setBoard] = useState<Board>(getInitialBoard());
   const [selectedPiece, setSelectedPiece] = useState<BoardPosition | null>(
     null
@@ -96,6 +98,13 @@ export function useGame(gameId: string | undefined) {
     });
 
     newSocket.on(SocketEvents.GAME_STATE_UPDATE, (updatedGame: GameState) => {
+      setMyColor((prev) => {
+        if (prev !== null) return prev;
+        if (updatedGame.whitePlayerId === myId) return Side.WHITE;
+        if (updatedGame.blackPlayerId === myId) return Side.BLACK;
+        return prev;
+      });
+
       const rawBoard: string[][] = JSON.parse(updatedGame.boardStateJson);
       const numericBoard: Board = rawBoard.map((row: string[]) =>
         row.map((cell: string): BoardCell => {
@@ -141,15 +150,17 @@ export function useGame(gameId: string | undefined) {
       newSocket.disconnect();
       socketRef.current = null;
     };
-  }, [gameId, logout, navigate]);
+  }, [gameId, logout, navigate, myId]);
 
   const handleSquareClick = (x: number, y: number): void => {
     if (isAiThinking || gameStatus === "FINISHED") return;
     if ((x + y) % 2 === 0) return;
 
     const piece = board[y][x];
+    const myPieceCodes: BoardCell[] =
+      myColor === Side.BLACK ? [2, 4] : [1, 3];
 
-    if (piece === 1 || piece === 3) {
+    if (myPieceCodes.includes(piece)) {
       setMoveError(null);
       setSelectedPiece(
         selectedPiece?.x === x && selectedPiece?.y === y ? null : { x, y }
@@ -173,6 +184,8 @@ export function useGame(gameId: string | undefined) {
       let finalPiece = movingPiece;
       if (movingPiece === 1 && toY === 7) {
         finalPiece = 3;
+      } else if (movingPiece === 2 && toY === 0) {
+        finalPiece = 4;
       }
       optimisticBoard[toY][toX] = finalPiece;
 
@@ -229,6 +242,7 @@ export function useGame(gameId: string | undefined) {
     isAiThinking,
     isWinner,
     isLoser,
+    myColor,
     handleSquareClick,
   };
 }

@@ -6,6 +6,8 @@
  * OpenAPI spec version: 1.0
  */
 
+export * from './createAiGameDto';
+export * from './createAiGameDtoSide';
 export * from './gameControllerGetHistoryParams';
 export * from './gameHistoryItemDto';
 export * from './gameHistoryItemDtoBlackPlayerId';

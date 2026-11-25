@@ -14,6 +14,11 @@ export enum SocketStatus {
   ERROR = "ERROR",
 }
 
+export enum Side {
+  WHITE = "WHITE",
+  BLACK = "BLACK",
+}
+
 // Core Game Types
 export interface MovePayload {
   fromPosition: string;
