@@ -123,7 +123,7 @@ export function Home() {
           {/* Game vs AI */}
           <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-all shadow-sm">
             <CardHeader>
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
                 <CardTitle className="flex items-center gap-2">
                   <Bot className="w-5 h-5 shrink-0 text-primary" />
                   {t("home.singleplayerTitle")}
@@ -198,7 +198,7 @@ export function Home() {
           {/* Online Multiplayer */}
           <Card className="relative overflow-hidden border bg-muted/30 opacity-80">
             <CardHeader>
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
                 <CardTitle className="flex items-center gap-2">
                   <Users className="w-5 h-5 shrink-0 text-muted-foreground" />
                   {t("home.multiplayerTitle")}
