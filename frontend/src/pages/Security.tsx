@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Check, Loader2, ShieldCheck, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -66,14 +66,25 @@ function SecuritySettings() {
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div className="flex-1 min-w-0">
-              <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight flex flex-wrap items-center gap-x-2 gap-y-1">
-                {t("security.totpTitle")}
+              {/* Badge pinned right: the title wraps, the badge never does. */}
+              <div className="flex items-start justify-between gap-3">
+                <CardTitle className="min-w-0 text-xl sm:text-2xl font-bold tracking-tight">
+                  {t("security.totpTitle")}
+                </CardTitle>
                 {status && (
-                  <Badge variant={status.totpEnabled ? "default" : "outline"}>
+                  <Badge
+                    variant={status.totpEnabled ? "default" : "outline"}
+                    className="mt-1 sm:mt-1.5"
+                  >
+                    {status.totpEnabled ? (
+                      <Check data-icon="inline-start" />
+                    ) : (
+                      <X data-icon="inline-start" />
+                    )}
                     {status.totpEnabled ? t("security.on") : t("security.off")}
                   </Badge>
                 )}
-              </CardTitle>
+              </div>
               <CardDescription>{t("security.totpDescription")}</CardDescription>
             </div>
           </div>
