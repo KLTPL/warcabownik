@@ -136,7 +136,7 @@ export function Home() {
                 {t("home.singleplayerBody")}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="@container">
               <p className="text-xs font-medium text-muted-foreground mb-1.5">
                 {t("home.chooseSide")}
               </p>
@@ -150,28 +150,30 @@ export function Home() {
                   role="radio"
                   aria-checked={selectedSide === CreateAiGameDtoSide.WHITE}
                   onClick={() => setSelectedSide(CreateAiGameDtoSide.WHITE)}
-                  className={`flex items-center justify-center gap-2 rounded-md py-2 text-sm font-semibold border-2 transition-all ${
+                  className={`flex items-center justify-center gap-2 rounded-md px-2 py-2 text-sm font-semibold border-2 transition-all ${
                     selectedSide === CreateAiGameDtoSide.WHITE
                       ? "bg-background text-foreground border-primary shadow-sm"
                       : "text-muted-foreground border-transparent hover:bg-background/60 hover:text-foreground"
                   }`}
                 >
                   <span className="w-3.5 h-3.5 rounded-full bg-gradient-to-br from-slate-100 to-slate-300 border border-slate-400 shrink-0" />
-                  {t("home.playAsWhite")}
+                  <span className="@xs:hidden">{t("home.sideWhite")}</span>
+                  <span className="hidden @xs:inline">{t("home.playAsWhite")}</span>
                 </button>
                 <button
                   type="button"
                   role="radio"
                   aria-checked={selectedSide === CreateAiGameDtoSide.BLACK}
                   onClick={() => setSelectedSide(CreateAiGameDtoSide.BLACK)}
-                  className={`flex items-center justify-center gap-2 rounded-md py-2 text-sm font-semibold border-2 transition-all ${
+                  className={`flex items-center justify-center gap-2 rounded-md px-2 py-2 text-sm font-semibold border-2 transition-all ${
                     selectedSide === CreateAiGameDtoSide.BLACK
                       ? "bg-background text-foreground border-primary shadow-sm"
                       : "text-muted-foreground border-transparent hover:bg-background/60 hover:text-foreground"
                   }`}
                 >
                   <span className="w-3.5 h-3.5 rounded-full bg-gradient-to-br from-neutral-800 to-neutral-950 border border-black shrink-0" />
-                  {t("home.playAsBlack")}
+                  <span className="@xs:hidden">{t("home.sideBlack")}</span>
+                  <span className="hidden @xs:inline">{t("home.playAsBlack")}</span>
                 </button>
               </div>
               <Button
