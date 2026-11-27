@@ -74,7 +74,8 @@
     "signUp": "Zarejestruj się",
     "needAccount": "Nie masz konta? Zarejestruj się",
     "haveAccount": "Masz już konto? Zaloguj się",
-    "orContinueWith": "Lub kontynuuj przez"
+    "orContinueWith": "Lub kontynuuj przez",
+    "signInWithPasskey": "Zaloguj się kluczem dostępu"
   },
   "game": {
     "exit": "Wyjdź z gry",
@@ -137,7 +138,27 @@
     "recoveryCodesRemaining_many": "Pozostało {{count}} kodów odzyskiwania.",
     "recoveryCodesRemaining_other": "Pozostało {{count}} kodów odzyskiwania.",
     "regenerateCodes": "Nowe kody odzyskiwania",
-    "disableTotp": "Wyłącz 2FA"
+    "disableTotp": "Wyłącz 2FA",
+    "passkeysTitle": "Klucze dostępu",
+    "passkeysDescription": "Loguj się odciskiem palca, twarzą lub PIN-em urządzenia. Bez hasła i kodu 2FA.",
+    "noPasskeys": "Nie masz jeszcze kluczy dostępu.",
+    "passkeyNameLabel": "Nazwa klucza",
+    "passkeyNamePlaceholder": "np. MacBook Touch ID",
+    "addPasskey": "Dodaj klucz",
+    "passkeySynced": "Synchronizowany",
+    "passkeyAdded": "Dodano {{date}}",
+    "passkeyLastUsed": "ostatnio użyto {{date}}",
+    "passkeyNeverUsed": "jeszcze nieużywany",
+    "removePasskey": "Usuń",
+    "removePasskeyNamed": "Usuń klucz {{name}}",
+    "passkeysUnsupported": "Ta przeglądarka nie obsługuje kluczy dostępu.",
+    "addPasskeyTitle": "Dodaj klucz dostępu",
+    "addPasskeyDescription": "Nazwij go, żeby łatwo go później rozpoznać. Przeglądarka poprosi potem o odcisk palca, twarz lub PIN.",
+    "continue": "Dalej",
+    "renamePasskeyTitle": "Zmień nazwę klucza",
+    "renamePasskeyDescription": "Tę nazwę widzisz tylko ty. Pomaga odróżnić twoje klucze.",
+    "renamePasskeyNamed": "Zmień nazwę klucza {{name}}",
+    "save": "Zapisz"
   },
   "errors": {
     "InvalidCredentials": "Nieprawidłowy e-mail lub hasło",
@@ -161,6 +182,12 @@
     "TooManyAttempts": "Zbyt wiele błędnych kodów. Spróbuj ponownie za 15 minut.",
     "TotpAlreadyEnabled": "Weryfikacja dwuetapowa jest już włączona.",
     "TotpNotEnabled": "Weryfikacja dwuetapowa nie jest włączona.",
-    "TotpSetupMissing": "Rozpocznij konfigurację ponownie, aby otrzymać nowy kod QR."
+    "TotpSetupMissing": "Rozpocznij konfigurację ponownie, aby otrzymać nowy kod QR.",
+    "ChallengeExpired": "Żądanie klucza dostępu wygasło. Spróbuj ponownie.",
+    "PasskeyNotFound": "Ten klucz dostępu nie jest przypisany do żadnego konta.",
+    "PasskeyVerificationFailed": "Nie udało się zweryfikować klucza dostępu. Spróbuj ponownie.",
+    "PasskeyNameInvalid": "Nadaj kluczowi nazwę o długości do 50 znaków.",
+    "PasskeyAlreadyRegistered": "To urządzenie ma już klucz dostępu do twojego konta.",
+    "PasskeyBrowserError": "Przeglądarka nie mogła obsłużyć żądania klucza dostępu."
   }
 }

@@ -33,6 +33,7 @@
     "@nestjs/websockets": "^11.2.3",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
+    "@simplewebauthn/server": "^13.3.3",
     "@warcabownik/shared": "workspace:*",
     "axios": "^1.20.0",
     "bcrypt": "^6.0.0",

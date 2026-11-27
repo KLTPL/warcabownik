@@ -72,7 +72,8 @@
     "signUp": "Sign Up",
     "needAccount": "Need an account? Sign up",
     "haveAccount": "Already have an account? Sign in",
-    "orContinueWith": "Or continue with"
+    "orContinueWith": "Or continue with",
+    "signInWithPasskey": "Sign in with a passkey"
   },
   "game": {
     "exit": "Exit Game",
@@ -133,7 +134,27 @@
     "recoveryCodesRemaining_one": "{{count}} recovery code left.",
     "recoveryCodesRemaining_other": "{{count}} recovery codes left.",
     "regenerateCodes": "New recovery codes",
-    "disableTotp": "Turn off 2FA"
+    "disableTotp": "Turn off 2FA",
+    "passkeysTitle": "Passkeys",
+    "passkeysDescription": "Sign in with your fingerprint, face or device PIN. No password or 2FA code needed.",
+    "noPasskeys": "No passkeys yet.",
+    "passkeyNameLabel": "Passkey name",
+    "passkeyNamePlaceholder": "e.g. MacBook Touch ID",
+    "addPasskey": "Add passkey",
+    "passkeySynced": "Synced",
+    "passkeyAdded": "Added {{date}}",
+    "passkeyLastUsed": "last used {{date}}",
+    "passkeyNeverUsed": "never used",
+    "removePasskey": "Remove",
+    "removePasskeyNamed": "Remove passkey {{name}}",
+    "passkeysUnsupported": "This browser doesn't support passkeys.",
+    "addPasskeyTitle": "Add a passkey",
+    "addPasskeyDescription": "Name it so you can recognise it later. Your browser will then ask for your fingerprint, face or PIN.",
+    "continue": "Continue",
+    "renamePasskeyTitle": "Rename passkey",
+    "renamePasskeyDescription": "Only you see this name. It helps you tell your passkeys apart.",
+    "renamePasskeyNamed": "Rename passkey {{name}}",
+    "save": "Save"
   },
   "errors": {
     "InvalidCredentials": "Wrong email or password",
@@ -157,6 +178,12 @@
     "TooManyAttempts": "Too many wrong codes. Try again in 15 minutes.",
     "TotpAlreadyEnabled": "Two-factor authentication is already on.",
     "TotpNotEnabled": "Two-factor authentication is not on.",
-    "TotpSetupMissing": "Start the setup again to get a new QR code."
+    "TotpSetupMissing": "Start the setup again to get a new QR code.",
+    "ChallengeExpired": "The passkey request expired. Please try again.",
+    "PasskeyNotFound": "This passkey isn't registered with any account.",
+    "PasskeyVerificationFailed": "The passkey couldn't be verified. Please try again.",
+    "PasskeyNameInvalid": "Give the passkey a name of up to 50 characters.",
+    "PasskeyAlreadyRegistered": "This device already has a passkey for your account.",
+    "PasskeyBrowserError": "Your browser couldn't complete the passkey request."
   }
 }

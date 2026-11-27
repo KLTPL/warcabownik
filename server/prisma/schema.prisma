@@ -31,7 +31,9 @@ model User {
   mfaFailedAttempts Int       @default(0)
   mfaLockedUntil    DateTime?
 
-  recoveryCodes RecoveryCode[]
+  recoveryCodes      RecoveryCode[]
+  passkeys           Passkey[]
+  webAuthnChallenges WebAuthnChallenge[]
 
   gamesAsWhite Game[] @relation("WhitePlayer")
   gamesAsBlack Game[] @relation("BlackPlayer")
@@ -46,6 +48,40 @@ model RecoveryCode {
   usedAt   DateTime?
 
   @@index([userId])
+}
+
+/// A WebAuthn credential that signs the user in without a password or 2FA code.
+model Passkey {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Base64url credential ID, as the authenticator reports it.
+  credentialId String    @unique
+  /// COSE-encoded public key.
+  publicKey    Bytes
+  /// Signature counter; a value that goes backwards hints at a cloned key.
+  counter      Int
+  transports   String[]
+  /// "singleDevice" or "multiDevice" (synced, e.g. iCloud Keychain).
+  deviceType   String
+  backedUp     Boolean
+  name         String
+  createdAt    DateTime  @default(now())
+  lastUsedAt   DateTime?
+
+  @@index([userId])
+}
+
+/// Single-use WebAuthn challenge. `userId` is set for registration ceremonies
+/// and null for passwordless sign-in, where the user is not known yet.
+model WebAuthnChallenge {
+  id        String   @id @default(uuid())
+  challenge String
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+
+  @@index([expiresAt])
 }
 
 model Game {

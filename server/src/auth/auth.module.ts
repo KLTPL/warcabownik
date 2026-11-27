@@ -13,9 +13,13 @@ import { MfaService } from "./mfa/mfa.service";
 import { TotpService } from "./mfa/totp.service";
 import { RecoveryCodesService } from "./mfa/recovery-codes.service";
 import { SecretCipher } from "./mfa/secret-cipher";
+import { PasskeyController } from "./passkey/passkey.controller";
+import { PasskeyService } from "./passkey/passkey.service";
+import { WebAuthnChallengeService } from "./passkey/webauthn-challenge.service";
+import { WebAuthnConfig } from "./passkey/webauthn.config";
 @Module({
   imports: [UserModule, JwtModule, PassportModule],
-  controllers: [AuthController, MfaController],
+  controllers: [AuthController, MfaController, PasskeyController],
   providers: [
     AuthService,
     TokenService,
@@ -27,6 +31,9 @@ import { SecretCipher } from "./mfa/secret-cipher";
     RecoveryCodesService,
     // Built at startup so a missing TOTP_ENCRYPTION_KEY fails fast.
     { provide: SecretCipher, useFactory: () => SecretCipher.fromEnv() },
+    PasskeyService,
+    WebAuthnChallengeService,
+    { provide: WebAuthnConfig, useFactory: () => WebAuthnConfig.fromEnv() },
   ],
   exports: [JwtModule],
 })
