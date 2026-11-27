@@ -18,9 +18,18 @@ API="https://api.render.com/v1"
 
 render() {
   local method=$1 path=$2 body=${3:-}
-  local args=(-fsS -X "$method" -H "Authorization: Bearer $RENDER_API_KEY" -H "Accept: application/json")
+  local args=(-sS -w '\n%{http_code}' -X "$method" -H "Authorization: Bearer $RENDER_API_KEY" -H "Accept: application/json")
   if [[ -n $body ]]; then args+=(-H "Content-Type: application/json" --data "$body"); fi
-  curl "${args[@]}" "$API$path"
+  local response status
+  response=$(curl "${args[@]}" "$API$path")
+  status=${response##*$'\n'}
+  response=${response%$'\n'*}
+  if [[ $status != 2* ]]; then
+    # Error bodies carry Render's reason (e.g. a missing API key permission), never env values.
+    echo "Render API $method $path returned $status: $response" >&2
+    return 1
+  fi
+  printf '%s\n' "$response"
 }
 
 find_preview() {
