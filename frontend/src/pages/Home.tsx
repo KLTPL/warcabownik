@@ -123,12 +123,12 @@ export function Home() {
           {/* Game vs AI */}
           <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-all shadow-sm">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <CardTitle className="flex items-center gap-2">
-                  <Bot className="w-5 h-5 text-primary" />
+                  <Bot className="w-5 h-5 shrink-0 text-primary" />
                   {t("home.singleplayerTitle")}
                 </CardTitle>
-                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                <span className="shrink-0 whitespace-nowrap text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
                   {t("home.singleplayerBadge")}
                 </span>
               </div>
@@ -198,12 +198,12 @@ export function Home() {
           {/* Online Multiplayer */}
           <Card className="relative overflow-hidden border bg-muted/30 opacity-80">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-muted-foreground" />
+                  <Users className="w-5 h-5 shrink-0 text-muted-foreground" />
                   {t("home.multiplayerTitle")}
                 </CardTitle>
-                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                <span className="shrink-0 whitespace-nowrap text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/20">
                   {t("home.multiplayerBadge")}
                 </span>
               </div>
