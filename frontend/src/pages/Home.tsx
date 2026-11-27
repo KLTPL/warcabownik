@@ -123,12 +123,12 @@ export function Home() {
           {/* Game vs AI */}
           <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-all shadow-sm">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
                 <CardTitle className="flex items-center gap-2">
-                  <Bot className="w-5 h-5 text-primary" />
+                  <Bot className="w-5 h-5 shrink-0 text-primary" />
                   {t("home.singleplayerTitle")}
                 </CardTitle>
-                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                <span className="shrink-0 whitespace-nowrap text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
                   {t("home.singleplayerBadge")}
                 </span>
               </div>
@@ -136,7 +136,7 @@ export function Home() {
                 {t("home.singleplayerBody")}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="@container">
               <p className="text-xs font-medium text-muted-foreground mb-1.5">
                 {t("home.chooseSide")}
               </p>
@@ -150,28 +150,30 @@ export function Home() {
                   role="radio"
                   aria-checked={selectedSide === CreateAiGameDtoSide.WHITE}
                   onClick={() => setSelectedSide(CreateAiGameDtoSide.WHITE)}
-                  className={`flex items-center justify-center gap-2 rounded-md py-2 text-sm font-semibold border-2 transition-all ${
+                  className={`flex items-center justify-center gap-2 rounded-md px-2 py-2 text-sm font-semibold border-2 transition-all ${
                     selectedSide === CreateAiGameDtoSide.WHITE
                       ? "bg-background text-foreground border-primary shadow-sm"
                       : "text-muted-foreground border-transparent hover:bg-background/60 hover:text-foreground"
                   }`}
                 >
                   <span className="w-3.5 h-3.5 rounded-full bg-gradient-to-br from-slate-100 to-slate-300 border border-slate-400 shrink-0" />
-                  {t("home.playAsWhite")}
+                  <span className="@xs:hidden">{t("home.sideWhite")}</span>
+                  <span className="hidden @xs:inline">{t("home.playAsWhite")}</span>
                 </button>
                 <button
                   type="button"
                   role="radio"
                   aria-checked={selectedSide === CreateAiGameDtoSide.BLACK}
                   onClick={() => setSelectedSide(CreateAiGameDtoSide.BLACK)}
-                  className={`flex items-center justify-center gap-2 rounded-md py-2 text-sm font-semibold border-2 transition-all ${
+                  className={`flex items-center justify-center gap-2 rounded-md px-2 py-2 text-sm font-semibold border-2 transition-all ${
                     selectedSide === CreateAiGameDtoSide.BLACK
                       ? "bg-background text-foreground border-primary shadow-sm"
                       : "text-muted-foreground border-transparent hover:bg-background/60 hover:text-foreground"
                   }`}
                 >
                   <span className="w-3.5 h-3.5 rounded-full bg-gradient-to-br from-neutral-800 to-neutral-950 border border-black shrink-0" />
-                  {t("home.playAsBlack")}
+                  <span className="@xs:hidden">{t("home.sideBlack")}</span>
+                  <span className="hidden @xs:inline">{t("home.playAsBlack")}</span>
                 </button>
               </div>
               <Button
@@ -196,12 +198,12 @@ export function Home() {
           {/* Online Multiplayer */}
           <Card className="relative overflow-hidden border bg-muted/30 opacity-80">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
                 <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-muted-foreground" />
+                  <Users className="w-5 h-5 shrink-0 text-muted-foreground" />
                   {t("home.multiplayerTitle")}
                 </CardTitle>
-                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                <span className="shrink-0 whitespace-nowrap text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/20">
                   {t("home.multiplayerBadge")}
                 </span>
               </div>

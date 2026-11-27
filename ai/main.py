@@ -1,13 +1,14 @@
 import os
 import random
 import numpy as np
-import torch
+import onnxruntime as ort
+
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
 from CheckersEnv import CheckersEnv
-from Model import CheckersValueNet, prepare_layout_for_network
+from MCTS import DynamicMCTS
 
 API_EMPTY = 0
 API_WHITE_MAN = 1
@@ -29,16 +30,9 @@ API_BLACK_PLAYER = 2
 ENV_WHITE_PLAYER = 1
 ENV_BLACK_PLAYER = -1
 
-CHECKERS_MODEL_WEIGHTS_PATH = "checkers_model.pth"
+CHECKERS_MODEL_ONNX_PATH = "checkers_model_float32.onnx"
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = CheckersValueNet().to(device)
-
-try:
-    model.load_state_dict(torch.load(CHECKERS_MODEL_WEIGHTS_PATH, map_location=device, weights_only=True))
-    print(f"Successfully loaded model into :{device}")
-except FileNotFoundError:
-    print(f"WARNING: file {CHECKERS_MODEL_WEIGHTS_PATH} not found")
+model = ort.InferenceSession(CHECKERS_MODEL_ONNX_PATH)
 
 app = FastAPI(title="Checkers AI Mock")
 frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
@@ -87,36 +81,13 @@ def translate_board_to_env(board_request, player):
     else:
         env.rotate_board(keep_colours=True)
         env.set_player(ENV_WHITE_PLAYER)
-       
     return env
-def unpack_possible_layouts_packages(possible_layouts_packages):
-    possible_layouts = []
-    layouts_moves_list = []
-    for package in possible_layouts_packages:
-        possible_layouts.append(package["board"])
-        layouts_moves_list.append(package["moves"])
-
-    return possible_layouts, layouts_moves_list
 
 def select_move(env: CheckersEnv):
-    possible_layouts_packages = env.get_next_states(collect_moves=True)
+    mcts = DynamicMCTS(env, model=model, current_board = env.get_board().copy())
+    selected_move = mcts.chose_best_next_moves()
 
-    if not possible_layouts_packages:
-        return None
-
-    possible_layouts, layouts_moves_list = unpack_possible_layouts_packages(possible_layouts_packages)
-    
-    if len(possible_layouts)==1:
-        return layouts_moves_list[0]
-
-    tensor_layout_list=[prepare_layout_for_network(layout) for layout in possible_layouts]
-    batch_tensor = torch.stack(tensor_layout_list).to(device)
-
-    with torch.no_grad():
-        predictions = model(batch_tensor)
-        best_idx = torch.argmax(predictions).item()
-
-    return layouts_moves_list[best_idx]
+    return selected_move
 
 def translate_moves_list_to_response(moves_list, player):
     response_moves_list = []
@@ -145,7 +116,7 @@ def health_check():
     return {"status": "awake"}
 
 @app.post("/predict-move", response_model=MoveResponse)
-async def predict_move(request: BoardRequest):
+def predict_move(request: BoardRequest):
     if len(request.board) != BOARD_SIZE or any(
         len(row) != BOARD_SIZE for row in request.board
     ):

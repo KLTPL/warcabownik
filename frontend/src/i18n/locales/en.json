@@ -47,6 +47,8 @@
     "chooseSide": "Choose your side",
     "playAsWhite": "Play as White",
     "playAsBlack": "Play as Black",
+    "sideWhite": "White",
+    "sideBlack": "Black",
     "multiplayerTitle": "Online Multiplayer",
     "multiplayerBadge": "Coming Soon",
     "multiplayerBody": "Find online opponents in real-time matchmaking.",
