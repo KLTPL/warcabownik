@@ -3,6 +3,7 @@ import { JwtService } from "@nestjs/jwt";
 import { Socket } from "socket.io";
 import { WsException } from "@nestjs/websockets";
 import { JwtPayload, WithSocketUser } from "../auth.types";
+import { ACCESS_TOKEN_AUDIENCE } from "../token.service";
 
 @Injectable()
 export class WsJwtGuard implements CanActivate {
@@ -19,6 +20,7 @@ export class WsJwtGuard implements CanActivate {
 
       const payload = this.jwtService.verify<JwtPayload>(token, {
         secret: process.env.JWT_SECRET,
+        audience: ACCESS_TOKEN_AUDIENCE,
       });
 
       client.user = { sub: payload.sub };

@@ -39,7 +39,9 @@ describe("AiService", () => {
     expect(mockedAxios.post).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({ player_id: 1 }),
+      expect.anything(),
     );
+    expect(mockedAxios.post.mock.calls[0][2]?.timeout).toBeGreaterThan(0);
   });
 
   it("requests a Black move with player_id 2 when the AI plays Black", async () => {
@@ -49,6 +51,8 @@ describe("AiService", () => {
     expect(mockedAxios.post).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({ player_id: 2 }),
+      expect.anything(),
     );
+    expect(mockedAxios.post.mock.calls[0][2]?.timeout).toBeGreaterThan(0);
   });
 });

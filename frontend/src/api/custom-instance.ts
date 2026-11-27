@@ -17,7 +17,11 @@ AXIOS_INSTANCE.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      const isLoginRequest = error.config?.url?.includes("/auth/login");
+      // Login steps answer 401 for bad credentials or an expired 2FA
+      // challenge; the page shows that error instead of being redirected.
+      const isLoginRequest = ["/auth/login", "/auth/2fa/verify"].some(
+        (path) => error.config?.url?.includes(path)
+      );
 
       if (!isLoginRequest) {
         localStorage.removeItem("token");

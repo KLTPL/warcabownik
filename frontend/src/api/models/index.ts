@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 
+export * from './accessTokenResponseDto';
 export * from './createAiGameDto';
 export * from './createAiGameDtoSide';
 export * from './gameControllerGetHistoryParams';
@@ -18,6 +19,21 @@ export * from './gameResponseDto';
 export * from './gameResponseDtoStatus';
 export * from './loginDto';
 export * from './loginResponseDto';
+export * from './mfaVerifyDto';
 export * from './paginatedGameHistoryDto';
+export * from './passkeyDto';
+export * from './passkeyListResponseDto';
+export * from './passkeyLoginDto';
+export * from './passkeyLoginDtoResponse';
+export * from './passkeyOptionsResponseDto';
+export * from './passkeyOptionsResponseDtoOptions';
+export * from './passkeyRegisterDto';
+export * from './passkeyRegisterDtoResponse';
+export * from './passkeyRenameDto';
+export * from './recoveryCodesResponseDto';
 export * from './registerDto';
+export * from './secondFactorCodeDto';
+export * from './securityStatusDto';
+export * from './totpCodeDto';
+export * from './totpSetupResponseDto';
 export * from './userEntity';

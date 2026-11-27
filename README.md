@@ -22,6 +22,7 @@ Grupowy projekt Solvro Wakacyjne Wyzwanie 2026 ścieżki Backend i AI/ML
 - [Local Development (Hybrid Workflow)](#🐳-local-development-hybrid-workflow)
   - [Environment Setup](#1-environment-setup)
   - [Prisma Studio](#8-prisma-studio-database-gui)
+- [PR Previews](#🔍-pr-previews)
 - [Conventional commits](#📝-conventional-commits)
 
 ## 🗂️ Project Structure
@@ -160,6 +161,26 @@ pnpm prisma studio
 ```
 
 > **Note:** Because Prisma Studio runs from the `server/` directory, ensure your `.env` file is accessible to it so it can resolve the `DATABASE_URL`.
+
+## 🔍 PR Previews
+
+Every pull request gets its own full stack, deployed by `.github/workflows/preview.yml`. The URLs are posted as a PR comment.
+
+| Part | Where | Notes |
+|---|---|---|
+| Database | Neon branch `preview/pr-<N>` | Copied from production, migrated with `prisma migrate deploy`, deleted when the PR closes |
+| Backend | Render PR preview | Created by Render; the workflow points it at the Neon branch, the preview frontend and its own `JWT_SECRET` |
+| AI | Vercel preview | Only deployed when the PR changes `ai/`; otherwise the production AI is used |
+| Frontend | Cloudflare Pages project `warcabownik-preview`, alias `pr-<N>` | Built with `VITE_SERVER_URL` pointing at the backend preview |
+
+The backend refuses to start as a preview until the workflow has rewired it (`server/src/preview-guard.ts`), so the first Render deploy of a new PR fails on purpose. OAuth login does not work in previews; use email and password. Put `[skip preview]` in the PR title to skip the preview.
+
+Required repository settings:
+
+| Kind | Name |
+|---|---|
+| Secret | `NEON_API_KEY`, `RENDER_API_KEY`, `CLOUDFLARE_API_TOKEN` (Account → Cloudflare Pages → Edit), `CLOUDFLARE_ACCOUNT_ID`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` |
+| Variable | `NEON_PROJECT_ID`, `RENDER_SERVICE_ID`; optional `NEON_DATABASE` (default `neondb`), `NEON_ROLE` (default `neondb_owner`), `CF_PREVIEW_PROJECT` (default `warcabownik-preview`) |
 
 ## 📝 Conventional Commits
 

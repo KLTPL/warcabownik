@@ -56,7 +56,7 @@ export class UserService {
     try {
       return await this.prisma.user.create({
         data,
-        omit: { passwordHash: true },
+        omit: { passwordHash: true, totpSecretEnc: true },
       });
     } catch (error) {
       switch (uniqueViolationField(error)) {

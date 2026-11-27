@@ -1,0 +1,194 @@
+name: PR preview
+
+# Full-stack preview per pull request:
+#   Neon branch (DB) -> Render PR preview (backend) -> Vercel preview (AI, only
+#   when ai/ changed) -> Cloudflare Pages preview project (frontend).
+# Render creates its preview itself; this workflow rewires its environment.
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  PR_NUMBER: ${{ github.event.pull_request.number }}
+  NEON_BRANCH: preview/pr-${{ github.event.pull_request.number }}
+  CF_PREVIEW_PROJECT: ${{ vars.CF_PREVIEW_PROJECT || 'warcabownik-preview' }}
+
+jobs:
+  deploy:
+    # Fork PRs get no secrets; "[skip preview]" also stops Render's preview.
+    if: >-
+      github.event.action != 'closed'
+      && github.event.pull_request.head.repo.full_name == github.repository
+      && !contains(github.event.pull_request.title, '[skip preview]')
+      && !contains(github.event.pull_request.labels.*.name, 'render-preview-skip')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Create Neon branch
+        id: neon
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          branch_name: ${{ env.NEON_BRANCH }}
+          database: ${{ vars.NEON_DATABASE || 'neondb' }}
+          role: ${{ vars.NEON_ROLE || 'neondb_owner' }}
+
+      - name: Mask database URL
+        run: echo "::add-mask::${{ steps.neon.outputs.db_url }}"
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Apply migrations to the Neon branch
+        run: pnpm --filter @warcabownik/server exec prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ steps.neon.outputs.db_url }}
+
+      - name: Check for AI changes
+        id: ai-changes
+        run: |
+          if git diff --quiet "${{ github.event.pull_request.base.sha }}...HEAD" -- ai/; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.ai-changes.outputs.changed == 'true'
+        with:
+          python-version: '3.11'
+
+      - uses: astral-sh/setup-uv@v5
+        if: steps.ai-changes.outputs.changed == 'true'
+
+      - name: Deploy AI preview to Vercel
+        id: ai
+        if: steps.ai-changes.outputs.changed == 'true'
+        working-directory: ./ai
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          npm install --global vercel@latest
+          vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+          vercel build --token="$VERCEL_TOKEN"
+          url=$(vercel deploy --prebuilt --token="$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Find Render preview
+        id: render
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+        run: >-
+          .github/scripts/render-preview.sh find
+          "${{ vars.RENDER_SERVICE_ID }}" "${{ github.event.pull_request.head.ref }}"
+          >> "$GITHUB_OUTPUT"
+
+      - name: Resolve Cloudflare preview project
+        id: cf
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          project_api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CF_PREVIEW_PROJECT"
+          auth="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          if ! curl -fsS -H "$auth" "$project_api" -o /dev/null; then
+            npx --yes wrangler@4 pages project create "$CF_PREVIEW_PROJECT" --production-branch=main
+          fi
+          subdomain=$(curl -fsS -H "$auth" "$project_api" | jq -er '.result.subdomain')
+          echo "url=https://pr-$PR_NUMBER.$subdomain" >> "$GITHUB_OUTPUT"
+
+      - name: Build frontend
+        run: |
+          pnpm --filter @warcabownik/shared run build
+          pnpm --filter @warcabownik/frontend run build
+        env:
+          VITE_SERVER_URL: ${{ steps.render.outputs.url }}
+
+      - name: Deploy frontend to Cloudflare Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: >-
+          npx --yes wrangler@4 pages deploy frontend/dist
+          --project-name="$CF_PREVIEW_PROJECT"
+          --branch="pr-$PR_NUMBER"
+          --commit-hash="${{ github.event.pull_request.head.sha }}"
+
+      - name: Point the Render preview at the preview stack
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          DATABASE_URL: ${{ steps.neon.outputs.db_url }}
+          FRONTEND_URL: ${{ steps.cf.outputs.url }}
+          AI_URL: ${{ steps.ai.outputs.url }}
+        run: |
+          vars=("DATABASE_URL=$DATABASE_URL" "FRONTEND_URL=$FRONTEND_URL")
+          # Without AI changes the preview keeps the AI_URL copied from production.
+          if [[ -n $AI_URL ]]; then vars+=("AI_URL=$AI_URL"); fi
+          .github/scripts/render-preview.sh sync-env "${{ steps.render.outputs.id }}" "${vars[@]}"
+
+      - name: Comment preview URLs on the PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FRONTEND_URL: ${{ steps.cf.outputs.url }}
+          SERVER_URL: ${{ steps.render.outputs.url }}
+          AI_URL: ${{ steps.ai.outputs.url || 'production (no ai/ changes)' }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          marker="<!-- pr-preview -->"
+          body=$(cat <<EOF
+          $marker
+          ### Preview for \`${SHA:0:7}\`
+          | Service | URL |
+          |---|---|
+          | Frontend | $FRONTEND_URL |
+          | Backend | $SERVER_URL |
+          | AI | $AI_URL |
+          | Database | Neon branch \`$NEON_BRANCH\` |
+
+          The backend can take a few minutes to redeploy. OAuth login is unavailable in previews; use email and password.
+          EOF
+          )
+          comments="repos/${{ github.repository }}/issues/$PR_NUMBER/comments"
+          existing=$(gh api "$comments" --paginate \
+            --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | head -n 1)
+          if [[ -n $existing ]]; then
+            gh api -X PATCH "repos/${{ github.repository }}/issues/comments/$existing" -f body="$body" >/dev/null
+          else
+            gh api -X POST "$comments" -f body="$body" >/dev/null
+          fi
+
+  cleanup:
+    # Render deletes its preview on close by itself.
+    if: >-
+      github.event.action == 'closed'
+      && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete Neon branch
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          branch: ${{ env.NEON_BRANCH }}

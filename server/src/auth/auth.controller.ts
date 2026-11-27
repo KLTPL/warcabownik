@@ -17,9 +17,16 @@ import { UserEntity } from "src/user/entities/user.entity";
 import { LoginDto } from "./dto/login.dto";
 import { LoginResponseDto } from "./dto/login-response.dto";
 import { AuthGuard } from "@nestjs/passport";
-import type { OAuthRequest } from "./auth.types";
+import type { LoginResult, OAuthRequest } from "./auth.types";
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+
+/** Sends 2FA accounts to the code prompt instead of straight into the app. */
+function oauthRedirectUrl(result: LoginResult): string {
+  return result.mfa_required
+    ? `${FRONTEND_URL}/auth/2fa?mfa_token=${result.mfa_token}`
+    : `${FRONTEND_URL}/oauth-success?token=${result.access_token}`;
+}
 
 @ApiTags("Auth")
 @Controller("auth")
@@ -64,8 +71,8 @@ export class AuthController {
   @UseGuards(AuthGuard("google"))
   @ApiOperation({ summary: "Google OAuth callback" })
   async googleAuthRedirect(@Req() req: OAuthRequest, @Res() res: Response) {
-    const { access_token } = await this.authService.validateOAuthUser(req.user);
-    return res.redirect(`${FRONTEND_URL}/oauth-success?token=${access_token}`);
+    const result = await this.authService.validateOAuthUser(req.user);
+    return res.redirect(oauthRedirectUrl(result));
   }
 
   @Get("github")
@@ -77,7 +84,7 @@ export class AuthController {
   @UseGuards(AuthGuard("github"))
   @ApiOperation({ summary: "GitHub OAuth callback" })
   async githubAuthRedirect(@Req() req: OAuthRequest, @Res() res: Response) {
-    const { access_token } = await this.authService.validateOAuthUser(req.user);
-    return res.redirect(`${FRONTEND_URL}/oauth-success?token=${access_token}`);
+    const result = await this.authService.validateOAuthUser(req.user);
+    return res.redirect(oauthRedirectUrl(result));
   }
 }
