@@ -73,6 +73,14 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - uses: actions/setup-python@v5
+        if: steps.ai-changes.outputs.changed == 'true'
+        with:
+          python-version: '3.11'
+
+      - uses: astral-sh/setup-uv@v5
+        if: steps.ai-changes.outputs.changed == 'true'
+
       - name: Deploy AI preview to Vercel
         id: ai
         if: steps.ai-changes.outputs.changed == 'true'
