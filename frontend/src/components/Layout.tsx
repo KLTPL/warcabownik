@@ -1,5 +1,5 @@
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
-import { Crown, LogOut, LogIn, History, LayoutDashboard, Sun, Moon } from "lucide-react";
+import { Crown, LogIn, History, LayoutDashboard, Sun, Moon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth-context";
@@ -7,19 +7,15 @@ import { useTheme } from "@/context/theme-context";
 import { useServiceWarmup } from "@/hooks/useServiceWarmup";
 import { WarmupBanner } from "@/components/WarmupBanner";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { AccountMenu } from "@/components/AccountMenu";
 
 export function Layout() {
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const warmupPhase = useServiceWarmup();
   const { t } = useTranslation();
-
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground antialiased">
@@ -28,18 +24,20 @@ export function Layout() {
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           
           {/* Logo & Branding */}
-          <Link 
-            to="/" 
-            className="flex items-center gap-2.5 font-bold text-base sm:text-xl tracking-tight transition-opacity hover:opacity-90"
+          <Link
+            to="/"
+            aria-label={t("brand")}
+            className="flex min-w-0 items-center gap-2.5 font-bold text-base sm:text-xl tracking-tight transition-opacity hover:opacity-90"
           >
-            <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20 shadow-sm">
+            <div className="shrink-0 p-2 rounded-xl bg-primary/10 text-primary border border-primary/20 shadow-sm">
               <Crown className="w-5 h-5" />
             </div>
-            <span>{t("brand")}</span>
+            {/* The narrowest phones get the logo alone so the actions fit. */}
+            <span className="hidden truncate min-[400px]:inline">{t("brand")}</span>
           </Link>
 
           {/* Navigation & Actions */}
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-4">
             {/* Language toggle */}
             <LanguageToggle />
 
@@ -64,7 +62,7 @@ export function Layout() {
             {isLoggedIn ? (
               <>
                 {/* Navigation links for logged-in users */}
-                <nav className="flex items-center gap-1 mr-2">
+                <nav className="flex items-center gap-1 sm:mr-2">
                   <Button
                     variant={location.pathname === "/" ? "secondary" : "ghost"}
                     size="sm"
@@ -86,16 +84,8 @@ export function Layout() {
                   </Button>
                 </nav>
 
-                {/* Logout button */}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleLogout}
-                  className="gap-2 text-muted-foreground hover:text-foreground"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span className="hidden sm:inline">{t("nav.logout")}</span>
-                </Button>
+                {/* Account menu: security settings + logout */}
+                <AccountMenu />
               </>
             ) : (
               /* Login button */

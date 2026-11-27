@@ -4,15 +4,15 @@ import { RegisterDto } from "./dto/register.dto";
 import { UserService } from "src/user/user.service";
 import { UserEntity } from "src/user/entities/user.entity";
 import { LoginDto } from "./dto/login.dto";
-import { JwtService } from "@nestjs/jwt";
-import { JwtPayload, OAuthUserDetails } from "./auth.types";
+import { LoginResult, OAuthUserDetails } from "./auth.types";
 import { User } from "generated/prisma/client";
+import { TokenService } from "./token.service";
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
-    private readonly jwtService: JwtService,
+    private readonly tokenService: TokenService,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<UserEntity | undefined> {
@@ -24,7 +24,7 @@ export class AuthService {
     });
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto): Promise<LoginResult> {
     const ERR_MESSAGE = "InvalidCredentials";
     const user = await this.userService.findByEmail(loginDto.email);
     if (!user || !user.passwordHash) {
@@ -38,19 +38,10 @@ export class AuthService {
       throw new UnauthorizedException(ERR_MESSAGE);
     }
 
-    const payload: Omit<JwtPayload, "exp" | "iat"> = {
-      sub: user.id,
-      email: user.email,
-    };
-    return {
-      access_token: this.jwtService.sign(payload, {
-        expiresIn: parseInt(process.env.EXPIRY_TIME_MS as string) / 1000,
-        secret: process.env.JWT_SECRET as string,
-      }),
-    };
+    return this.completeFirstFactor(user);
   }
 
-  async validateOAuthUser(details: OAuthUserDetails) {
+  async validateOAuthUser(details: OAuthUserDetails): Promise<LoginResult> {
     let user: User | null = null;
     if (details.googleId) {
       user = await this.userService.findByGoogleId(details.googleId);
@@ -77,19 +68,20 @@ export class AuthService {
         githubId: details.githubId,
       });
     }
-    return this.generateJwtToken(user.id, user.email);
+    return this.completeFirstFactor(user);
   }
 
-  private generateJwtToken(userId: string, email: string) {
-    const payload: Omit<JwtPayload, "exp" | "iat"> = {
-      sub: userId,
-      email: email,
-    };
+  /** 2FA applies to every login path, so all of them end here. */
+  private completeFirstFactor(user: User): LoginResult {
+    if (user.totpEnabled) {
+      return {
+        mfa_required: true,
+        mfa_token: this.tokenService.signMfaToken(user.id),
+      };
+    }
     return {
-      access_token: this.jwtService.sign(payload, {
-        expiresIn: parseInt(process.env.EXPIRY_TIME_MS as string) / 1000,
-        secret: process.env.JWT_SECRET as string,
-      }),
+      mfa_required: false,
+      access_token: this.tokenService.signAccessToken(user.id, user.email),
     };
   }
 }

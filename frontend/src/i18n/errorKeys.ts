@@ -1,10 +1,16 @@
 import { useTranslation } from "react-i18next";
 
 // Stable codes thrown by the server (see server/src/**: game.service.ts,
-// auth.service.ts, user.service.ts, the auth guards and the auth DTOs),
-// plus two client-only fallbacks.
+// auth.service.ts, mfa.service.ts, token.service.ts, user.service.ts, the
+// auth guards and the auth DTOs), plus two client-only fallbacks.
 const ERROR_CODES = [
   "InvalidCredentials",
+  "InvalidTotpCode",
+  "MfaTokenInvalid",
+  "TooManyAttempts",
+  "TotpAlreadyEnabled",
+  "TotpNotEnabled",
+  "TotpSetupMissing",
   "EmailAlreadyUsed",
   "TokenExpired",
   "InvalidToken",

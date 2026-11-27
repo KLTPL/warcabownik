@@ -12,9 +12,26 @@ export interface AuthenticatedRequest extends Request {
 export type JwtPayload = {
   sub: string;
   email: string;
+  aud: string;
   iat: number;
   exp: number;
 };
+
+/** Short-lived token proving the first login factor passed. */
+export type MfaTokenPayload = {
+  sub: string;
+  aud: string;
+  iat: number;
+  exp: number;
+};
+
+/**
+ * Outcome of a first-factor login: either the session is ready, or the user
+ * has 2FA on and must exchange `mfa_token` plus a code for an access token.
+ */
+export type LoginResult =
+  | { mfa_required: false; access_token: string }
+  | { mfa_required: true; mfa_token: string };
 
 /**
  * Identity an OAuth strategy hands to Passport, which then exposes it as

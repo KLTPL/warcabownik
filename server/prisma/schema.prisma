@@ -23,8 +23,29 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  /// AES-256-GCM encrypted TOTP secret; set but unused until `totpEnabled`.
+  totpSecretEnc     String?
+  totpEnabled       Boolean   @default(false)
+  /// Last accepted TOTP time step, so a code cannot be replayed.
+  totpLastUsedStep  Int?
+  mfaFailedAttempts Int       @default(0)
+  mfaLockedUntil    DateTime?
+
+  recoveryCodes RecoveryCode[]
+
   gamesAsWhite Game[] @relation("WhitePlayer")
   gamesAsBlack Game[] @relation("BlackPlayer")
+}
+
+model RecoveryCode {
+  id       String    @id @default(uuid())
+  userId   String
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// SHA-256 of the code; codes are high-entropy random, so no salt is needed.
+  codeHash String
+  usedAt   DateTime?
+
+  @@index([userId])
 }
 
 model Game {

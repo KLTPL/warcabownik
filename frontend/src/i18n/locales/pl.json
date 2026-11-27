@@ -18,7 +18,9 @@
     "switchToLight": "Przełącz na jasny motyw",
     "switchToDark": "Przełącz na ciemny motyw",
     "switchLanguage": "Zmień język",
-    "footer": "© {{year}} Warcabownik. Zbudowane z NestJS, React i PyTorch AI."
+    "footer": "© {{year}} Warcabownik. Zbudowane z NestJS, React i PyTorch AI.",
+    "security": "Bezpieczeństwo",
+    "account": "Konto"
   },
   "warmup": {
     "waking": "Budzenie serwerów (darmowy hosting). Pierwsze ładowanie może potrwać do minuty…",
@@ -102,6 +104,41 @@
     "inProgress": "W toku",
     "winner": "Zwycięzca: {{id}}"
   },
+  "twoFactor": {
+    "title": "Weryfikacja dwuetapowa",
+    "descriptionTotp": "Wpisz 6-cyfrowy kod z aplikacji uwierzytelniającej.",
+    "descriptionRecovery": "Wpisz jeden z kodów odzyskiwania. Każdy kod działa tylko raz.",
+    "codeLabel": "Kod uwierzytelniający",
+    "recoveryCodeLabel": "Kod odzyskiwania",
+    "verify": "Zweryfikuj",
+    "useRecoveryCode": "Użyj kodu odzyskiwania",
+    "useAuthenticator": "Użyj aplikacji uwierzytelniającej",
+    "backToSignIn": "Wróć do logowania"
+  },
+  "security": {
+    "totpTitle": "Aplikacja uwierzytelniająca",
+    "totpDescription": "Wymagaj kodu z aplikacji uwierzytelniającej (Google Authenticator, Aegis, 1Password…) przy każdym logowaniu.",
+    "on": "Wł.",
+    "off": "Wył.",
+    "totpOffBody": "Weryfikacja dwuetapowa jest wyłączona. Włącz ją, aby samo skradzione hasło nie wystarczyło do wejścia na twoje konto.",
+    "setUpTotp": "Skonfiguruj aplikację",
+    "scanQr": "Zeskanuj ten kod QR w aplikacji uwierzytelniającej.",
+    "qrAlt": "Kod QR dla aplikacji uwierzytelniającej",
+    "manualEntry": "Nie możesz zeskanować? Wpisz ten klucz ręcznie:",
+    "enterCodeToConfirm": "Wpisz 6-cyfrowy kod z aplikacji",
+    "enableTotp": "Włącz 2FA",
+    "cancel": "Anuluj",
+    "recoveryCodesWarning": "Zapisz te kody odzyskiwania w bezpiecznym miejscu. Każdy z nich pozwoli zalogować się raz, jeśli zgubisz telefon. Nie zostaną pokazane ponownie.",
+    "copyCodes": "Kopiuj kody",
+    "copied": "Skopiowano",
+    "savedCodes": "Zapisałem je",
+    "recoveryCodesRemaining_one": "Pozostał {{count}} kod odzyskiwania.",
+    "recoveryCodesRemaining_few": "Pozostały {{count}} kody odzyskiwania.",
+    "recoveryCodesRemaining_many": "Pozostało {{count}} kodów odzyskiwania.",
+    "recoveryCodesRemaining_other": "Pozostało {{count}} kodów odzyskiwania.",
+    "regenerateCodes": "Nowe kody odzyskiwania",
+    "disableTotp": "Wyłącz 2FA"
+  },
   "errors": {
     "InvalidCredentials": "Nieprawidłowy e-mail lub hasło",
     "EmailAlreadyUsed": "Ten adres e-mail jest już używany",
@@ -118,6 +155,12 @@
     "NotYourTurn": "To nie jest twój ruch.",
     "FailedToFetchAiMove": "Usługa SI jest niedostępna. Spróbuj ponownie za chwilę.",
     "authFailed": "Uwierzytelnianie nie powiodło się",
-    "unexpected": "Wystąpił nieoczekiwany błąd"
+    "unexpected": "Wystąpił nieoczekiwany błąd",
+    "InvalidTotpCode": "Kod jest nieprawidłowy lub został już użyty.",
+    "MfaTokenInvalid": "Próba logowania wygasła. Zaloguj się ponownie.",
+    "TooManyAttempts": "Zbyt wiele błędnych kodów. Spróbuj ponownie za 15 minut.",
+    "TotpAlreadyEnabled": "Weryfikacja dwuetapowa jest już włączona.",
+    "TotpNotEnabled": "Weryfikacja dwuetapowa nie jest włączona.",
+    "TotpSetupMissing": "Rozpocznij konfigurację ponownie, aby otrzymać nowy kod QR."
   }
 }

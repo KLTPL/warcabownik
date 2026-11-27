@@ -8,6 +8,8 @@ import { Auth } from "./pages/Auth";
 import { Game } from "./pages/Game";
 import { GameHistory } from "./pages/GameHistory";
 import { OAuthSuccess } from "./pages/OAuthSuccess";
+import { TwoFactor } from "./pages/TwoFactor";
+import { Security } from "./pages/Security";
 
 export default function App() {
   return (
@@ -19,6 +21,8 @@ export default function App() {
               <Route path="/" element={<Layout />}>
                 <Route index element={<Home />} />
                 <Route path="auth" element={<Auth />} />
+                <Route path="auth/2fa" element={<TwoFactor />} />
+                <Route path="security" element={<Security />} />
                 <Route path="oauth-success" element={<OAuthSuccess />} />
                 <Route path="game/:id" element={<Game />} />
                 <Route path="history" element={<GameHistory />} />

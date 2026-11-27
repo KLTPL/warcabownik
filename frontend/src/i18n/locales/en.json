@@ -18,7 +18,9 @@
     "switchToLight": "Switch to light theme",
     "switchToDark": "Switch to dark theme",
     "switchLanguage": "Switch language",
-    "footer": "© {{year}} Warcabownik. Built with NestJS, React & PyTorch AI."
+    "footer": "© {{year}} Warcabownik. Built with NestJS, React & PyTorch AI.",
+    "security": "Security",
+    "account": "Account"
   },
   "warmup": {
     "waking": "Waking up the servers (free hosting). The first load can take up to a minute…",
@@ -100,6 +102,39 @@
     "inProgress": "In Progress",
     "winner": "Winner: {{id}}"
   },
+  "twoFactor": {
+    "title": "Two-factor authentication",
+    "descriptionTotp": "Enter the 6-digit code from your authenticator app.",
+    "descriptionRecovery": "Enter one of your recovery codes. Each code works only once.",
+    "codeLabel": "Authentication code",
+    "recoveryCodeLabel": "Recovery code",
+    "verify": "Verify",
+    "useRecoveryCode": "Use a recovery code instead",
+    "useAuthenticator": "Use your authenticator app instead",
+    "backToSignIn": "Back to sign in"
+  },
+  "security": {
+    "totpTitle": "Authenticator app",
+    "totpDescription": "Require a code from an authenticator app (Google Authenticator, Aegis, 1Password…) at every sign-in.",
+    "on": "On",
+    "off": "Off",
+    "totpOffBody": "Two-factor authentication is off. Turn it on so a stolen password alone can't open your account.",
+    "setUpTotp": "Set up authenticator",
+    "scanQr": "Scan this QR code with your authenticator app.",
+    "qrAlt": "QR code for your authenticator app",
+    "manualEntry": "Can't scan it? Enter this key manually:",
+    "enterCodeToConfirm": "Enter the 6-digit code the app shows",
+    "enableTotp": "Turn on 2FA",
+    "cancel": "Cancel",
+    "recoveryCodesWarning": "Save these recovery codes somewhere safe. Each one signs you in once if you lose your phone. They won't be shown again.",
+    "copyCodes": "Copy codes",
+    "copied": "Copied",
+    "savedCodes": "I've saved them",
+    "recoveryCodesRemaining_one": "{{count}} recovery code left.",
+    "recoveryCodesRemaining_other": "{{count}} recovery codes left.",
+    "regenerateCodes": "New recovery codes",
+    "disableTotp": "Turn off 2FA"
+  },
   "errors": {
     "InvalidCredentials": "Wrong email or password",
     "EmailAlreadyUsed": "Email is already used",
@@ -116,6 +151,12 @@
     "NotYourTurn": "It's not your turn.",
     "FailedToFetchAiMove": "The AI service is unavailable. Try again in a moment.",
     "authFailed": "Authentication failed",
-    "unexpected": "An unexpected error occurred"
+    "unexpected": "An unexpected error occurred",
+    "InvalidTotpCode": "That code is wrong or has already been used.",
+    "MfaTokenInvalid": "The sign-in attempt expired. Please sign in again.",
+    "TooManyAttempts": "Too many wrong codes. Try again in 15 minutes.",
+    "TotpAlreadyEnabled": "Two-factor authentication is already on.",
+    "TotpNotEnabled": "Two-factor authentication is not on.",
+    "TotpSetupMissing": "Start the setup again to get a new QR code."
   }
 }
