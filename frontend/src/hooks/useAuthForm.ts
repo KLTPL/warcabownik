@@ -1,16 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { isAxiosError } from "axios";
 import { useAuth } from "@/context/auth-context";
+import { getApiErrorCode } from "@/lib/apiError";
+import type { TwoFactorLocationState } from "@/hooks/useTwoFactorChallenge";
 import {
   useAuthControllerLogin,
   useAuthControllerRegister,
 } from "../api/endpoints/auth/auth";
-
-/** Error shape NestJS' validation pipe and exception filters return. */
-interface ApiErrorBody {
-  message?: string | string[];
-}
+import type { LoginResponseDto } from "../api/models";
 
 export function useAuthForm() {
   const navigate = useNavigate();
@@ -47,6 +44,18 @@ export function useAuthForm() {
     return null;
   };
 
+  /** Enters the app, or hands off to the 2FA prompt when the account needs it. */
+  const finishLogin = (response: LoginResponseDto) => {
+    if (response.mfa_required && response.mfa_token) {
+      const state: TwoFactorLocationState = { mfaToken: response.mfa_token };
+      navigate("/auth/2fa", { state });
+      return;
+    }
+    if (!response.access_token) throw new Error("authFailed");
+    login(response.access_token);
+    navigate("/");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -63,8 +72,7 @@ export function useAuthForm() {
           data: { email: formData.email, password: formData.password },
         });
 
-        login(response.access_token);
-        navigate("/");
+        finishLogin(response);
       } else {
         await registerMutation.mutateAsync({
           data: {
@@ -78,20 +86,10 @@ export function useAuthForm() {
           data: { email: formData.email, password: formData.password },
         });
 
-        login(loginResponse.access_token);
-        navigate("/");
+        finishLogin(loginResponse);
       }
     } catch (err) {
-      if (isAxiosError<ApiErrorBody>(err)) {
-        const message = err.response?.data?.message;
-        setError(
-          (Array.isArray(message) ? message[0] : message) || "authFailed"
-        );
-      } else if (err instanceof Error) {
-        setError(err.message || "unexpected");
-      } else {
-        setError("unexpected");
-      }
+      setError(getApiErrorCode(err));
     }
   };
 

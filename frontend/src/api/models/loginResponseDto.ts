@@ -7,6 +7,10 @@
  */
 
 export interface LoginResponseDto {
-  /** JWT Access Token */
-  access_token: string;
+  /** True when the account has 2FA on: exchange `mfa_token` and a code at POST /auth/2fa/verify */
+  mfa_required: boolean;
+  /** JWT Access Token (when `mfa_required` is false) */
+  access_token?: string;
+  /** Short-lived 2FA challenge token (when `mfa_required` is true) */
+  mfa_token?: string;
 }
