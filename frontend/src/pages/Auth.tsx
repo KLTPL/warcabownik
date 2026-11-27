@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PasskeySignInButton } from "@/components/PasskeySignInButton";
 import { useAuthForm } from "@/hooks/useAuthForm";
 import { useErrorMessage } from "@/i18n/errorKeys";
 
@@ -48,7 +49,7 @@ export function Auth() {
               </>
             )}
           </CardTitle>
-          <CardDescription>
+          <CardDescription id="auth-description">
             {isLogin
               ? t("auth.descriptionSignIn")
               : t("auth.descriptionSignUp")}
@@ -91,6 +92,10 @@ export function Auth() {
                   className="pl-9"
                   value={formData.email}
                   onChange={handleInputChange}
+                  // "webauthn" lets the browser offer saved passkeys in autofill.
+                  autoComplete={isLogin ? "username webauthn" : "email"}
+                  aria-describedby="auth-description"
+                  autoFocus={isLogin}
                   required
                 />
               </div>
@@ -110,6 +115,7 @@ export function Auth() {
                   className="pl-9"
                   value={formData.password}
                   onChange={handleInputChange}
+                  autoComplete={isLogin ? "current-password" : "new-password"}
                   required
                 />
               </div>
@@ -215,6 +221,8 @@ export function Auth() {
               <span>GitHub</span>
             </Button>
           </div>
+
+          {isLogin && <PasskeySignInButton />}
         </CardContent>
       </Card>
     </div>

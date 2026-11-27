@@ -29,6 +29,12 @@ import type {
   LoginDto,
   LoginResponseDto,
   MfaVerifyDto,
+  PasskeyDto,
+  PasskeyListResponseDto,
+  PasskeyLoginDto,
+  PasskeyOptionsResponseDto,
+  PasskeyRegisterDto,
+  PasskeyRenameDto,
   RecoveryCodesResponseDto,
   RegisterDto,
   SecondFactorCodeDto,
@@ -987,4 +993,493 @@ export const useMfaControllerRegenerateRecoveryCodes = <TError = unknown,
         TContext
       > => {
       return useMutation(getMfaControllerRegenerateRecoveryCodesMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Start a passwordless passkey sign-in
+ */
+export const passkeyControllerLoginOptions = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<PasskeyOptionsResponseDto>(
+      {url: `/auth/passkeys/login/options`, method: 'POST', signal
+    },
+      options);
+    }
+
+
+
+
+export const getPasskeyControllerLoginOptionsMutationKey = () => ['passkeyControllerLoginOptions'] as const;
+
+export const getPasskeyControllerLoginOptionsMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof passkeyControllerLoginOptions>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof passkeyControllerLoginOptions>>, TError,void, TContext> => {
+
+const mutationKey = getPasskeyControllerLoginOptionsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof passkeyControllerLoginOptions>>, void> = () => {
+
+
+          return  passkeyControllerLoginOptions(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PasskeyControllerLoginOptionsMutationResult = NonNullable<Awaited<ReturnType<typeof passkeyControllerLoginOptions>>>
+
+    export type PasskeyControllerLoginOptionsMutationError = unknown
+
+
+    /**
+ * @summary Start a passwordless passkey sign-in
+ */
+export const usePasskeyControllerLoginOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof passkeyControllerLoginOptions>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof passkeyControllerLoginOptions>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getPasskeyControllerLoginOptionsMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Finish a passkey sign-in; skips 2FA
+ */
+export const passkeyControllerLogin = (
+    passkeyLoginDto: PasskeyLoginDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<AccessTokenResponseDto>(
+      {url: `/auth/passkeys/login/verify`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: passkeyLoginDto, signal
+    },
+      options);
+    }
+
+
+
+
+export const getPasskeyControllerLoginMutationKey = () => ['passkeyControllerLogin'] as const;
+
+export const getPasskeyControllerLoginMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof passkeyControllerLogin>>, TError,PasskeyControllerLoginMutationVariables, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof passkeyControllerLogin>>, TError,PasskeyControllerLoginMutationVariables, TContext> => {
+
+const mutationKey = getPasskeyControllerLoginMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof passkeyControllerLogin>>, PasskeyControllerLoginMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  passkeyControllerLogin(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PasskeyControllerLoginMutationResult = NonNullable<Awaited<ReturnType<typeof passkeyControllerLogin>>>
+    export type PasskeyControllerLoginMutationBody = PasskeyLoginDto
+    export type PasskeyControllerLoginMutationError = void
+    export type PasskeyControllerLoginMutationVariables = {data: PasskeyLoginDto}
+
+    /**
+ * @summary Finish a passkey sign-in; skips 2FA
+ */
+export const usePasskeyControllerLogin = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof passkeyControllerLogin>>, TError,PasskeyControllerLoginMutationVariables, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof passkeyControllerLogin>>,
+        TError,
+        PasskeyControllerLoginMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPasskeyControllerLoginMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Start adding a passkey to the current account
+ */
+export const passkeyControllerRegisterOptions = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<PasskeyOptionsResponseDto>(
+      {url: `/auth/passkeys/register/options`, method: 'POST', signal
+    },
+      options);
+    }
+
+
+
+
+export const getPasskeyControllerRegisterOptionsMutationKey = () => ['passkeyControllerRegisterOptions'] as const;
+
+export const getPasskeyControllerRegisterOptionsMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof passkeyControllerRegisterOptions>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof passkeyControllerRegisterOptions>>, TError,void, TContext> => {
+
+const mutationKey = getPasskeyControllerRegisterOptionsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof passkeyControllerRegisterOptions>>, void> = () => {
+
+
+          return  passkeyControllerRegisterOptions(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PasskeyControllerRegisterOptionsMutationResult = NonNullable<Awaited<ReturnType<typeof passkeyControllerRegisterOptions>>>
+
+    export type PasskeyControllerRegisterOptionsMutationError = unknown
+
+
+    /**
+ * @summary Start adding a passkey to the current account
+ */
+export const usePasskeyControllerRegisterOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof passkeyControllerRegisterOptions>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof passkeyControllerRegisterOptions>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getPasskeyControllerRegisterOptionsMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Finish adding a passkey
+ */
+export const passkeyControllerRegister = (
+    passkeyRegisterDto: PasskeyRegisterDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<PasskeyDto>(
+      {url: `/auth/passkeys/register/verify`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: passkeyRegisterDto, signal
+    },
+      options);
+    }
+
+
+
+
+export const getPasskeyControllerRegisterMutationKey = () => ['passkeyControllerRegister'] as const;
+
+export const getPasskeyControllerRegisterMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof passkeyControllerRegister>>, TError,PasskeyControllerRegisterMutationVariables, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof passkeyControllerRegister>>, TError,PasskeyControllerRegisterMutationVariables, TContext> => {
+
+const mutationKey = getPasskeyControllerRegisterMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof passkeyControllerRegister>>, PasskeyControllerRegisterMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  passkeyControllerRegister(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PasskeyControllerRegisterMutationResult = NonNullable<Awaited<ReturnType<typeof passkeyControllerRegister>>>
+    export type PasskeyControllerRegisterMutationBody = PasskeyRegisterDto
+    export type PasskeyControllerRegisterMutationError = void
+    export type PasskeyControllerRegisterMutationVariables = {data: PasskeyRegisterDto}
+
+    /**
+ * @summary Finish adding a passkey
+ */
+export const usePasskeyControllerRegister = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof passkeyControllerRegister>>, TError,PasskeyControllerRegisterMutationVariables, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof passkeyControllerRegister>>,
+        TError,
+        PasskeyControllerRegisterMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPasskeyControllerRegisterMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary List the current account's passkeys
+ */
+export const passkeyControllerList = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<PasskeyListResponseDto>(
+      {url: `/auth/passkeys`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getPasskeyControllerListQueryKey = () => {
+    return [
+    `/auth/passkeys`
+    ] as const;
+    }
+
+
+export const getPasskeyControllerListQueryOptions = <TData = Awaited<ReturnType<typeof passkeyControllerList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof passkeyControllerList>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPasskeyControllerListQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof passkeyControllerList>>> = ({ signal }) => passkeyControllerList(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof passkeyControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PasskeyControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof passkeyControllerList>>>
+export type PasskeyControllerListQueryError = unknown
+
+
+export function usePasskeyControllerList<TData = Awaited<ReturnType<typeof passkeyControllerList>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof passkeyControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof passkeyControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof passkeyControllerList>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePasskeyControllerList<TData = Awaited<ReturnType<typeof passkeyControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof passkeyControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof passkeyControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof passkeyControllerList>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePasskeyControllerList<TData = Awaited<ReturnType<typeof passkeyControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof passkeyControllerList>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the current account's passkeys
+ */
+
+export function usePasskeyControllerList<TData = Awaited<ReturnType<typeof passkeyControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof passkeyControllerList>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPasskeyControllerListQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+/**
+ * @summary Rename one of the current account's passkeys
+ */
+export const passkeyControllerRename = (
+    id: string,
+    passkeyRenameDto: PasskeyRenameDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<PasskeyDto>(
+      {url: `/auth/passkeys/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: passkeyRenameDto, signal
+    },
+      options);
+    }
+
+
+
+
+export const getPasskeyControllerRenameMutationKey = () => ['passkeyControllerRename'] as const;
+
+export const getPasskeyControllerRenameMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof passkeyControllerRename>>, TError,PasskeyControllerRenameMutationVariables, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof passkeyControllerRename>>, TError,PasskeyControllerRenameMutationVariables, TContext> => {
+
+const mutationKey = getPasskeyControllerRenameMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof passkeyControllerRename>>, PasskeyControllerRenameMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  passkeyControllerRename(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PasskeyControllerRenameMutationResult = NonNullable<Awaited<ReturnType<typeof passkeyControllerRename>>>
+    export type PasskeyControllerRenameMutationBody = PasskeyRenameDto
+    export type PasskeyControllerRenameMutationError = void
+    export type PasskeyControllerRenameMutationVariables = {id: string;data: PasskeyRenameDto}
+
+    /**
+ * @summary Rename one of the current account's passkeys
+ */
+export const usePasskeyControllerRename = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof passkeyControllerRename>>, TError,PasskeyControllerRenameMutationVariables, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof passkeyControllerRename>>,
+        TError,
+        PasskeyControllerRenameMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPasskeyControllerRenameMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Remove one of the current account's passkeys
+ */
+export const passkeyControllerRemove = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/auth/passkeys/${id}`, method: 'DELETE', signal
+    },
+      options);
+    }
+
+
+
+
+export const getPasskeyControllerRemoveMutationKey = () => ['passkeyControllerRemove'] as const;
+
+export const getPasskeyControllerRemoveMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof passkeyControllerRemove>>, TError,PasskeyControllerRemoveMutationVariables, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof passkeyControllerRemove>>, TError,PasskeyControllerRemoveMutationVariables, TContext> => {
+
+const mutationKey = getPasskeyControllerRemoveMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof passkeyControllerRemove>>, PasskeyControllerRemoveMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  passkeyControllerRemove(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PasskeyControllerRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof passkeyControllerRemove>>>
+
+    export type PasskeyControllerRemoveMutationError = void
+    export type PasskeyControllerRemoveMutationVariables = {id: string}
+
+    /**
+ * @summary Remove one of the current account's passkeys
+ */
+export const usePasskeyControllerRemove = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof passkeyControllerRemove>>, TError,PasskeyControllerRemoveMutationVariables, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof passkeyControllerRemove>>,
+        TError,
+        PasskeyControllerRemoveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPasskeyControllerRemoveMutationOptions(options), queryClient);
     }

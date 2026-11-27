@@ -9,6 +9,7 @@ import { useAuth } from "@/context/auth-context";
 import { RecoveryCodesPanel } from "@/components/security/RecoveryCodesPanel";
 import { TotpManage } from "@/components/security/TotpManage";
 import { TotpSetupFlow } from "@/components/security/TotpSetupFlow";
+import { PasskeysCard } from "@/components/security/PasskeysCard";
 import { useMfaControllerGetSecurityStatus } from "../api/endpoints/auth/auth";
 
 export function Security() {
@@ -91,6 +92,8 @@ function SecuritySettings() {
         </CardHeader>
         <CardContent>{renderTotpBody()}</CardContent>
       </Card>
+
+      <PasskeysCard />
     </div>
   );
 }
