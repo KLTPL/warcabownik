@@ -47,8 +47,34 @@ export class UserService {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2002"
       ) {
-        throw new ConflictException("EmailAlreadyUsed");
+        const constraint = violatedUniqueConstraint(error);
+        if (constraint.includes("username")) {
+          throw new ConflictException("UsernameAlreadyUsed");
+        }
+        if (constraint.includes("email")) {
+          throw new ConflictException("EmailAlreadyUsed");
+        }
       }
+      throw error;
     }
   }
+}
+
+/**
+ * Names the unique constraint a P2002 error tripped. With the pg driver
+ * adapter Prisma doesn't fill `meta.target`; the adapter reports the
+ * constraint as `{ index: "User_email_key" }` or `{ fields: ["email"] }`.
+ */
+function violatedUniqueConstraint(
+  error: Prisma.PrismaClientKnownRequestError,
+): string {
+  const meta = error.meta as
+    | {
+        driverAdapterError?: {
+          cause?: { constraint?: { index?: string; fields?: string[] } };
+        };
+      }
+    | undefined;
+  const constraint = meta?.driverAdapterError?.cause?.constraint;
+  return constraint?.index ?? constraint?.fields?.join(",") ?? "";
 }

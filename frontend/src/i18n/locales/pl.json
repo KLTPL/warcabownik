@@ -105,6 +105,7 @@
   "errors": {
     "InvalidCredentials": "Nieprawidłowy e-mail lub hasło",
     "EmailAlreadyUsed": "Ten adres e-mail jest już używany",
+    "UsernameAlreadyUsed": "Ta nazwa użytkownika jest już zajęta",
     "TokenExpired": "Twoja sesja wygasła. Zaloguj się ponownie.",
     "InvalidToken": "Brak dostępu lub nieprawidłowy token",
     "Unauthorized": "Brak autoryzacji",
