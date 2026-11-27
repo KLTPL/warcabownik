@@ -38,7 +38,7 @@ export class AuthController {
   })
   @ApiResponse({
     status: 409,
-    description: "Email is already used",
+    description: "Email or username is already used",
   })
   async register(@Body() dto: RegisterDto): Promise<UserEntity | undefined> {
     return this.authService.register(dto);

@@ -103,6 +103,7 @@
   "errors": {
     "InvalidCredentials": "Wrong email or password",
     "EmailAlreadyUsed": "Email is already used",
+    "UsernameAlreadyUsed": "Username is already taken",
     "TokenExpired": "Your session has expired. Please sign in again.",
     "InvalidToken": "Access forbidden or bad token",
     "Unauthorized": "Unauthorized",
