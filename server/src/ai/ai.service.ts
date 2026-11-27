@@ -21,16 +21,20 @@ export class AiService {
   public wakeUpAi(): void {
     this.logger.log(`Sending ping to wake up the AI server...`);
 
-    axios.get(`${process.env.AI_URL}/docs`, { timeout: 3000 })
+    axios
+      .get(`${process.env.AI_URL}/docs`, { timeout: 3000 })
       .then(() => {
-        this.logger.log('Wake-up signal: AI server is already active and ready to respond.');
+        this.logger.log(
+          "Wake-up signal: AI server is already active and ready to respond.",
+        );
       })
       .catch((error) => {
-        const msg = axios.isAxiosError(error) ? error.message: String(error);
-        this.logger.log(`Wake-up signal sent. The AI server is probably waking up now (${msg}).`)
+        const msg = axios.isAxiosError(error) ? error.message : String(error);
+        this.logger.log(
+          `Wake-up signal sent. The AI server is probably waking up now (${msg}).`,
+        );
       });
   }
-
 
   async getAiMove(
     boardStateJson: string,
@@ -63,7 +67,7 @@ export class AiService {
             board: numericBoard,
             player_id: playerId,
           },
-          { timeout: 10000 }
+          { timeout: 10000 },
         );
         this.logger.log("Response");
 
@@ -76,7 +80,7 @@ export class AiService {
         }));
       } catch (error) {
         let errorMessage = "Unknown error";
-        if (axios.isAxiosError(error)){
+        if (axios.isAxiosError(error)) {
           errorMessage = `Axios Error: ${error.message}`;
           if (error.response?.data) {
             errorMessage += ` | Data: ${JSON.stringify(error.response.data)}`;
@@ -84,9 +88,9 @@ export class AiService {
         } else if (error instanceof Error) {
           errorMessage = error.message;
         } else {
-          errorMessage = String(error)
+          errorMessage = String(error);
         }
-        
+
         this.logger.warn(
           `AI attempt failed (${errorMessage}). Retrying in 3s... (${retries - 1} left)`,
         );
