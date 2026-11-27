@@ -1,21 +1,36 @@
 import numpy as np
-
+from collections import deque
 # Constants (Clean Code)
 EMPTY = 0
 MAN = 1
 KING = 2
 BOARD_SIZE = 8
+NON_CAPTURE_MOVES_LIMIT = 80
 
 MAN_REWARD = 0.07
 KING_REWARD = 0.12
 PROMOTION_REWARD = 0.04
 #the opponent checks are represented as negative Ones
 
+def create_cord_field_dict():
+    field_cord_dict={}
+    cols = [1,3,5,7]
+    field = 0
+    for row in range(8):
+        for col in cols:
+            cord = row, col - (row % 2)
+            field_cord_dict[cord] = field
+            field += 1
+    return field_cord_dict
+
+    
 class CheckersEnv:
     def __init__(self):
         self.player = None
         self.board = None
         self.create_starting_state()
+        self.non_capture_counter = 0
+        self.six_last_layouts_hashes = deque(maxlen=6)
         
 
     def create_starting_state(self):
@@ -58,8 +73,37 @@ class CheckersEnv:
         
         reward = MAN_DIFF*MAN_REWARD + KING_DIFF*KING_REWARD + PROMOTION_DIFF*PROMOTION_REWARD
         return reward
-        
+
+    def was_captured(self, next_layout):
+        MAN_DIFF = np.count_nonzero(self.board == -MAN) - np.count_nonzero(next_layout == -MAN)
+        KING_DIFF = np.count_nonzero(self.board == -KING) - np.count_nonzero(next_layout == -KING)
+
+        return MAN_DIFF + KING_DIFF > 0
+    
+    def is_tie(self):
+        if len(self.six_last_layouts_hashes) == 6:
+            if ((self.six_last_layouts_hashes[0] == self.six_last_layouts_hashes[2] and
+                self.six_last_layouts_hashes[0] == self.six_last_layouts_hashes[4]) or 
+                (self.six_last_layouts_hashes[1] == self.six_last_layouts_hashes[3] and
+                self.six_last_layouts_hashes[1] == self.six_last_layouts_hashes[5])):
+                return True
+            
+        if self.non_capture_counter >= NON_CAPTURE_MOVES_LIMIT:
+            return True
+
+        return False
+
+    def was_man_moved(self, next_layout):
+        return not np.array_equal(self.board == MAN, next_layout == MAN)
+    
     def next_move(self, new_board):
+        if self.was_captured(new_board) or self.was_man_moved(new_board):
+            self.non_capture_counter = 0
+        else:
+            self.non_capture_counter += 1
+
+        self.six_last_layouts_hashes.append(hash(new_board.tobytes()))
+        
         self.board = new_board
         self.rotate_board()
         self.player *= -1
@@ -317,3 +361,6 @@ class CheckersEnv:
                 row_str += symbols[field_val] + " "
             print(row_str)
         print()
+if __name__ =="__main__":
+    env= CheckersEnv()
+    env.print_board()
